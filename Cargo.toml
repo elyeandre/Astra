@@ -2,9 +2,9 @@
 name = "astra"
 version = "0.1.0"
 edition = "2021"
+exclude = ["examples"]
 
 [dependencies]
-anyhow = "1.0.94"
 axum = { version = "0.7.9", features = ["macros"] }
 mlua = { version = "0.10.2", features = [
     "luajit",

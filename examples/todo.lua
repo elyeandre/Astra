@@ -1,14 +1,14 @@
 _G.Astra = {}
 
-function get_request(path, returns, func)
-    table.insert(Astra, { path = path, method = "get", returns = returns or "plain", func = func })
+function get_request(path, func)
+    table.insert(Astra, { path = path, method = "get", func = func })
 end
 
-get_request("/", "plain", function()
-    print("hello from default Astra instance!")
+get_request("/", function()
+    return "hello from default Astra instance!"
 end)
 
 
-get_request("/test", "plain", function()
-    print("YEEE HAW")
+get_request("/test", function()
+    return { key = 123 }
 end)

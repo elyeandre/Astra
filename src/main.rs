@@ -1,5 +1,6 @@
 use axum::{
     extract::Query,
+    response::IntoResponse,
     routing::{delete, get, post, put},
     Router,
 };
@@ -15,18 +16,10 @@ enum Method {
     Put,
     Delete,
 }
-#[derive(Debug, Clone, Copy, mlua::FromLua, serde::Serialize, serde::Deserialize, PartialEq)]
-#[serde(rename_all = "snake_case")]
-enum Returns {
-    Plain,
-    Json,
-    StatusCode,
-}
 #[derive(Debug, Clone, mlua::FromLua, PartialEq)]
 struct Route {
     path: String,
     method: Method,
-    returns: Returns,
     function: mlua::Function,
 }
 
@@ -48,7 +41,6 @@ static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
             routes.push(Route {
                 path: LUA.from_value(entry.get("path")?)?,
                 method: LUA.from_value(entry.get("method")?)?,
-                returns: LUA.from_value(entry.get("returns")?)?,
                 function: entry.get::<mlua::Function>("func")?,
             });
 
@@ -61,14 +53,25 @@ static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
     routes
 });
 
-async fn route(details: Route) -> impl axum::response::IntoResponse {
-    let result = details.function.call::<mlua::Value>(());
+async fn route(details: Route) -> axum::response::Response {
+    let result = details.function.call::<mlua::Value>(("Hey", 12));
     match result {
-        Ok(val) => Ok("".to_string()),
+        Ok(value) => match LUA.from_value::<serde_json::Value>(value) {
+            Ok(result) => match result {
+                serde_json::Value::String(plain) => plain.into_response(),
+                serde_json::Value::Object(_) => axum::Json(result).into_response(),
+                _ => axum::http::StatusCode::OK.into_response(),
+            },
+            Err(e) => {
+                eprintln!("Result Parsing Error: {e}");
+
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            }
+        },
         Err(e) => {
             eprintln!("Route Calling Error: {e}");
 
-            Err(axum::http::StatusCode::INTERNAL_SERVER_ERROR)
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
     }
 }
