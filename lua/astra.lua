@@ -1,7 +1,21 @@
+---@diagnostic disable: duplicate-set-field
+
 require "./libs/utils.lua"
 
 _G.Astra = {}
 
-function get_request(path, callback)
+Astra.get_request = function(path, callback)
     table.insert(_G.Astra, { path = path, method = "get", func = callback })
+end
+
+Astra.post_request = function(path, callback)
+    table.insert(_G.Astra, { path = path, method = "post", func = callback })
+end
+
+Astra.put_request = function(path, callback)
+    table.insert(_G.Astra, { path = path, method = "put", func = callback })
+end
+
+Astra.delete_request = function(path, callback)
+    table.insert(_G.Astra, { path = path, method = "delete", func = callback })
 end

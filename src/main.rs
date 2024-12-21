@@ -1,3 +1,6 @@
+#![deny(clippy::unwrap_used)]
+#![deny(clippy::expect_used)]
+
 use axum::{
     body::Body,
     extract::Request,
@@ -6,7 +9,6 @@ use axum::{
     Router,
 };
 use mlua::LuaSerdeExt;
-use serde_json::Value;
 use std::{collections::HashMap, sync::LazyLock};
 
 #[derive(Debug, Clone, Copy, mlua::FromLua, serde::Serialize, serde::Deserialize, PartialEq)]
@@ -26,14 +28,17 @@ struct Route {
 
 static LUA_FILE_PATH: LazyLock<String> = LazyLock::new(|| {
     let lua_file = std::env::args().collect::<Vec<_>>();
+    #[allow(clippy::expect_used)]
     lua_file.get(1).expect("Couldn't open the lua file").clone()
 });
 static LUA: LazyLock<mlua::Lua> = LazyLock::new(mlua::Lua::new);
 static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
     let lua_prelude = include_str!("../lua/astra.bundle.lua");
+    #[allow(clippy::expect_used)]
     LUA.load(lua_prelude).exec().expect("Couldn't add prelude");
 
     // Filter out lines that start with "require" and contain "astra.lua" or "astra.bundle.lua"
+    #[allow(clippy::expect_used)]
     let user_file = std::fs::read_to_string(LUA_FILE_PATH.as_str()).expect("Couldn't read file");
 
     let lines: Vec<&str> = user_file.lines().collect();
@@ -51,20 +56,24 @@ static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
     // Join the filtered lines back into a single string
     let updated_content = filtered_lines.join("\n");
 
+    #[allow(clippy::expect_used)]
     LUA.load(updated_content)
         .exec()
         .expect("Couldn't load lua file");
 
     let mut routes = Vec::new();
+    #[allow(clippy::unwrap_used)]
     LUA.globals()
         .get::<mlua::Table>("Astra")
         .unwrap()
-        .for_each(|_key: i32, entry: mlua::Table| {
-            routes.push(Route {
-                path: LUA.from_value(entry.get("path")?)?,
-                method: LUA.from_value(entry.get("method")?)?,
-                function: entry.get::<mlua::Function>("func")?,
-            });
+        .for_each(|_key: mlua::Value, entry: mlua::Value| {
+            if let Some(entry) = entry.as_table() {
+                routes.push(Route {
+                    path: LUA.from_value(entry.get("path")?)?,
+                    method: LUA.from_value(entry.get("method")?)?,
+                    function: entry.get::<mlua::Function>("func")?,
+                });
+            }
 
             Ok(())
         })
@@ -73,7 +82,23 @@ static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
     routes
 });
 
-async fn parse_request(req: Request<Body>) -> Result<axum::Json<Value>, axum::http::StatusCode> {
+#[derive(Debug, Clone)]
+struct RequestLua {
+    method: String,
+    uri: String,
+    headers: HashMap<String, String>,
+    body: String,
+}
+impl mlua::UserData for RequestLua {
+    fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method("get_method", |_, this, ()| Ok(this.method.clone()));
+        methods.add_method("get_uri", |_, this, ()| Ok(this.uri.clone()));
+        methods.add_method("get_headers", |_, this, ()| Ok(this.headers.clone()));
+        methods.add_method("get_body", |_, this, ()| Ok(this.body.clone()));
+    }
+}
+
+async fn parse_request(req: Request<Body>) -> Option<RequestLua> {
     // Extract request metadata: method, URI, and headers
     let method = req.method().to_string();
     let uri = req.uri().to_string();
@@ -84,46 +109,42 @@ async fn parse_request(req: Request<Body>) -> Result<axum::Json<Value>, axum::ht
         .collect();
 
     // Convert the request body into a byte vector
-    let body_bytes = axum::body::to_bytes(req.into_body(), usize::MAX)
-        .await
-        .map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)?;
+    if let Ok(body_bytes) = axum::body::to_bytes(req.into_body(), usize::MAX).await {
+        let body_string = String::from_utf8_lossy(&body_bytes).to_string();
 
-    let body_string = String::from_utf8_lossy(&body_bytes).to_string();
+        // Build the full JSON object with all the request data
+        let request_json = RequestLua {
+            method,
+            uri,
+            headers,
+            body: body_string,
+        };
 
-    // Build the full JSON object with all the request data
-    let request_json = serde_json::json!({
-        "method": method,
-        "uri": uri,
-        "headers": headers,
-        "body": body_string,
-    });
-
-    // Return the constructed JSON as the response
-    Ok(axum::Json(request_json))
+        // Return the constructed JSON as the response
+        Some(request_json)
+    } else {
+        None
+    }
 }
 
 async fn route(details: Route, request: Request<Body>) -> axum::response::Response {
-    let request = if let Ok(request) = parse_request(request).await {
-        request.0
-    } else {
-        Value::Null
-    };
+    let request = parse_request(request).await;
 
-    let parsed_request = LUA.to_value(&request);
+    //let parsed_request = LUA.to_value(&request);
 
-    let result = details.function.call::<mlua::Value>(parsed_request);
+    let result = details.function.call_async::<mlua::Value>(request).await;
     match result {
-        Ok(value) => match LUA.from_value::<serde_json::Value>(value) {
-            Ok(result) => match result {
-                serde_json::Value::String(plain) => plain.into_response(),
-                serde_json::Value::Object(_) => axum::Json(result).into_response(),
-                _ => axum::http::StatusCode::OK.into_response(),
-            },
-            Err(e) => {
-                eprintln!("Result Parsing Error: {e}");
+        Ok(value) => match value {
+            mlua::Value::String(plain) => plain.to_string_lossy().into_response(),
+            mlua::Value::Table(_) => match LUA.from_value::<serde_json::Value>(value.clone()) {
+                Ok(result) => axum::Json(result).into_response(),
+                Err(e) => {
+                    eprintln!("Result Parsing Error: {e}");
 
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
-            }
+                    axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                }
+            },
+            _ => axum::http::StatusCode::OK.into_response(),
         },
         Err(e) => {
             eprintln!("Route Calling Error: {e}");

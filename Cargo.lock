@@ -380,16 +380,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5aba8db14291edd000dfcc4d620c7ebfb122c613afb886ca8803fa4e128a20a"
 
 [[package]]
-name = "libloading"
-version = "0.8.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc2f4eb4bc735547cfed7c0a4922cbd04a4655978c09b54f1f7b228750664c34"
-dependencies = [
- "cfg-if",
- "windows-targets",
-]
-
-[[package]]
 name = "linux-raw-sys"
 version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -428,15 +418,6 @@ checksum = "3015551c284515db7c30c559fc1080f9cb9ee990d1f6fca315451a107c7540bb"
 dependencies = [
  "cc",
  "which",
-]
-
-[[package]]
-name = "luau0-src"
-version = "0.11.2+luau653"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02313a53daf1fae25e82f7e7ca56180b72d1f08c514426672877cd957298201c"
-dependencies = [
- "cc",
 ]
 
 [[package]]
@@ -488,7 +469,6 @@ dependencies = [
  "either",
  "erased-serde",
  "futures-util",
- "libloading",
  "mlua-sys",
  "mlua_derive",
  "num-traits",
@@ -508,7 +488,6 @@ dependencies = [
  "cfg-if",
  "lua-src",
  "luajit-src",
- "luau0-src",
  "pkg-config",
 ]
 

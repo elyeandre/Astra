@@ -7,7 +7,7 @@ exclude = ["examples"]
 [dependencies]
 axum = { version = "0.7.9", features = ["macros"] }
 mlua = { version = "0.10.2", features = [
-    "luau-jit",
+    "luajit",
     "serialize",
     "vendored",
     "async",

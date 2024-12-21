@@ -29,6 +29,8 @@ local module_index = {}
 local modules = {}
 
 local luapack_header = [[
+---@diagnostic disable: duplicate-set-field, lowercase-global
+
 __luapack_modules__ = {
 %s
 }

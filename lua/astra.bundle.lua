@@ -1,3 +1,5 @@
+---@diagnostic disable: duplicate-set-field, lowercase-global
+
 __luapack_modules__ = {
     (function()
         local b={_version="0.1.0"}
@@ -23,9 +25,23 @@ __luapack_require__ = function(idx)
     return module
 end
 
+---@diagnostic disable: duplicate-set-field
+
 __luapack_require__(1)
 _G.Astra = {}
 
-function get_request(path, callback)
+Astra.get_request = function(path, callback)
     table.insert(_G.Astra, { path = path, method = "get", func = callback })
+end
+
+Astra.post_request = function(path, callback)
+    table.insert(_G.Astra, { path = path, method = "post", func = callback })
+end
+
+Astra.put_request = function(path, callback)
+    table.insert(_G.Astra, { path = path, method = "put", func = callback })
+end
+
+Astra.delete_request = function(path, callback)
+    table.insert(_G.Astra, { path = path, method = "delete", func = callback })
 end
