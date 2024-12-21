@@ -183,6 +183,8 @@ async fn main() {
         .await
         .unwrap();
 
+    println!("🚀 Listening at: http://127.0.0.1:20001");
+
     #[allow(clippy::unwrap_used)]
     axum::serve(listener, load_routes()).await.unwrap();
 }

@@ -4,6 +4,22 @@ Experimentational web framework for Lua 5.1 running on Axum for potential use at
 
 The performance has not been thoroughly tested, but it should be expected to be close to Rust as this is a thin wrapper. Serialization takes up most of the performance overhead and is very much a bottleneck.
 
+## Example
+
+Typically in lua you can register routes like below, binded to a method
+
+```lua
+Astra.get_request("/", function()
+    return "hello from default Astra instance!"
+end)
+```
+
+You can run an example after cloning this repository such as:
+
+```bash
+cargo run examples/todo.lua
+```
+
 ## Structure
 
 The lua folder contains some utils and functions that are auto included in the server runtime by packaging them into `astra.bundle.lua`. You can import this into your server for intellisense as well. You can either use `make pack_lua` on root or navigate to lua folder and `luajit pack.lua astra.lua` to package the library. Notice that your server needs to be packaged as well as the runtime at the moment does not have a concept of imports. You can however import the astra bundled library just fine as the import line is removed during runtime and replaced by the bundled code prelude.

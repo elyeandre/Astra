@@ -1,7 +1,10 @@
 [package]
 name = "astra"
 version = "0.1.0"
+authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
+description = "Experimental Lua 5.1 webserver framework written in Rust + Axum"
 edition = "2021"
+license = "Apache-2.0"
 exclude = ["examples"]
 
 [dependencies]
@@ -24,7 +27,13 @@ tracing-subscriber = "0.3.19"
 
 [profile.release]
 opt-level = 3
+panic = "abort"
 lto = true
 codegen-units = 1
 overflow-checks = false
+debug-assertions = false
 debug = false
+strip = "debuginfo"
+[profile.release.package."*"]
+opt-level = 3
+codegen-units = 1
