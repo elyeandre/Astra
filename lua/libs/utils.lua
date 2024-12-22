@@ -1,4 +1,4 @@
-_G.utils = { _version = "0.1.0" }
+local utils = { _version = "0.1.0" }
 
 -- Recursively converts a Lua table into a pretty-formatted JSON string.
 -- @param tbl The input table.
@@ -26,10 +26,10 @@ function utils.pretty_table(table)
     return "{ " .. string.sub(json_str, 1, -3) .. " }"
 end
 
-function string.trim(str)
-    local trimmed_str = str:match("^%s*(.-)%s*$")
-    return trimmed_str
-end
+-- function string.trim(str)
+--     local trimmed_str = str:match("^%s*(.-)%s*$")
+--     return trimmed_str
+-- end
 
 function utils.urldecode(uri)
     uri = uri:gsub('+', ' ')

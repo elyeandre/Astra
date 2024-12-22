@@ -1,4 +1,4 @@
-use crate::common::{LUA, LUA_FILE_PATH};
+use crate::common::LUA;
 use axum::{
     body::Body,
     http::Request,
@@ -25,30 +25,6 @@ pub struct Route {
 }
 
 pub static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
-    // Filter out lines that start with "require" and contain "astra.lua" or "astra.bundle.lua"
-    #[allow(clippy::expect_used)]
-    let user_file = std::fs::read_to_string(LUA_FILE_PATH.as_str()).expect("Couldn't read file");
-
-    let lines: Vec<&str> = user_file.lines().collect();
-
-    // Filter out lines that start with "require" and contain "astra.lua" or "astra.bundle.lua"
-    let filtered_lines: Vec<String> = lines
-        .into_iter()
-        .filter(|line| {
-            !(line.starts_with("require")
-                && (line.contains("astra") || line.contains("astra_bundle")))
-        })
-        .map(|line| line.to_string()) // Convert to String
-        .collect();
-
-    // Join the filtered lines back into a single string
-    let updated_content = filtered_lines.join("\n");
-
-    #[allow(clippy::expect_used)]
-    LUA.load(updated_content)
-        .exec()
-        .expect("Couldn't load lua file");
-
     if let Ok(settings) = LUA.globals().get::<mlua::Table>("Astra") {
         match settings.set("version", crate::common::get_package_version()) {
             Ok(_) => {

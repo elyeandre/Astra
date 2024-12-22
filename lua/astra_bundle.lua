@@ -2,19 +2,18 @@
 
 __luapack_modules__ = {
     (function()
-        _G.utils={_version="0.1.0"}
-        function utils.pretty_table(a)local b=""
-        for c,d in pairs(a)do if type(c)~='number'then c=
-        '"'..c..'"'end
-        if type(d)=="table"then
-        b=b..c..": "..
-        utils.pretty_table(d)..", "else if type(d)=='string'then d='"'..d..'"'end;b=b..c..": "..
-        tostring(d)..", "end end;return"{ "..string.sub(b,1,-3).." }"end
-        function string.trim(a)local b=a:match("^%s*(.-)%s*$")return b end;function utils.urldecode(a)
-        a=a:gsub('+',' '):gsub('%%(%x%x)',function(b)
-        return string.char(tonumber(b,16))end)return a end;function utils.parseurl(a)
-        local b={}
-    for c,d in a:gmatch('([^&=?]-)=([^&=?]+)')do b[c]=utils.urldecode(d)end;return b end;return utils
+        local b={_version="0.1.0"}
+        function b.pretty_table(c)local d=""
+        for _a,aa in pairs(c)do if type(_a)~='number'then
+        _a='"'.._a..'"'end
+        if type(aa)=="table"then d=d.._a..": "..
+        b.pretty_table(aa)..", "else if
+        type(aa)=='string'then aa='"'..aa..'"'end;d=d.._a..": "..
+        tostring(aa)..", "end end;return"{ "..string.sub(d,1,-3).." }"end;function b.urldecode(c)
+        c=c:gsub('+',' '):gsub('%%(%x%x)',function(d)
+        return string.char(tonumber(d,16))end)return c end;function b.parseurl(c)
+        local d={}
+    for _a,aa in c:gmatch('([^&=?]-)=([^&=?]+)')do d[_a]=b.urldecode(aa)end;return d end;return b
     end),
     (function()
         local c_a={_version="0.1.2"}local d_a
