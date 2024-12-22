@@ -12,9 +12,8 @@ __luapack_modules__ = {
         tostring(d)..", "end end;return"{ "..string.sub(b,1,-3).." }"end
         function string.trim(a)local b=a:match("^%s*(.-)%s*$")return b end;function utils.urldecode(a)
         a=a:gsub('+',' '):gsub('%%(%x%x)',function(b)
-        return string.char(tonumber(b,16))end)return a end
-        function utils.parseurl(a)
-        a=a:match('%s+(.+)')local b={}
+        return string.char(tonumber(b,16))end)return a end;function utils.parseurl(a)
+        local b={}
     for c,d in a:gmatch('([^&=?]-)=([^&=?]+)')do b[c]=utils.urldecode(d)end;return b end;return utils
     end),
     (function()
@@ -126,20 +125,24 @@ end
 
 __luapack_require__(1)
 __luapack_require__(2)
-_G.Astra = {}
+_G.Astra = {
+    version = "0.0.0",
+    hostname = "127.0.0.1",
+    port = 20001
+}
 
 Astra.get_request = function(path, callback)
-    table.insert(_G.Astra, { path = path, method = "get", func = callback })
+    table.insert(Astra, { path = path, method = "get", func = callback })
 end
 
 Astra.post_request = function(path, callback)
-    table.insert(_G.Astra, { path = path, method = "post", func = callback })
+    table.insert(Astra, { path = path, method = "post", func = callback })
 end
 
 Astra.put_request = function(path, callback)
-    table.insert(_G.Astra, { path = path, method = "put", func = callback })
+    table.insert(Astra, { path = path, method = "put", func = callback })
 end
 
 Astra.delete_request = function(path, callback)
-    table.insert(_G.Astra, { path = path, method = "delete", func = callback })
+    table.insert(Astra, { path = path, method = "delete", func = callback })
 end

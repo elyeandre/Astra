@@ -3,10 +3,8 @@ require("../lua/astra_bundle")
 local counter = 0
 
 Astra.get_request("/", function(req)
-    local success, uri = pcall(utils.parseurl, req:uri())
-    if success ~= nil then
-        print(utils.pretty_table(uri))
-    end
+    print(Astra.version)
+
     return "hello from default Astra instance!"
 end)
 

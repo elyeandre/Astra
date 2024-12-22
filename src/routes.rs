@@ -1,3 +1,4 @@
+use crate::common::{LUA, LUA_FILE_PATH};
 use axum::{
     body::Body,
     http::Request,
@@ -7,8 +8,6 @@ use axum::{
 };
 use mlua::LuaSerdeExt;
 use std::sync::LazyLock;
-
-use crate::{LUA, LUA_FILE_PATH};
 
 #[derive(Debug, Clone, Copy, mlua::FromLua, serde::Serialize, serde::Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -25,11 +24,7 @@ pub struct Route {
     pub function: mlua::Function,
 }
 
-static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
-    let lua_prelude = include_str!("../lua/astra_bundle.lua");
-    #[allow(clippy::expect_used)]
-    LUA.load(lua_prelude).exec().expect("Couldn't add prelude");
-
+pub static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
     // Filter out lines that start with "require" and contain "astra.lua" or "astra.bundle.lua"
     #[allow(clippy::expect_used)]
     let user_file = std::fs::read_to_string(LUA_FILE_PATH.as_str()).expect("Couldn't read file");
@@ -41,7 +36,7 @@ static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
         .into_iter()
         .filter(|line| {
             !(line.starts_with("require")
-                && (line.contains("astra.lua") || line.contains("astra_bundle.lua")))
+                && (line.contains("astra") || line.contains("astra_bundle")))
         })
         .map(|line| line.to_string()) // Convert to String
         .collect();
@@ -54,6 +49,19 @@ static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
         .exec()
         .expect("Couldn't load lua file");
 
+    if let Ok(settings) = LUA.globals().get::<mlua::Table>("Astra") {
+        match settings.set("version", crate::common::get_package_version()) {
+            Ok(_) => {
+                if let Err(e) = LUA.globals().set("Astra", settings) {
+                    println!("Error adding setting back to Astra: {e:#?}");
+                }
+            }
+            Err(e) => {
+                eprintln!("Error setting version: {e:#?}");
+            }
+        }
+    }
+
     let mut routes = Vec::new();
     #[allow(clippy::unwrap_used)]
     LUA.globals()
@@ -61,7 +69,7 @@ static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
         .unwrap()
         .for_each(|_key: mlua::Value, entry: mlua::Value| {
             if let Some(entry) = entry.as_table() {
-                routes.push(Route {
+                routes.push(crate::routes::Route {
                     path: LUA.from_value(entry.get("path")?)?,
                     method: LUA.from_value(entry.get("method")?)?,
                     function: entry.get::<mlua::Function>("func")?,
