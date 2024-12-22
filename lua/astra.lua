@@ -1,6 +1,7 @@
 ---@diagnostic disable: duplicate-set-field
 
 require "./libs/utils.lua"
+require "./libs/json.lua"
 
 _G.Astra = {}
 

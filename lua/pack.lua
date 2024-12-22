@@ -215,7 +215,7 @@ function main(argv)
     source = header .. '\n' .. source
 
     local out = string.gsub(entry, "%.lua", "")
-    out = out .. ".bundle.lua"
+    out = out .. "_bundle.lua"
     out = path.basename(out)
     io.open(out, "w"):write(source)
 

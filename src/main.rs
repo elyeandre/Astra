@@ -3,7 +3,7 @@
 
 use axum::{
     body::Body,
-    extract::Request,
+    http::Request,
     response::IntoResponse,
     routing::{delete, get, post, put},
     Router,
@@ -33,7 +33,7 @@ static LUA_FILE_PATH: LazyLock<String> = LazyLock::new(|| {
 });
 static LUA: LazyLock<mlua::Lua> = LazyLock::new(mlua::Lua::new);
 static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
-    let lua_prelude = include_str!("../lua/astra.bundle.lua");
+    let lua_prelude = include_str!("../lua/astra_bundle.lua");
     #[allow(clippy::expect_used)]
     LUA.load(lua_prelude).exec().expect("Couldn't add prelude");
 
@@ -48,7 +48,7 @@ static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
         .into_iter()
         .filter(|line| {
             !(line.starts_with("require")
-                && (line.contains("astra.lua") || line.contains("astra.bundle.lua")))
+                && (line.contains("astra.lua") || line.contains("astra_bundle.lua")))
         })
         .map(|line| line.to_string()) // Convert to String
         .collect();
@@ -82,55 +82,68 @@ static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
     routes
 });
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct RequestLua {
-    method: String,
-    uri: String,
-    headers: HashMap<String, String>,
+    inner_request: Request<Body>,
     body: String,
 }
-impl mlua::UserData for RequestLua {
-    fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method("get_method", |_, this, ()| Ok(this.method.clone()));
-        methods.add_method("get_uri", |_, this, ()| Ok(this.uri.clone()));
-        methods.add_method("get_headers", |_, this, ()| Ok(this.headers.clone()));
-        methods.add_method("get_body", |_, this, ()| Ok(this.body.clone()));
+impl RequestLua {
+    async fn new(request: Request<Body>) -> Self {
+        let (parts, body) = request.into_parts();
+        match axum::body::to_bytes(body, usize::MAX).await {
+            Ok(bytes) => {
+                let inner_request = Request::from_parts(parts, Body::from(bytes.clone()));
+                let body = String::from_utf8_lossy(&bytes).to_string();
+
+                Self {
+                    inner_request,
+                    body,
+                }
+            }
+
+            Err(e) => {
+                eprintln!("Error extracting body from request: {e:#?}");
+
+                Self {
+                    inner_request: Request::from_parts(parts, Body::empty()),
+                    body: "".to_string(),
+                }
+            }
+        }
     }
 }
+impl std::ops::Deref for RequestLua {
+    type Target = Request<Body>;
 
-async fn parse_request(req: Request<Body>) -> Option<RequestLua> {
-    // Extract request metadata: method, URI, and headers
-    let method = req.method().to_string();
-    let uri = req.uri().to_string();
-    let headers: HashMap<String, String> = req
-        .headers()
-        .iter()
-        .map(|(key, value)| (key.to_string(), value.to_str().unwrap_or("").to_string()))
-        .collect();
+    fn deref(&self) -> &Self::Target {
+        &self.inner_request
+    }
+}
+impl std::ops::DerefMut for RequestLua {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner_request
+    }
+}
+unsafe impl Send for RequestLua {}
+unsafe impl Sync for RequestLua {}
 
-    // Convert the request body into a byte vector
-    if let Ok(body_bytes) = axum::body::to_bytes(req.into_body(), usize::MAX).await {
-        let body_string = String::from_utf8_lossy(&body_bytes).to_string();
-
-        // Build the full JSON object with all the request data
-        let request_json = RequestLua {
-            method,
-            uri,
-            headers,
-            body: body_string,
-        };
-
-        // Return the constructed JSON as the response
-        Some(request_json)
-    } else {
-        None
+impl mlua::UserData for RequestLua {
+    fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method("method", |_, this, ()| Ok(this.method().to_string()));
+        methods.add_method("uri", |_, this, ()| Ok(this.uri().to_string()));
+        methods.add_method("headers", |_, this, ()| {
+            Ok(this
+                .headers()
+                .iter()
+                .map(|(key, value)| (key.to_string(), value.to_str().unwrap_or("").to_string()))
+                .collect::<HashMap<String, String>>())
+        });
+        methods.add_async_method("body", |_, this, ()| async move { Ok(this.body.clone()) });
     }
 }
 
 async fn route(details: Route, request: Request<Body>) -> axum::response::Response {
-    let request = parse_request(request).await;
-
-    //let parsed_request = LUA.to_value(&request);
+    let request = LUA.create_userdata(RequestLua::new(request).await);
 
     let result = details.function.call_async::<mlua::Value>(request).await;
     match result {
