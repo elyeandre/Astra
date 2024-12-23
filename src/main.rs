@@ -2,6 +2,8 @@
 #![deny(clippy::expect_used)]
 
 mod common;
+#[cfg(feature = "sqlx")]
+mod database;
 mod requests;
 mod routes;
 

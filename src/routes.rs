@@ -25,19 +25,6 @@ pub struct Route {
 }
 
 pub static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
-    if let Ok(settings) = LUA.globals().get::<mlua::Table>("Astra") {
-        match settings.set("version", crate::common::get_package_version()) {
-            Ok(_) => {
-                if let Err(e) = LUA.globals().set("Astra", settings) {
-                    println!("Error adding setting back to Astra: {e:#?}");
-                }
-            }
-            Err(e) => {
-                eprintln!("Error setting version: {e:#?}");
-            }
-        }
-    }
-
     let mut routes = Vec::new();
     #[allow(clippy::unwrap_used)]
     LUA.globals()

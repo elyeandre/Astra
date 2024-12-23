@@ -2,14 +2,37 @@ use std::sync::LazyLock;
 
 pub static LUA: LazyLock<mlua::Lua> = LazyLock::new(|| {
     let lua = mlua::Lua::new();
-
     let lib = include_str!("../lua/astra_bundle.lua");
 
     #[allow(clippy::expect_used)]
     lua.load(lib).exec().expect("Couldn't add prelude");
 
-    let args = std::env::args().collect::<Vec<_>>();
+    #[cfg(feature = "sqlx")]
+    #[allow(clippy::expect_used)]
+    tokio::runtime::Runtime::new()
+        .expect("Could not pre_start an async runtime")
+        .block_on(async {
+            #[allow(clippy::expect_used)]
+            crate::database::Database::register_to_lua(&lua)
+                .await
+                .expect("Could not register Database function");
+        });
 
+    // settings
+    if let Ok(settings) = lua.globals().get::<mlua::Table>("Astra") {
+        // set the version
+        if settings
+            .set("version", crate::common::get_package_version())
+            .is_ok()
+        {
+            if let Err(e) = lua.globals().set("Astra", settings) {
+                println!("Error adding setting back to Astra: {e:#?}");
+            }
+        }
+    }
+
+    // commands
+    let args = std::env::args().collect::<Vec<_>>();
     match args.get(1) {
         Some(command) if command == "run" => {
             // Filter out lines that start with "require" and contain "astra.lua" or "astra.bundle.lua"
@@ -34,7 +57,7 @@ pub static LUA: LazyLock<mlua::Lua> = LazyLock::new(|| {
             let updated_content = filtered_lines.join("\n");
 
             #[allow(clippy::expect_used)]
-            LUA.load(updated_content)
+            lua.load(updated_content)
                 .exec()
                 .expect("Couldn't load lua file");
         }
@@ -48,7 +71,10 @@ pub static LUA: LazyLock<mlua::Lua> = LazyLock::new(|| {
             std::process::exit(0);
         }
 
-        _ => {}
+        _ => {
+            println!("☹️  Available Commands: run | export-bundle");
+            std::process::exit(0);
+        }
     }
 
     lua
