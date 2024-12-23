@@ -17,8 +17,10 @@ end)
 You can run an example after cloning this repository such as:
 
 ```bash
-cargo run examples/todo.lua
+cargo run -- run examples/todo.lua
 ```
+
+During runtime however, you have two commands available: `run` which runs the lua provided, and `export-bundle` which saves the bundled lua library code in case you need it again.
 
 ## Structure
 
