@@ -164,6 +164,14 @@ function Astra.delete(path, callback)
     table.insert(Astra, { path = path, method = "delete", func = callback })
 end
 
+---
+---Registers a static folder to serve
+---@param path string The URL path for the request.
+---@param serve_path string The directory path relatively
+function Astra.static(path, serve_path)
+    table.insert(Astra, { path = path, method = "static", func = function() end, static = serve_path })
+end
+
 -- MARK: Internal
 
 ---

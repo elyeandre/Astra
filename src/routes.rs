@@ -15,10 +15,12 @@ pub enum Method {
     Post,
     Put,
     Delete,
+    Static,
 }
 #[derive(Debug, Clone, mlua::FromLua, PartialEq)]
 pub struct Route {
     pub path: String,
+    pub serve_folder: Option<String>,
     pub method: Method,
     pub function: mlua::Function,
 }
@@ -59,6 +61,7 @@ pub fn load_routes() -> Router {
             if let Some(entry) = entry.as_table() {
                 routes.push(crate::routes::Route {
                     path: LUA.from_value(entry.get("path")?)?,
+                    serve_folder: LUA.from_value(entry.get("static")?)?,
                     method: LUA.from_value(entry.get("method")?)?,
                     function: entry.get::<mlua::Function>("func")?,
                 });
@@ -69,16 +72,39 @@ pub fn load_routes() -> Router {
         .unwrap();
 
     for route_values in routes.clone() {
-        router = router.route(
-            route_values.path.clone().as_str(),
-            match route_values.method {
-                Method::Get => get(|request: Request<Body>| route(route_values, request)),
-                Method::Post => post(|request: Request<Body>| route(route_values, request)),
-                Method::Put => put(|request: Request<Body>| route(route_values, request)),
-                Method::Delete => delete(|request: Request<Body>| route(route_values, request)),
-            },
-        );
+        let path = route_values.path.clone();
+        let path = path.as_str();
+
+        router = match route_values.method {
+            Method::Get => router.route(
+                path,
+                get(|request: Request<Body>| route(route_values, request)),
+            ),
+            Method::Post => router.route(
+                path,
+                post(|request: Request<Body>| route(route_values, request)),
+            ),
+            Method::Put => router.route(
+                path,
+                put(|request: Request<Body>| route(route_values, request)),
+            ),
+            Method::Delete => router.route(
+                path,
+                delete(|request: Request<Body>| route(route_values, request)),
+            ),
+            Method::Static => {
+                if let Some(serve_path) = route_values.serve_folder {
+                    router.nest_service(path, tower_http::services::ServeDir::new(serve_path))
+                } else {
+                    router
+                }
+            }
+        }
     }
 
-    router
+    router.layer(
+        tower::ServiceBuilder::new()
+            .layer(tower_http::decompression::RequestDecompressionLayer::new())
+            .layer(tower_http::compression::CompressionLayer::new()),
+    )
 }
