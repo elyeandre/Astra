@@ -13,6 +13,8 @@ async fn main() {
         .with_max_level(tracing::Level::DEBUG)
         .init();
 
+    common::init().await;
+
     let mut listener_address = "127.0.0.1:8080".to_string();
 
     if let Ok(settings) = common::LUA.globals().get::<mlua::Table>("Astra") {

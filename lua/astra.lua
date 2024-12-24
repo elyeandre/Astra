@@ -1,7 +1,7 @@
 ---@diagnostic disable: duplicate-set-field
 
-require "./libs/utils.lua"
-require "./libs/json.lua"
+_G.utils = require "./libs/utils.lua"
+_G.json = require "./libs/json.lua"
 
 -- MARK: Astra
 
@@ -54,11 +54,30 @@ end
 ---@field body fun(): string|nil Returns the body of the request, which can be a table or a string.
 
 ---
+--- SQLx driver for PostgreSQL
+---@class Database
+_G.Database = {}
+
+---@param sql string The SQL query to execute.
+---@param parameters table Optional table containing the parameters to bind to the query.
+function Database:execute(sql, parameters) end
+
+---
+---@param sql string The SQL query to execute that returns one row.
+---@param parameters table Optional table containing the parameters to bind to the query.
+---@return table|nil row a table representing the result row if successful, or `nil` on failure.
+function Database:query_one(sql, parameters) end
+
+---
+---@param sql string The SQL query to execute that returns multiple rows.
+---@param parameters table Optional table containing the parameters to bind to the query.
+---@return table|nil rows a table containing all result rows if successful, or `nil` on failure.
+function Database:query_all(sql, parameters) end
+
+---
 ---Opens a new PostgreSQL connection using the provided URL and returns a table representing the connection.
 ---@param url string The URL of the PostgreSQL database to connect to.
----@return table Database that represents the PostgreSQL connection.
+---@return Database Database that represents the PostgreSQL connection.
 ---@nodiscard
 ---@diagnostic disable-next-line: missing-return, lowercase-global
 function database_connect(url) end
-
-_G.Database = {}

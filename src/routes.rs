@@ -7,7 +7,6 @@ use axum::{
     Router,
 };
 use mlua::LuaSerdeExt;
-use std::sync::LazyLock;
 
 #[derive(Debug, Clone, Copy, mlua::FromLua, serde::Serialize, serde::Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -23,28 +22,6 @@ pub struct Route {
     pub method: Method,
     pub function: mlua::Function,
 }
-
-pub static ROUTES: LazyLock<Vec<Route>> = LazyLock::new(|| {
-    let mut routes = Vec::new();
-    #[allow(clippy::unwrap_used)]
-    LUA.globals()
-        .get::<mlua::Table>("Astra")
-        .unwrap()
-        .for_each(|_key: mlua::Value, entry: mlua::Value| {
-            if let Some(entry) = entry.as_table() {
-                routes.push(crate::routes::Route {
-                    path: LUA.from_value(entry.get("path")?)?,
-                    method: LUA.from_value(entry.get("method")?)?,
-                    function: entry.get::<mlua::Function>("func")?,
-                });
-            }
-
-            Ok(())
-        })
-        .unwrap();
-
-    routes
-});
 
 pub async fn route(details: Route, request: Request<Body>) -> axum::response::Response {
     let request = LUA.create_userdata(crate::requests::RequestLua::new(request).await);
@@ -73,8 +50,25 @@ pub async fn route(details: Route, request: Request<Body>) -> axum::response::Re
 
 pub fn load_routes() -> Router {
     let mut router = Router::new();
+    let mut routes = Vec::new();
+    #[allow(clippy::unwrap_used)]
+    LUA.globals()
+        .get::<mlua::Table>("Astra")
+        .unwrap()
+        .for_each(|_key: mlua::Value, entry: mlua::Value| {
+            if let Some(entry) = entry.as_table() {
+                routes.push(crate::routes::Route {
+                    path: LUA.from_value(entry.get("path")?)?,
+                    method: LUA.from_value(entry.get("method")?)?,
+                    function: entry.get::<mlua::Function>("func")?,
+                });
+            }
 
-    for route_values in ROUTES.clone() {
+            Ok(())
+        })
+        .unwrap();
+
+    for route_values in routes.clone() {
         router = router.route(
             route_values.path.clone().as_str(),
             match route_values.method {

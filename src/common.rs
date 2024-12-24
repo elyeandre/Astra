@@ -1,22 +1,22 @@
 use std::sync::LazyLock;
 
-pub static LUA: LazyLock<mlua::Lua> = LazyLock::new(|| {
-    let lua = mlua::Lua::new();
+pub static LUA: LazyLock<mlua::Lua> = LazyLock::new(mlua::Lua::new);
+
+pub async fn init() {
+    let lua = &LUA;
     let lib = include_str!("../lua/astra_bundle.lua");
 
     #[allow(clippy::expect_used)]
-    lua.load(lib).exec().expect("Couldn't add prelude");
+    lua.load(lib)
+        .exec_async()
+        .await
+        .expect("Couldn't add prelude");
 
     #[cfg(feature = "sqlx")]
     #[allow(clippy::expect_used)]
-    tokio::runtime::Runtime::new()
-        .expect("Could not pre_start an async runtime")
-        .block_on(async {
-            #[allow(clippy::expect_used)]
-            crate::database::Database::register_to_lua(&lua)
-                .await
-                .expect("Could not register Database function");
-        });
+    crate::database::Database::register_to_lua(lua)
+        .await
+        .expect("Could not register Database function");
 
     // settings
     if let Ok(settings) = lua.globals().get::<mlua::Table>("Astra") {
@@ -58,7 +58,8 @@ pub static LUA: LazyLock<mlua::Lua> = LazyLock::new(|| {
 
             #[allow(clippy::expect_used)]
             lua.load(updated_content)
-                .exec()
+                .exec_async()
+                .await
                 .expect("Couldn't load lua file");
         }
 
@@ -76,9 +77,7 @@ pub static LUA: LazyLock<mlua::Lua> = LazyLock::new(|| {
             std::process::exit(0);
         }
     }
-
-    lua
-});
+}
 
 pub fn get_package_version() -> String {
     let project = include_str!("../Cargo.toml");

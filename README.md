@@ -9,7 +9,7 @@ The performance has not been thoroughly tested, but it should be expected to be 
 Typically in lua you can register routes like below, binded to a method
 
 ```lua
-Astra.get_request("/", function()
+Astra.get("/", function()
     return "hello from default Astra instance!"
 end)
 ```
