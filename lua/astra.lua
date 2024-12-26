@@ -8,6 +8,7 @@ _G.json = require "./libs/json.lua"
 _G.Astra = {
     version = "0.0.0",
     hostname = "127.0.0.1",
+    compression = false,
     port = 20001
 }
 

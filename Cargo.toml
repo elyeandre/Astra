@@ -8,13 +8,14 @@ license = "Apache-2.0"
 exclude = ["examples"]
 
 [features]
-default = ["sqlx"]
+default = ["sqlx", "compression"]
 sqlx = ["dep:sqlx"]
 compression = [
     "dep:tower",
     "tower-http/compression-full",
     "tower-http/decompression-full",
 ]
+
 
 [dependencies]
 axum = { version = "0.7.9", features = ["macros"] }

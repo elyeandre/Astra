@@ -117,12 +117,18 @@ pub fn load_routes() -> Router {
 
     // TODO: add another release binary that does support this flag
     #[cfg(feature = "compression")]
+    if let Ok(should_compress) = crate::common::LUA
+        .globals()
+        .get::<mlua::Table>("Astra")
+        .and_then(|setting| setting.get::<bool>("compression"))
     {
-        router = router.layer(
-            tower::ServiceBuilder::new()
-                .layer(tower_http::decompression::RequestDecompressionLayer::new())
-                .layer(tower_http::compression::CompressionLayer::new()),
-        );
+        if should_compress {
+            router = router.layer(
+                tower::ServiceBuilder::new()
+                    .layer(tower_http::decompression::RequestDecompressionLayer::new())
+                    .layer(tower_http::compression::CompressionLayer::new()),
+            );
+        }
     };
 
     router
