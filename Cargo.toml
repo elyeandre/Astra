@@ -1,8 +1,8 @@
 [package]
 name = "astra"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
-description = "Experimental Lua 5.1 webserver framework written in Rust + Axum"
+description = "Experimental LuaJIT webserver framework written in Rust + Axum"
 edition = "2021"
 license = "Apache-2.0"
 exclude = ["examples"]
@@ -10,6 +10,11 @@ exclude = ["examples"]
 [features]
 default = ["sqlx"]
 sqlx = ["dep:sqlx"]
+compression = [
+    "dep:tower",
+    "tower-http/compression-full",
+    "tower-http/decompression-full",
+]
 
 [dependencies]
 axum = { version = "0.7.9", features = ["macros"] }
@@ -26,7 +31,7 @@ mlua = { version = "0.10.2", features = [
 ] }
 serde = { version = "1.0.216", features = ["derive"] }
 serde_json = "1.0.133"
-sqlx = { version = "0.8", features = [
+sqlx = { version = "0.8.2", features = [
     "runtime-tokio",
     "tls-native-tls",
     "postgres",
@@ -36,13 +41,8 @@ sqlx = { version = "0.8", features = [
 ], optional = true }
 tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
 toml = "0.8.19"
-tower = "0.5.2"
-tower-http = { version = "0.6.2", features = [
-    "fs",
-    "trace",
-    "compression-full",
-    "decompression-full",
-] }
+tower = { version = "0.5.2", optional = true }
+tower-http = { version = "0.6.2", features = ["fs", "trace"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 uuid = { version = "1.11.0", features = ["serde", "v4"] }

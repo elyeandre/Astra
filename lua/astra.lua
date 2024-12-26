@@ -11,36 +11,46 @@ _G.Astra = {
     port = 20001
 }
 
----
----Registers a GET request to the specified path with the provided callback function.
 ---@param path string The URL path for the request.
 ---@param callback fun(request: Request): any A function that will be called when the request is made.
 function Astra.get(path, callback)
     table.insert(Astra, { path = path, method = "get", func = callback })
 end
 
----
----Registers a POST request to the specified path with the provided callback function.
 ---@param path string The URL path for the request.
 ---@param callback fun(request: Request): any A function that will be called when the request is made.
 function Astra.post(path, callback)
     table.insert(Astra, { path = path, method = "post", func = callback })
 end
 
----
----Registers a PUT request to the specified path with the provided callback function.
 ---@param path string The URL path for the request.
 ---@param callback fun(request: Request): any A function that will be called when the request is made.
 function Astra.put(path, callback)
     table.insert(Astra, { path = path, method = "put", func = callback })
 end
 
----
----Registers a DELETE request to the specified path with the provided callback function.
 ---@param path string The URL path for the request.
 ---@param callback fun(request: Request): any A function that will be called when the request is made.
 function Astra.delete(path, callback)
     table.insert(Astra, { path = path, method = "delete", func = callback })
+end
+
+---@param path string The URL path for the request.
+---@param callback fun(request: Request): any A function that will be called when the request is made.
+function Astra.options(path, callback)
+    table.insert(Astra, { path = path, method = "options", func = callback })
+end
+
+---@param path string The URL path for the request.
+---@param callback fun(request: Request): any A function that will be called when the request is made.
+function Astra.patch(path, callback)
+    table.insert(Astra, { path = path, method = "patch", func = callback })
+end
+
+---@param path string The URL path for the request.
+---@param callback fun(request: Request): any A function that will be called when the request is made.
+function Astra.trace(path, callback)
+    table.insert(Astra, { path = path, method = "trace", func = callback })
 end
 
 ---
