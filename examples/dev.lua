@@ -22,4 +22,4 @@ Astra.get("/insert", function(req)
     return "Successfully inserted name: " .. "queries.name"
 end)
 
-Astra.static("/examples", "examples")
+Astra.static_file("/examples", "examples/dev.lua")

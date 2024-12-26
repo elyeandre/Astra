@@ -18,12 +18,14 @@ pub enum Method {
     Options,
     Patch,
     Trace,
-    Static,
+    StaticDir,
+    StaticFile,
 }
 #[derive(Debug, Clone, mlua::FromLua, PartialEq)]
 pub struct Route {
     pub path: String,
-    pub serve_folder: Option<String>,
+    pub static_dir: Option<String>,
+    pub static_file: Option<String>,
     pub method: Method,
     pub function: mlua::Function,
 }
@@ -64,7 +66,8 @@ pub fn load_routes() -> Router {
             if let Some(entry) = entry.as_table() {
                 routes.push(crate::routes::Route {
                     path: LUA.from_value(entry.get("path")?)?,
-                    serve_folder: LUA.from_value(entry.get("static")?)?,
+                    static_dir: LUA.from_value(entry.get("static_dir")?)?,
+                    static_file: LUA.from_value(entry.get("static_file")?)?,
                     method: LUA.from_value(entry.get("method")?)?,
                     function: entry.get::<mlua::Function>("func")?,
                 });
@@ -95,9 +98,16 @@ pub fn load_routes() -> Router {
             Method::Options => match_routes!(options),
             Method::Patch => match_routes!(patch),
             Method::Trace => match_routes!(trace),
-            Method::Static => {
-                if let Some(serve_path) = route_values.serve_folder {
+            Method::StaticDir => {
+                if let Some(serve_path) = route_values.static_dir {
                     router.nest_service(path, tower_http::services::ServeDir::new(serve_path))
+                } else {
+                    router
+                }
+            }
+            Method::StaticFile => {
+                if let Some(serve_path) = route_values.static_file {
+                    router.nest_service(path, tower_http::services::ServeFile::new(serve_path))
                 } else {
                     router
                 }

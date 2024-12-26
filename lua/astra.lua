@@ -57,8 +57,16 @@ end
 ---Registers a static folder to serve
 ---@param path string The URL path for the request.
 ---@param serve_path string The directory path relatively
-function Astra.static(path, serve_path)
-    table.insert(Astra, { path = path, method = "static", func = function() end, static = serve_path })
+function Astra.static_dir(path, serve_path)
+    table.insert(Astra, { path = path, method = "static_dir", func = function() end, static_dir = serve_path })
+end
+
+---
+---Registers a static file to serve
+---@param path string The URL path for the request.
+---@param serve_path string The directory path relatively
+function Astra.static_file(path, serve_path)
+    table.insert(Astra, { path = path, method = "static_file", func = function() end, static_file = serve_path })
 end
 
 -- MARK: Internal
