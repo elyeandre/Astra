@@ -1,9 +1,41 @@
 local utils = { _version = "0.1.0" }
 
--- Recursively converts a Lua table into a pretty-formatted JSON string.
--- @param tbl The input table.
--- @return A pretty-formatted JSON string representation of the input table.
-function utils.pretty_table(table)
+---@diagnostic disable-next-line: duplicate-set-field
+function _G.pretty_print(inner_table)
+    local function pretty_print_table(table)
+        local str = ""
+
+        -- Iterate over each key-value pair in the table
+        for k, v in pairs(table) do
+            k = '[' .. k .. ']'
+
+            -- Recursively convert nested tables to JSON strings
+            if type(v) == "table" then
+                str = str .. k .. ": " .. pretty_print_table(v) .. ", "
+            else
+                -- Format string values with quotation marks
+                if type(v) == 'string' then
+                    v = '"' .. v .. '"'
+                end
+                str = str .. k .. ": " .. tostring(v) .. ", "
+            end
+        end
+
+        return "{ " .. string.sub(str, 1, -3) .. " }"
+    end
+
+    if type(inner_table) == 'table' then
+        print(pretty_print_table(inner_table))
+    else
+        print(tostring(inner_table))
+    end
+end
+
+---
+---Recursively converts a Lua table into a pretty-formatted JSON string.
+---@param table table The input table.
+---@diagnostic disable-next-line: duplicate-set-field
+function _G.pretty_json_table(table)
     local json_str = ""
 
     -- Iterate over each key-value pair in the table
@@ -12,7 +44,7 @@ function utils.pretty_table(table)
 
         -- Recursively convert nested tables to JSON strings
         if type(v) == "table" then
-            json_str = json_str .. k .. ": " .. utils.pretty_table(v) .. ", "
+            json_str = json_str .. k .. ": " .. _G.pretty_json_table(v) .. ", "
         else
             -- Format string values with quotation marks
             if type(v) == 'string' then

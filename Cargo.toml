@@ -1,6 +1,6 @@
 [package]
 name = "astra"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 description = "Experimental LuaJIT webserver framework written in Rust + Axum"
 edition = "2021"
@@ -20,6 +20,7 @@ compression = [
 [dependencies]
 axum = { version = "0.7.9", features = ["macros"] }
 chrono = { version = "0.4.39", features = ["serde"] }
+dotenvy = "0.15.7"
 mlua = { version = "0.10.2", features = [
     "luajit",
     "serialize",
@@ -53,6 +54,7 @@ opt-level = 3
 lto = true
 codegen-units = 1
 overflow-checks = false
+debug = 0
 [profile.release.package."*"]
 opt-level = 3
 codegen-units = 1

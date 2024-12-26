@@ -3,6 +3,14 @@
 _G.utils = require "./libs/utils.lua"
 _G.json = require "./libs/json.lua"
 
+-- Load envs
+local dotenv = require "./libs/dotenv.lua"
+dotenv:load(".env")
+dotenv:load(".env.production")
+dotenv:load(".env.development")
+dotenv:load(".env.test")
+dotenv:load(".env.local")
+
 -- MARK: Astra
 
 _G.Astra = {

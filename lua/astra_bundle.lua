@@ -3,12 +3,20 @@
 __luapack_modules__ = {
     (function()
         local b={_version="0.1.0"}
-        function b.pretty_table(c)local d=""
-        for _a,aa in pairs(c)do if type(_a)~='number'then
-        _a='"'.._a..'"'end
-        if type(aa)=="table"then d=d.._a..": "..
-        b.pretty_table(aa)..", "else if
-        type(aa)=='string'then aa='"'..aa..'"'end;d=d.._a..": "..
+        function _G.pretty_print(c)
+        local function d(_a)local aa=""
+        for ba,ca in pairs(_a)do ba='['..ba..']'
+        if
+        type(ca)=="table"then aa=aa..ba..": "..d(ca)..", "else if
+        type(ca)=='string'then ca='"'..ca..'"'end;aa=aa..ba..": "..tostring(ca)..
+        ", "end end;return"{ "..string.sub(aa,1,-3).." }"end
+        if type(c)=='table'then print(d(c))else print(tostring(c))end end
+        function _G.pretty_json_table(c)local d=""
+        for _a,aa in pairs(c)do
+        if type(_a)~='number'then _a='"'.._a..'"'end
+        if type(aa)=="table"then d=d.._a..
+        ": ".._G.pretty_json_table(aa)..", "else if type(aa)==
+        'string'then aa='"'..aa..'"'end;d=d.._a..": "..
         tostring(aa)..", "end end;return"{ "..string.sub(d,1,-3).." }"end;function b.urldecode(c)
         c=c:gsub('+',' '):gsub('%%(%x%x)',function(d)
         return string.char(tonumber(d,16))end)return c end;function b.parseurl(c)
@@ -108,6 +116,22 @@ __luapack_modules__ = {
         local aab,bab=cba(_ab,_da(_ab,1,_ca,true))bab=_da(_ab,bab,_ca,true)if bab<=#_ab then
     ada(_ab,bab,"trailing garbage")end;return aab end;return c_a
     end),
+    (function()
+        local d={}_G.ENV={}
+        local function _a(ba)local ca=io.open(ba,'r')if not ca then
+        return nil,'File not found: '..ba end;local da=ca:read('*a')ca:close()return da end
+        local function aa(ba)local ca={}
+        for da in ba:gmatch('[^\r\n]+')do da=da:match('^%s*(.-)%s*$')
+        if da~=''and
+        da:sub(1,1)~='#'then local _b,ab=da:match('([^=]+)=(.*)')
+        _b=_b:match('^%s*(.-)%s*$')ab=ab:match('^%s*(.-)%s*$')
+        if ab:sub(1,1)=='"'and
+        ab:sub(-1,-1)=='"'then ab=ab:sub(2,-2):gsub('\\"','"')end;if ab:sub(1,1)=="'"and ab:sub(-1,-1)=="'"then
+        ab=ab:sub(2,-2)end;ca[_b]=ab end end;return ca end
+        function d:load(ba)ba=ba or'.env'local ca,da=_a(ba)if not ca then return nil,da end
+        local _b=aa(ca)
+    for ab,bb in pairs(_b)do if not _G.ENV[ab]then _G.ENV[ab]=bb end end;return true end;return d
+    end),
 }
 __luapack_cache__ = {}
 __luapack_require__ = function(idx)
@@ -124,11 +148,20 @@ end
 
 _G.utils = __luapack_require__(1)
 _G.json = __luapack_require__(2)
+-- Load envs
+local dotenv = __luapack_require__(3)
+dotenv:load(".env")
+dotenv:load(".env.production")
+dotenv:load(".env.development")
+dotenv:load(".env.test")
+dotenv:load(".env.local")
+
 -- MARK: Astra
 
 _G.Astra = {
     version = "0.0.0",
     hostname = "127.0.0.1",
+    compression = false,
     port = 20001
 }
 

@@ -6,10 +6,12 @@ require("../lua/astra_bundle")
 
 -- local db = database_connect("postgres://astra_postgres:password@localhost/astr_database")
 -- db:execute("CREATE TABLE IF NOT EXISTS test (id SERIAL PRIMARY KEY, name TEXT)", {});
+pretty_print("asd")
 
 Astra.get("/", function()
     -- local result = db:query_one("SELECT * FROM test;", {});
     -- print(utils.pretty_table(result))
+
 
     return "hello from default Astra instance! " .. Astra.version
 end)

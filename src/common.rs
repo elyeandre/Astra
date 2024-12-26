@@ -57,10 +57,9 @@ pub async fn init() {
             let updated_content = filtered_lines.join("\n");
 
             #[allow(clippy::expect_used)]
-            lua.load(updated_content)
-                .exec_async()
-                .await
-                .expect("Couldn't load lua file");
+            if let Err(e) = lua.load(updated_content).exec_async().await {
+                eprintln!("Error loading lua file: {:#?}", e);
+            }
         }
 
         Some(command) if command == "export-bundle" => {
@@ -79,6 +78,7 @@ pub async fn init() {
     }
 }
 
+#[inline]
 pub fn get_package_version() -> String {
     let project = include_str!("../Cargo.toml");
     if let Ok(toml_parse) = toml::from_str::<toml::Value>(project) {
