@@ -40,7 +40,7 @@ jobs:
         key: ${{ env.cache-key }}
 
     - name: Build Server
-      run: cargo build --release
+      run: cargo build --release && chmod +x ./target/release/${{ matrix.artifact_name }}
     
     - name: Clear cache
       continue-on-error: true # Don't fail if the cache doesn't exist
