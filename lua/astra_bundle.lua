@@ -130,7 +130,10 @@ __luapack_modules__ = {
         ab=ab:sub(2,-2)end;ca[_b]=ab end end;return ca end
         function d:load(ba)ba=ba or'.env'local ca,da=_a(ba)if not ca then return nil,da end
         local _b=aa(ca)
-    for ab,bb in pairs(_b)do if not _G.ENV[ab]then _G.ENV[ab]=bb end end;return true end;return d
+        for ab,bb in pairs(_b)do
+        if not _G.ENV[ab]then local cb=""for _c in bb:gmatch("([^".."#".."]+)")do
+        cb=_c:gsub("%s+",""):gsub("^\"(.*)\"$","%1"):gsub("^'(.*)'$","%1")break end
+    local db=tonumber(cb)if db~=nil then _G.ENV[ab]=db else _G.ENV[ab]=cb end end end;return true end;return d
     end),
 }
 __luapack_cache__ = {}

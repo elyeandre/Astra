@@ -70,8 +70,24 @@ function dotenv:load(filename)
   for key, value in pairs(env_pairs) do
     -- Check if the key is not already in the _G table
     if not _G.ENV[key] then
-      -- Set the key-value pair in the _G table
-      _G.ENV[key] = value
+      -- Clean up the value
+      local cleaned_value = ""
+      for i in value:gmatch("([^" .. "#" .. "]+)") do
+        -- Get first value and clean up
+        cleaned_value = i:gsub("%s+", ""):gsub("^\"(.*)\"$", "%1"):gsub("^'(.*)'$", "%1")
+        break
+      end
+      
+      -- Check if number
+      local number_parse = tonumber(cleaned_value)
+      if number_parse ~= nil then
+        -- Set the key-value pair in the _G table
+        _G.ENV[key] = number_parse
+      else
+        -- Set the key-value pair in the _G table
+        _G.ENV[key] = cleaned_value
+      end
+
     end
   end
   -- Return true
