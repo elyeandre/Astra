@@ -26,70 +26,70 @@ jobs:
       cache-key: "cargo-cache"
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: rui314/setup-mold@v1
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
 
-    - uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          ./target/
-        key: ${{ env.cache-key }}
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ./target/
+          key: ${{ env.cache-key }}
 
-    - name: Build Server
-      run: cargo build --release && chmod +x ./target/release/${{ matrix.artifact_name }}
-    
-    - name: Clear cache
-      continue-on-error: true # Don't fail if the cache doesn't exist
-      env:
-        GH_TOKEN: ${{ github.token }} # required by gh
-      run: |
-        gh extension install actions/gh-actions-cache
-        gh actions-cache delete "${{ env.cache-key }}" --confirm
+      - name: Build Server
+        run: cargo build --release
 
-    - name: Upload server binary to release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        file: ./target/release/${{ matrix.artifact_name }}
-        asset_name: ${{ matrix.asset_name }}
-        tag: ${{ github.ref }}
+      - name: Clear cache
+        continue-on-error: true # Don't fail if the cache doesn't exist
+        env:
+          GH_TOKEN: ${{ github.token }} # required by gh
+        run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete "${{ env.cache-key }}" --confirm
 
-    - uses: actions/cache/save@v4
-      id: cache
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          ./target/
-        key: ${{ env.cache-key }}
-    
-    - uses: chrnorm/deployment-action@v2
-      name: Create GitHub deployment
-      id: deployment
-      with:
-        token: '${{ github.token }}'
-        environment-url: https://github.com/ArkForgeLabs/Astra
-        environment: production
+      - name: Upload server binary to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: ./target/release/${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}
 
-    - name: Update deployment status (success)
-      if: success()
-      uses: chrnorm/deployment-status@v2
-      with:
-        token: '${{ github.token }}'
-        environment-url: ${{ steps.deployment.outputs.environment_url }}
-        deployment-id: ${{ steps.deployment.outputs.deployment_id }}
-        state: 'success'
+      - uses: actions/cache/save@v4
+        id: cache
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ./target/
+          key: ${{ env.cache-key }}
 
-    - name: Update deployment status (failure)
-      if: failure()
-      uses: chrnorm/deployment-status@v2
-      with:
-        token: '${{ github.token }}'
-        environment-url: ${{ steps.deployment.outputs.environment_url }}
-        deployment-id: ${{ steps.deployment.outputs.deployment_id }}
-        state: 'failure'
+      - uses: chrnorm/deployment-action@v2
+        name: Create GitHub deployment
+        id: deployment
+        with:
+          token: "${{ github.token }}"
+          environment-url: https://github.com/ArkForgeLabs/Astra
+          environment: production
+
+      - name: Update deployment status (success)
+        if: success()
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: "${{ github.token }}"
+          environment-url: ${{ steps.deployment.outputs.environment_url }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          state: "success"
+
+      - name: Update deployment status (failure)
+        if: failure()
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: "${{ github.token }}"
+          environment-url: ${{ steps.deployment.outputs.environment_url }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          state: "failure"

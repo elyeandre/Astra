@@ -1,6 +1,6 @@
 [package]
 name = "astra"
-version = "0.3.3"
+version = "0.3.5"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 description = "Experimental LuaJIT webserver framework written in Rust + Axum"
 edition = "2021"
