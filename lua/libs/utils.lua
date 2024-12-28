@@ -63,20 +63,30 @@ end
 --     return trimmed_str
 -- end
 
-function utils.urldecode(uri)
-    uri = uri:gsub('+', ' ')
-        :gsub('%%(%x%x)', function(h)
+function utils.parse_query(str)
+    local function unescape(s)
+        s = string.gsub(s, "+", " ")
+        s = string.gsub(s, "%%(%x%x)", function(h)
             return string.char(tonumber(h, 16))
         end)
-    return uri
+        return s
+    end
+
+    local result_table = {}
+    for k, v in string.gmatch(str, "([^&=?]+)=([^&=?]+)") do
+        --t[k] = v
+        result_table[k] = unescape(v)
+    end
+
+    return result_table
 end
 
-function utils.parseurl(s)
-    local ans = {}
-    for k, v in s:gmatch('([^&=?]-)=([^&=?]+)') do
-        ans[k] = utils.urldecode(v)
+function string.split(str, separator)
+    local result_table = {}
+    for word in str:gmatch("([^" .. separator .. "]+)") do
+        table.insert(result_table, word)
     end
-    return ans
+    return result_table
 end
 
 return utils

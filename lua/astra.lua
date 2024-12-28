@@ -2,6 +2,7 @@
 
 _G.utils = require "./libs/utils.lua"
 _G.json = require "./libs/json.lua"
+_G.validate_table = require "./libs/table_schema.lua"
 
 -- Load envs
 local dotenv = require "./libs/dotenv.lua"
