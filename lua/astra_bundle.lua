@@ -17,11 +17,14 @@ __luapack_modules__ = {
         if type(aa)=="table"then d=d.._a..
         ": ".._G.pretty_json_table(aa)..", "else if type(aa)==
         'string'then aa='"'..aa..'"'end;d=d.._a..": "..
-        tostring(aa)..", "end end;return"{ "..string.sub(d,1,-3).." }"end;function b.urldecode(c)
-        c=c:gsub('+',' '):gsub('%%(%x%x)',function(d)
-        return string.char(tonumber(d,16))end)return c end;function b.parseurl(c)
-        local d={}
-    for _a,aa in c:gmatch('([^&=?]-)=([^&=?]+)')do d[_a]=b.urldecode(aa)end;return d end;return b
+        tostring(aa)..", "end end;return"{ "..string.sub(d,1,-3).." }"end
+        function b.parse_query(c)
+        local function d(aa)aa=string.gsub(aa,"+"," ")
+        aa=string.gsub(aa,"%%(%x%x)",function(ba)return
+        string.char(tonumber(ba,16))end)return aa end;local _a={}
+        for aa,ba in string.gmatch(c,"([^&=?]+)=([^&=?]+)")do _a[aa]=d(ba)end;return _a end
+        function string.split(c,d)local _a={}for aa in c:gmatch("([^"..d.."]+)")do
+    table.insert(_a,aa)end;return _a end;return b
     end),
     (function()
         local c_a={_version="0.1.2"}local d_a
@@ -117,6 +120,36 @@ __luapack_modules__ = {
     ada(_ab,bab,"trailing garbage")end;return aab end;return c_a
     end),
     (function()
+        
+        local function b(c,d)
+        local function _a(da,_b)
+        local ab={number="number",string="string",boolean="boolean",table="table",["function"]="function",["nil"]="nil",table_array="table"}return type(da)==ab[_b]end;local function aa(da,_b,ab)
+        return not(_b and da<_b)and not(ab and da>ab)end
+        local function ba(da,_b,ab)local bb,cb=b(da,_b)if not bb then
+        return false,ab..": "..cb end;return true end
+        local function ca(da,_b,ab)
+        if type(da)~="table"then return false,
+        ab..": Expected an array of tables, got "..type(da)end;for bb,cb in ipairs(da)do local db,_c=ba(cb,_b,ab.."["..bb.."]")if not db then
+        return false,_c end end
+        return true end
+        for da,_b in pairs(d)do local ab=c[da]local bb=_b.type;local cb=_b.required or false
+        local db=_b.min;local _c=_b.max;local ac=_b.schema;local bc=_b.default;local cc=da;if cb and ab==nil then return false,
+        "Missing required key: "..cc end;if
+        ab~=nil and not _a(ab,bb)then
+        return false,"Incorrect type for key: "..cc..". Expected "..
+        bb..", got "..type(ab)end
+        if ac and
+        type(ab)=="table"and bb=="table"then local dc,_d=ba(ab,ac,cc)
+        if not dc then return false,
+        "Error in nested table for key: "..cc..". ".._d end end
+        if bb=="table_array"and type(ab)=="table"then
+        local dc,_d=ca(ab,ac,cc)if not dc then
+        return false,"Error in array of tables for key: "..cc..". ".._d end end;if ab~=nil and not aa(ab,db,_c)then return false,
+        "Value for key "..cc.." is out of range."end;if
+        ab==nil and bc~=nil then c[da]=bc end end;for da in pairs(c)do
+    if not d[da]then return false,"Unexpected key found: "..da end end;return true end;return b
+    end),
+    (function()
         local d={}_G.ENV={}
         local function _a(ba)local ca=io.open(ba,'r')if not ca then
         return nil,'File not found: '..ba end;local da=ca:read('*a')ca:close()return da end
@@ -151,8 +184,9 @@ end
 
 _G.utils = __luapack_require__(1)
 _G.json = __luapack_require__(2)
+_G.validate_table = __luapack_require__(3)
 -- Load envs
-local dotenv = __luapack_require__(3)
+local dotenv = __luapack_require__(4)
 dotenv:load(".env")
 dotenv:load(".env.production")
 dotenv:load(".env.development")

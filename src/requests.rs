@@ -1,11 +1,13 @@
+use axum::{body::Body, http::Request};
+use mlua::LuaSerdeExt;
 use std::collections::HashMap;
 
-use axum::{body::Body, http::Request};
+use crate::common::LUA;
 
 #[derive(Debug)]
 pub struct RequestLua {
     pub inner_request: Request<Body>,
-    pub body: String,
+    pub body: RequestBodyLua,
 }
 impl RequestLua {
     pub async fn new(request: Request<Body>) -> Self {
@@ -13,11 +15,11 @@ impl RequestLua {
         match axum::body::to_bytes(body, usize::MAX).await {
             Ok(bytes) => {
                 let inner_request = Request::from_parts(parts, Body::from(bytes.clone()));
-                let body = String::from_utf8_lossy(&bytes).to_string();
+                // let body = String::from_utf8_lossy(&bytes).to_string();
 
                 Self {
                     inner_request,
-                    body,
+                    body: RequestBodyLua { body: bytes },
                 }
             }
 
@@ -26,7 +28,9 @@ impl RequestLua {
 
                 Self {
                     inner_request: Request::from_parts(parts, Body::empty()),
-                    body: "".to_string(),
+                    body: RequestBodyLua {
+                        body: bytes::Bytes::new(),
+                    },
                 }
             }
         }
@@ -59,5 +63,26 @@ impl mlua::UserData for RequestLua {
                 .collect::<HashMap<String, String>>())
         });
         methods.add_async_method("body", |_, this, ()| async move { Ok(this.body.clone()) });
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RequestBodyLua {
+    pub body: bytes::Bytes,
+}
+impl mlua::UserData for RequestBodyLua {
+    fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method("text", |_, this, ()| {
+            Ok(String::from_utf8_lossy(&this.body).to_string())
+        });
+
+        methods.add_method("json", |_, this, ()| {
+            match serde_json::to_value(&this.body) {
+                Ok(body_json) => Ok(LUA.to_value(&body_json)?),
+                Err(e) => Err(mlua::Error::runtime(format!(
+                    "Could not parse the body as JSON: {e:#?}"
+                ))),
+            }
+        });
     }
 }
