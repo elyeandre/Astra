@@ -13,12 +13,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
+          - os: ubuntu-20.04
             artifact_name: astra
             asset_name: astra-linux-amd64
 
     name: release ${{ matrix.os }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     environment: production
 
     env:
@@ -39,9 +39,6 @@ jobs:
             ./target/
           key: ${{ env.cache-key }}
 
-      - name: Build Server
-        run: cargo build --release
-
       - name: Clear cache
         continue-on-error: true # Don't fail if the cache doesn't exist
         env:
@@ -49,6 +46,9 @@ jobs:
         run: |
           gh extension install actions/gh-actions-cache
           gh actions-cache delete "${{ env.cache-key }}" --confirm
+
+      - name: Build Server
+        run: cargo build --release
 
       - name: Upload server binary to release
         uses: svenstaro/upload-release-action@v2
