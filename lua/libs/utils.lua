@@ -81,6 +81,13 @@ function utils.parse_query(str)
     return result_table
 end
 
+---
+---Splits a word into an array given the separator
+---@param str string The input string
+---@param separator string The input string
+---@return table array
+---@nodiscard
+---@diagnostic disable-next-line: duplicate-set-field
 function string.split(str, separator)
     local result_table = {}
     for word in str:gmatch("([^" .. separator .. "]+)") do

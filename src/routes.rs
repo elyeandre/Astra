@@ -31,26 +31,66 @@ pub struct Route {
 }
 
 pub async fn route(details: Route, request: Request<Body>) -> axum::response::Response {
-    let request = LUA.create_userdata(crate::requests::RequestLua::new(request).await);
+    let request = {
+        match LUA.create_userdata(crate::requests::RequestLua::new(request).await) {
+            Ok(v) => Some(v),
+            Err(e) => {
+                eprintln!("Could not construct request: {e:#?}");
 
-    let result = details.function.call_async::<mlua::Value>(request).await;
-    match result {
-        Ok(value) => match value {
-            mlua::Value::String(plain) => plain.to_string_lossy().into_response(),
-            mlua::Value::Table(_) => match LUA.from_value::<serde_json::Value>(value.clone()) {
-                Ok(result) => axum::Json(result).into_response(),
-                Err(e) => {
-                    eprintln!("Result Parsing Error: {e}");
+                None
+            }
+        }
+    };
+    let mut response: axum::http::Response<Body>;
 
-                    axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
-                }
+    #[inline]
+    fn handle_result(result: mlua::Result<mlua::Value>) -> axum::http::Response<Body> {
+        match result {
+            Ok(value) => match value {
+                mlua::Value::String(plain) => plain.to_string_lossy().into_response(),
+                mlua::Value::Table(_) => match LUA.from_value::<serde_json::Value>(value.clone()) {
+                    Ok(result) => axum::Json(result).into_response(),
+                    Err(e) => {
+                        eprintln!("Result Parsing Error: {e}");
+
+                        axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                    }
+                },
+                _ => axum::http::StatusCode::OK.into_response(),
             },
-            _ => axum::http::StatusCode::OK.into_response(),
-        },
-        Err(e) => {
-            eprintln!("Route Calling Error: {e}");
+            Err(e) => {
+                eprintln!("Route Calling Error: {e}");
 
-            axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
+            }
+        }
+    }
+
+    // if a response userdata can be created
+    match LUA.create_userdata(crate::responses::ResponseLua::new()) {
+        Ok(response_details) => {
+            response = handle_result(
+                details
+                    .function
+                    .call_async::<mlua::Value>((request, response_details.clone()))
+                    .await,
+            );
+
+            if let Ok(response_details) = response_details.borrow::<crate::responses::ResponseLua>()
+            {
+                *response.status_mut() = response_details.status_code;
+
+                for (key, value) in response_details.headers.iter() {
+                    response.headers_mut().insert(key, value.clone());
+                }
+            }
+
+            response
+        }
+        Err(e) => {
+            eprintln!("Could not craft a response details userdata: {e:#?}");
+            response = handle_result(details.function.call_async::<mlua::Value>(request).await);
+            response
         }
     }
 }

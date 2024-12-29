@@ -185,6 +185,8 @@ end
 _G.utils = __luapack_require__(1)
 _G.json = __luapack_require__(2)
 _G.validate_table = __luapack_require__(3)
+-- TODO: include http status codes as enum
+
 -- Load envs
 local dotenv = __luapack_require__(4)
 dotenv:load(".env")
@@ -203,43 +205,43 @@ _G.Astra = {
 }
 
 ---@param path string The URL path for the request.
----@param callback fun(request: Request): any A function that will be called when the request is made.
+---@param callback fun(request: Request, response: Response): any A function that will be called when the request is made.
 function Astra.get(path, callback)
     table.insert(Astra, { path = path, method = "get", func = callback })
 end
 
 ---@param path string The URL path for the request.
----@param callback fun(request: Request): any A function that will be called when the request is made.
+---@param callback fun(request: Request, response: Response): any A function that will be called when the request is made.
 function Astra.post(path, callback)
     table.insert(Astra, { path = path, method = "post", func = callback })
 end
 
 ---@param path string The URL path for the request.
----@param callback fun(request: Request): any A function that will be called when the request is made.
+---@param callback fun(request: Request, response: Response): any A function that will be called when the request is made.
 function Astra.put(path, callback)
     table.insert(Astra, { path = path, method = "put", func = callback })
 end
 
 ---@param path string The URL path for the request.
----@param callback fun(request: Request): any A function that will be called when the request is made.
+---@param callback fun(request: Request, response: Response): any A function that will be called when the request is made.
 function Astra.delete(path, callback)
     table.insert(Astra, { path = path, method = "delete", func = callback })
 end
 
 ---@param path string The URL path for the request.
----@param callback fun(request: Request): any A function that will be called when the request is made.
+---@param callback fun(request: Request, response: Response): any A function that will be called when the request is made.
 function Astra.options(path, callback)
     table.insert(Astra, { path = path, method = "options", func = callback })
 end
 
 ---@param path string The URL path for the request.
----@param callback fun(request: Request): any A function that will be called when the request is made.
+---@param callback fun(request: Request, response: Response): any A function that will be called when the request is made.
 function Astra.patch(path, callback)
     table.insert(Astra, { path = path, method = "patch", func = callback })
 end
 
 ---@param path string The URL path for the request.
----@param callback fun(request: Request): any A function that will be called when the request is made.
+---@param callback fun(request: Request, response: Response): any A function that will be called when the request is made.
 function Astra.trace(path, callback)
     table.insert(Astra, { path = path, method = "trace", func = callback })
 end
@@ -269,6 +271,14 @@ end
 ---@field uri fun(): string Returns the URI of the request.
 ---@field headers fun(): table Returns a table containing the headers of the request.
 ---@field body fun(): string|nil Returns the body of the request, which can be a table or a string.
+
+---
+--- Represents an HTTP response.
+---@class Response
+---@field set_status_code fun(new_status_code: number) Sets the HTTP status code of the response
+---@field set_header fun(key: string, value: string) Sets a header
+---@field get_headers fun(): table|nil Returns the entire headers list that so far has been set for the response
+---@field remove_header fun(key: string) Removes a header from the headers list
 
 ---
 --- SQLx driver for PostgreSQL

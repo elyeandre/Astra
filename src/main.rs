@@ -9,6 +9,7 @@ mod common;
 #[cfg(feature = "sqlx")]
 mod database;
 mod requests;
+mod responses;
 mod routes;
 
 #[tokio::main]

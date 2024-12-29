@@ -9,12 +9,16 @@ require("../lua/astra_bundle")
 
 pretty_print(ENV)
 
--- Astra.get("/", function()
---     -- local result = db:query_one("SELECT * FROM test;", {});
---     -- print(utils.pretty_table(result))
+Astra.get("/", function(req, res)
+    res:set_status_code(300)
+    res:set_header("test", "VALLLL")
 
---     return "hello from default Astra instance! " .. Astra.version
--- end)
+    pretty_print(res:get_headers())
+    -- local result = db:query_one("SELECT * FROM test;", {});
+    -- print(utils.pretty_table(result))
+
+    return "hello from default Astra instance! " .. Astra.version
+end)
 
 -- Astra.get("/insert", function(req)
 --     -- local queries = utils.parseurl(req:uri())
