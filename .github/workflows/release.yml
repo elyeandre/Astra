@@ -27,25 +27,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: rui314/setup-mold@v1
-
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            ./target/
-          key: ${{ env.cache-key }}
-
-      - name: Clear cache
-        continue-on-error: true # Don't fail if the cache doesn't exist
-        env:
-          GH_TOKEN: ${{ github.token }} # required by gh
-        run: |
-          gh extension install actions/gh-actions-cache
-          gh actions-cache delete "${{ env.cache-key }}" --confirm
 
       - name: Build Server
         run: cargo build --release
@@ -56,17 +37,6 @@ jobs:
           file: ./target/release/${{ matrix.artifact_name }}
           asset_name: ${{ matrix.asset_name }}
           tag: ${{ github.ref }}
-
-      - uses: actions/cache/save@v4
-        id: cache
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            ./target/
-          key: ${{ env.cache-key }}
 
       - uses: chrnorm/deployment-action@v2
         name: Create GitHub deployment
