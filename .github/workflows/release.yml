@@ -16,9 +16,12 @@ jobs:
           - os: ubuntu-20.04
             artifact_name: astra
             asset_name: astra-linux-amd64
+          - os: windows-2022
+            artifact_name: astra.exe
+            asset_name: astra-windows-amd64.exe
 
     name: release ${{ matrix.os }}
-    runs-on: ubuntu-20.04
+    runs-on: '${{ matrix.os }}'
     environment: production
 
     env:
