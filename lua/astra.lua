@@ -84,12 +84,18 @@ end
 -- MARK: Internal
 
 ---
+--- Represents an HTTP body.
+---@class Body
+---@field text fun(): string Returns the body as text
+---@field json fun(): table Returns the body parsed as JSON -> Lua Table
+
+---
 --- Represents an HTTP request.
 ---@class Request
 ---@field method fun(): string Returns the HTTP method (e.g., "GET", "POST").
 ---@field uri fun(): string Returns the URI of the request.
 ---@field headers fun(): table Returns a table containing the headers of the request.
----@field body fun(): string|nil Returns the body of the request, which can be a table or a string.
+---@field body fun(): Body|nil Returns the body of the request, which can be a table or a string.
 
 ---
 --- Represents an HTTP response.
@@ -127,3 +133,19 @@ function Database:query_all(sql, parameters) end
 ---@nodiscard
 ---@diagnostic disable-next-line: missing-return, lowercase-global
 function database_connect(url) end
+
+---
+--- Represents an HTTP response.
+---@class HTTPClientResponse
+---@field status_code fun(): table Gets the response HTTP Status code
+---@field body fun(): Body Gets the response HTTP Body which further can be parsed
+---@field headers fun(): table|nil Returns the entire headers list from the HTTP response
+---@field remote_address fun(): string|nil Gets the remote address of the HTTP response server
+
+---
+---Opens a new async HTTP Request. The request is running as a task in parallel
+---@param url string
+---@param options table | function | nil Extra options to set for the request
+---@param callback fun(response: HTTPClientResponse) | nil The callback to consume the content of the response
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function http_request(url, options, callback) end
