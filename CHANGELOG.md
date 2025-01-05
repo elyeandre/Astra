@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2025-01-05
+
+### Features
+
+- Added async tasks throughg tokio tasks ([97bcba8](https://github.com/ArkForgeLabs/Astra/commit/97bcba8f35d93a68e05b98a485ca3a793a6d0f16))
+
 ## [0.5.0] - 2025-01-01
 
 ### Features
