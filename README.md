@@ -1,5 +1,7 @@
 # Astra
 
+[![Release](https://github.com/ArkForgeLabs/Astra/actions/workflows/release.yml/badge.svg)](https://github.com/ArkForgeLabs/Astra/actions/workflows/release.yml)
+
 Experimentational web framework for Lua 5.1 running on Axum for potential use at ArkForge. The goal is to get as much performance as possible and write web server logic in lua instead for faster iteration and no-build requirements.
 
 The performance has not been thoroughly tested, but it should be expected to be close to Rust as this is a thin wrapper. Serialization takes up most of the performance overhead and is very much a bottleneck.
