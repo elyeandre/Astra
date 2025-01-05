@@ -30,28 +30,25 @@ pub struct HTTPClientRequest {
     pub remote_address: Option<String>,
     pub body: BodyLua,
 }
-impl HTTPClientRequest {
-    pub async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
-        let http_client = lua.create_async_function(
+impl crate::utils::LuaUtils for HTTPClientRequest {
+    async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
+        let function = lua.create_async_function(
             |lua,
              (url, options, callback): (
                 String,
                 Option<HTTPClientRequestOptions>,
                 Option<mlua::Function>,
             )| async move {
-                tokio::spawn(async move {
-                    let request = Self::prepare_http_request(&lua, url, options).await;
-                    Self::execute_request(request, callback).await;
-                });
+                let request = Self::prepare_http_request(&lua, url, options).await;
+                Self::execute_request(request, callback).await;
 
                 Ok(())
             },
         )?;
-        lua.globals().set("http_request", http_client)?;
-
-        Ok(())
+        lua.globals().set("http_request", function)
     }
-
+}
+impl HTTPClientRequest {
     pub async fn prepare_http_request(
         _lua: &mlua::Lua,
         url: String,

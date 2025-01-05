@@ -6,8 +6,8 @@ use sqlx::Row;
 pub struct Database {
     pub pool: sqlx::Pool<sqlx::Postgres>,
 }
-impl Database {
-    pub async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
+impl crate::utils::LuaUtils for Database {
+    async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
         let database_constructor = lua.create_async_function(|_, url: String| async move {
             match sqlx::postgres::PgPoolOptions::new()
                 .max_connections(5)

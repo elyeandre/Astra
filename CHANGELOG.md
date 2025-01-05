@@ -13,17 +13,6 @@ All notable changes to this project will be documented in this file.
 - Updated dependencies and now Windows releases are supported ([577671c](https://github.com/ArkForgeLabs/Astra/commit/577671c93b4d28ac0baa7f9211b5760436d2555c))
 - Removed caches from GH Actions ([3b0308c](https://github.com/ArkForgeLabs/Astra/commit/3b0308c825ce343ba3252a2bfa4381faf67264f0))
 
-## [unreleased]
-
-### Features
-
-- Added async task client http request support ([9ea6cfa](https://github.com/ArkForgeLabs/Astra/commit/9ea6cfa263f8a45d1f167fe8fc4e5a3dddac07da))
-
-### Miscellaneous Tasks
-
-- Updated dependencies and now Windows releases are supported ([577671c](https://github.com/ArkForgeLabs/Astra/commit/577671c93b4d28ac0baa7f9211b5760436d2555c))
-- Removed caches from GH Actions ([3b0308c](https://github.com/ArkForgeLabs/Astra/commit/3b0308c825ce343ba3252a2bfa4381faf67264f0))
-
 ## [0.4.0] - 2024-12-29
 
 ### Features

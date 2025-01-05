@@ -149,3 +149,9 @@ function database_connect(url) end
 ---@param callback fun(response: HTTPClientResponse) | nil The callback to consume the content of the response
 ---@diagnostic disable-next-line: missing-return, lowercase-global
 function http_request(url, options, callback) end
+
+---
+---Starts a new async task
+---@param callback fun() | nil The callback to run the content of the async task
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function new_task(callback) end

@@ -1,6 +1,5 @@
-use std::sync::LazyLock;
-
 use mlua::LuaSerdeExt;
+use std::sync::LazyLock;
 pub static LUA: LazyLock<mlua::Lua> = LazyLock::new(mlua::Lua::new);
 
 pub async fn init() {
@@ -13,16 +12,9 @@ pub async fn init() {
         .await
         .expect("Couldn't add prelude");
 
-    #[cfg(feature = "sqlx")]
-    #[allow(clippy::expect_used)]
-    crate::database::Database::register_to_lua(lua)
-        .await
-        .expect("Could not register Database function");
-
-    #[allow(clippy::expect_used)]
-    crate::http_client_request::HTTPClientRequest::register_to_lua(lua)
-        .await
-        .expect("Could not register HTTP Client function");
+    if let Err(e) = crate::utils::register_utils(lua).await {
+        println!("Error setting the util functions: {e}");
+    }
 
     // settings
     if let Ok(settings) = lua.globals().get::<mlua::Table>("Astra") {

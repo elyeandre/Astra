@@ -6,12 +6,10 @@
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod common;
-#[cfg(feature = "sqlx")]
-mod database;
-mod http_client_request;
 mod requests;
 mod responses;
 mod routes;
+mod utils;
 
 #[tokio::main]
 async fn main() {
