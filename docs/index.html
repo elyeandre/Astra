@@ -1,195 +1,196 @@
-<!DOCTYPE HTML>
-<html lang="en" class="light sidebar-visible" dir="ltr">
-    <head>
-        <!-- Book generated using mdBook -->
-        <meta charset="UTF-8">
-        <title>Chapter 1 - ArkForge Astra</title>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Primary Meta Tags -->
+    <title>Astra - Lightning-Fast Web Server for LuaJIT</title>
+    <meta name="title" content="Astra" />
+    <meta name="description" content="Lightning-Fast Web Server for LuaJIT" />
 
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://astra.arkforge.net" />
+    <meta property="og:title" content="Astra" />
+    <meta
+      property="og:description"
+      content="Lightning-Fast Web Server for LuaJIT"
+    />
+    <meta property="og:image" content="https://astra.arkforge.net/banner.jpg" />
+    <meta content="#0e0f0f" data-react-helmet="true" name="theme-color" />
 
-        <!-- Custom HTML head -->
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://astra.arkforge.net" />
+    <meta property="twitter:title" content="Astra" />
+    <meta
+      property="twitter:description"
+      content="Lightning-Fast Web Server for LuaJIT"
+    />
+    <meta
+      property="twitter:image"
+      content="https://astra.arkforge.net/banner.jpg"
+    />
 
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#ffffff">
-
-        <link rel="icon" href="favicon.svg">
-        <link rel="shortcut icon" href="favicon.png">
-        <link rel="stylesheet" href="css/variables.css">
-        <link rel="stylesheet" href="css/general.css">
-        <link rel="stylesheet" href="css/chrome.css">
-        <link rel="stylesheet" href="css/print.css" media="print">
-
-        <!-- Fonts -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-        <link rel="stylesheet" href="fonts/fonts.css">
-
-        <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="highlight.css">
-        <link rel="stylesheet" href="tomorrow-night.css">
-        <link rel="stylesheet" href="ayu-highlight.css">
-
-        <!-- Custom theme stylesheets -->
-
-
-        <!-- Provide site root to javascript -->
-        <script>
-            var path_to_root = "";
-            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
-        </script>
-        <!-- Start loading toc.js asap -->
-        <script src="toc.js"></script>
-    </head>
-    <body>
-    <div id="body-container">
-        <!-- Work around some values being stored in localStorage wrapped in quotes -->
-        <script>
-            try {
-                var theme = localStorage.getItem('mdbook-theme');
-                var sidebar = localStorage.getItem('mdbook-sidebar');
-
-                if (theme.startsWith('"') && theme.endsWith('"')) {
-                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
-                }
-
-                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
-                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
-                }
-            } catch (e) { }
-        </script>
-
-        <!-- Set the theme before any content is loaded, prevents flash -->
-        <script>
-            var theme;
-            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
-            if (theme === null || theme === undefined) { theme = default_theme; }
-            const html = document.documentElement;
-            html.classList.remove('light')
-            html.classList.add(theme);
-            html.classList.add("js");
-        </script>
-
-        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
-
-        <!-- Hide / unhide sidebar before it is displayed -->
-        <script>
-            var sidebar = null;
-            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
-            if (document.body.clientWidth >= 1080) {
-                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
-                sidebar = sidebar || 'visible';
-            } else {
-                sidebar = 'hidden';
-            }
-            sidebar_toggle.checked = sidebar === 'visible';
-            html.classList.remove('sidebar-visible');
-            html.classList.add("sidebar-" + sidebar);
-        </script>
-
-        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <!-- populated by js -->
-            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
-            <noscript>
-                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
-            </noscript>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
-                <div class="sidebar-resize-indicator"></div>
-            </div>
-        </nav>
-
-        <div id="page-wrapper" class="page-wrapper">
-
-            <div class="page">
-                <div id="menu-bar-hover-placeholder"></div>
-                <div id="menu-bar" class="menu-bar sticky">
-                    <div class="left-buttons">
-                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
-                            <i class="fa fa-bars"></i>
-                        </label>
-                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
-                            <i class="fa fa-paint-brush"></i>
-                        </button>
-                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
-                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
-                        </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
-                            <i class="fa fa-search"></i>
-                        </button>
-                    </div>
-
-                    <h1 class="menu-title">ArkForge Astra</h1>
-
-                    <div class="right-buttons">
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
-                            <i id="print-button" class="fa fa-print"></i>
-                        </a>
-
-                    </div>
-                </div>
-
-                <div id="search-wrapper" class="hidden">
-                    <form id="searchbar-outer" class="searchbar-outer">
-                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
-                    </form>
-                    <div id="searchresults-outer" class="searchresults-outer hidden">
-                        <div id="searchresults-header" class="searchresults-header"></div>
-                        <ul id="searchresults">
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
-                <script>
-                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
-                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
-                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
-                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
-                    });
-                </script>
-
-                <div id="content" class="content">
-                    <main>
-                        <h1 id="chapter-1"><a class="header" href="#chapter-1">Chapter 1</a></h1>
-
-                    </main>
-
-                    <nav class="nav-wrapper" aria-label="Page navigation">
-                        <!-- Mobile navigation buttons -->
-
-
-                        <div style="clear: both"></div>
-                    </nav>
-                </div>
-            </div>
-
-            <nav class="nav-wide-wrapper" aria-label="Page navigation">
-
-            </nav>
-
+    <!-- The rest -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.png" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-lua.min.js"></script>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav>
+      <div class="nav-container">
+        <a href="#" class="logo">
+          <i data-lucide="zap" color="#03a9f4"></i>
+          <span>Astra</span>
+        </a>
+        <div class="nav-links">
+          <a href="/docs/latest" class="nav-link">
+            <i data-lucide="book"></i>
+            <span>Docs</span>
+          </a>
+          <a href="https://github.com/ArkForgeLabs/Astra" class="nav-link">
+            <i data-lucide="github"></i>
+            <span>GitHub</span>
+          </a>
         </div>
+      </div>
+    </nav>
 
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1>The Lightning-Fast Web Server for LuaJIT</h1>
+        <p>
+          Built with Rust and Axum, Astra delivers unmatched performance and
+          ease-of-use for your Lua servers
+        </p>
+        <div class="button-group">
+          <button class="button button-primary">Get Started</button>
+          <button class="button button-secondary">View on GitHub</button>
+        </div>
+      </div>
+    </section>
 
+    <!-- Features -->
+    <section class="features">
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i data-lucide="gauge" color="#03a9f4"></i>
+          </div>
+          <h3 class="feature-title">Blazing Fast</h3>
+          <p class="feature-description">
+            Engineered for speed with Rust's zero-cost abstractions and Axum's
+            async runtime
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i data-lucide="code-2" color="#ffeb3b"></i>
+          </div>
+          <h3 class="feature-title">LuaJIT Integration</h3>
+          <p class="feature-description">
+            Seamless integration with LuaJIT for high-performance scripting
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i data-lucide="blocks" color="#ff5722"></i>
+          </div>
+          <h3 class="feature-title">Modular Design</h3>
+          <p class="feature-description">
+            Extensible architecture that grows with your application
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i data-lucide="wand-sparkles" color="#8bc34a"></i>
+          </div>
+          <h3 class="feature-title">Ease of Use</h3>
+          <p class="feature-description">
+            A single binary, packed with all the batteries included
+          </p>
+        </div>
+      </div>
+    </section>
 
+    <!-- Code Example -->
+    <section class="code-section">
+      <div class="code-block">
+        <pre
+          id="code-block-pre"
+        ><code class="language-lua" style="overflow-x: auto;">-- You can also use the local variables within routes
+local counter = 0
+Astra.get("/count", function(request, response)
+    -- consume the request body
+    print(request:body():text())
 
-        <script>
-            window.playground_copyable = true;
-        </script>
+    -- set header code (Optional)
+    response:set_status_code(300)
+    -- set headers (Optional)
+    response:set_header("header-key", "header-value")
 
+    counter = counter + 1
+    -- and also can return JSON
+    return { counter_value = counter }
+end)
+</code></pre>
+      </div>
+    </section>
 
-        <script src="elasticlunr.min.js"></script>
-        <script src="mark.min.js"></script>
-        <script src="searcher.js"></script>
+    <!-- Footer -->
+    <footer>
+      <div class="footer-content">
+        <div class="footer-section">
+          <div>
+            <h4>Product</h4>
+            <ul class="footer-links">
+              <li><a href="/docs/latest">Documentation</a></li>
+              <li>
+                <a
+                  href="https://github.com/ArkForgeLabs/Astra/tree/main/examples"
+                  >Examples</a
+                >
+              </li>
+              <li>
+                <a href="https://github.com/ArkForgeLabs/Astra/releases"
+                  >Releases</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-section">
+          <div>
+            <h4>Links</h4>
+            <ul class="footer-links">
+              <li>
+                <a href="https://github.com/ArkForgeLabs/Astra">GitHub</a>
+              </li>
+              <li>
+                <a href="https://discord.com/invite/6PMjUx8x3b">Discord</a>
+              </li>
+              <li><a href="https://arkforge.net">ArkForge</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 ArkForge LLC. All rights reserved.</p>
+      </div>
+    </footer>
 
-        <script src="clipboard.min.js"></script>
-        <script src="highlight.js"></script>
-        <script src="book.js"></script>
-
-        <!-- Custom JS scripts -->
-
-
-    </div>
-    </body>
+    <script>
+      // Initialize Lucide icons
+      lucide.createIcons();
+    </script>
+  </body>
 </html>

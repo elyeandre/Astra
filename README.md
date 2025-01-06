@@ -1,6 +1,8 @@
 # Astra
 
 [![Release](https://github.com/ArkForgeLabs/Astra/actions/workflows/release.yml/badge.svg)](https://github.com/ArkForgeLabs/Astra/actions/workflows/release.yml)
+[![Static Badge](https://img.shields.io/badge/Join-The_Discord-blue?style=flat&logo=discord&color=blue)](https://discord.com/invite/6PMjUx8x3b)
+[![Static Badge](https://img.shields.io/badge/Read_The_Docs-blue?style=flat&logo=docsdotrs&color=%23000000)](https://astra.arkforge.net/docs/latest)
 
 Experimentational web framework for Lua 5.1 running on Axum for potential use at ArkForge. The goal is to get as much performance as possible and write web server logic in lua instead for faster iteration and no-build requirements.
 
@@ -16,19 +18,46 @@ Astra.get("/", function()
 end)
 ```
 
-You can run an example after cloning this repository such as:
+You can also use the local variables within routes
 
-```bash
-cargo run -- run examples/todo.lua
+```lua
+local counter = 0
+Astra.get("/count", function()
+    counter = counter + 1
+    -- and also can return JSON
+    return { counter }
+end)
 ```
 
-During runtime however, you have two commands available: `run` which runs the lua provided, and `export-bundle` which saves the bundled lua library code in case you need it again.
+Requests and Responses and their configuration are provided when needed
 
-## Structure
+```lua
+Astra.get("/", function(req, res)
+    -- set header code
+    res:set_status_code(300)
+    -- set headers
+    res:set_header("header-key", "header-value")
 
-The lua folder contains some utils and functions that are auto included in the server runtime by packaging them into `astra.bundle.lua`. You can import this into your server for intellisense as well. You can either use `make pack_lua` on root or navigate to lua folder and `luajit pack.lua astra.lua` to package the library. Notice that your server needs to be packaged as well as the runtime at the moment does not have a concept of imports. You can however import the astra bundled library just fine as the import line is removed during runtime and replaced by the bundled code prelude.
+    -- consume the request body
+    print(req:body():text())
 
-The server uses axum and tokio for route definitions and accepts lua function as callback. Request data is sent as mlua's UserData however without serialization by default; saving serilization performance overhead. The data can be consumed using the methods available such as `get_uri()`. The return type is automatically matched and returned on axum.
+    return "Responding with Code 300 cuz why not"
+end)
+```
+
+There are also utilities provided such as a PostgreSQL, http client requests, lua extra utils, and async tasks.
+
+```lua
+-- spawn an async task that does not block the running thread
+new_task(function ()
+    -- HTTP Request to check your IP address
+    http_request("https://myip.wtf/json", nil, function(response)
+        pretty_print(response:status_code())
+        pretty_print(response:remote_address())
+        pretty_print(response:body():json())
+    end)
+end)
+```
 
 ## Note
 

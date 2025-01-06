@@ -1,0 +1,22 @@
+[book]
+title = "ArkForge Astra"
+authors = ["Elham Aryanpur"]
+language = "en"
+multilingual = false
+src = "./src"
+
+[build]
+build-dir = "../../../docs/docs/latest"
+
+[output.html]
+theme = "../theme"
+default-theme = "dark"
+preferred-dark-theme = "arkforge"
+git-repository-url = "https://github.com/ArkForgeLabs/Astra"
+git-repository-icon = "fa-github"
+site-url = "/docs/latest/"
+edit-url-template = "https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/{path}"
+
+[output.html.playground]
+copyable = true
+copy-js = true
