@@ -8,7 +8,7 @@ class MDBookSidebarScrollbox extends HTMLElement {
         super();
     }
     connectedCallback() {
-        this.innerHTML = '<ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="getting_started.html">Getting Started</a></li></ol>';
+        this.innerHTML = '<ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="getting_started.html">Getting Started</a></li><li class="chapter-item expanded affix "><li class="part-title">Basic Usage</li><li class="chapter-item expanded "><a href="basic_usage/configuration.html"><strong aria-hidden="true">1.</strong> Configuration</a></li><li class="chapter-item expanded "><a href="basic_usage/routes.html"><strong aria-hidden="true">2.</strong> Routes</a></li><li class="chapter-item expanded "><a href="basic_usage/requests.html"><strong aria-hidden="true">3.</strong> Requests</a></li><li class="chapter-item expanded "><a href="basic_usage/responses.html"><strong aria-hidden="true">4.</strong> Responses</a></li><li class="chapter-item expanded affix "><li class="part-title">Internal Modifications</li><li class="chapter-item expanded "><a href="internal_modifications/extending_astra.html"><strong aria-hidden="true">5.</strong> Extending Astra</a></li></ol>';
         // Set the current, active page, and reveal it if it's hidden
         let current_page = document.location.href.toString();
         if (current_page.endsWith("/")) {

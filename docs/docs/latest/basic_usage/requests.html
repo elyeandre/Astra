@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - ArkForge Astra</title>
+        <title>Requests - ArkForge Astra</title>
 
 
         <!-- Custom HTML head -->
@@ -12,32 +12,32 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="favicon.svg">
-        <link rel="shortcut icon" href="favicon.png">
-        <link rel="stylesheet" href="css/variables.css">
-        <link rel="stylesheet" href="css/general.css">
-        <link rel="stylesheet" href="css/chrome.css">
-        <link rel="stylesheet" href="css/print.css" media="print">
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-        <link rel="stylesheet" href="fonts/fonts.css">
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="highlight.css">
-        <link rel="stylesheet" href="tomorrow-night.css">
-        <link rel="stylesheet" href="ayu-highlight.css">
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
 
 
         <!-- Provide site root to javascript -->
         <script>
-            var path_to_root = "";
+            var path_to_root = "../";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "arkforge" : "dark";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc.js"></script>
+        <script src="../toc.js"></script>
     </head>
     <body>
     <div id="body-container">
@@ -89,7 +89,7 @@
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
-                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
             </noscript>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -124,13 +124,13 @@
                     <h1 class="menu-title">ArkForge Astra</h1>
 
                     <div class="right-buttons">
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
                         <a href="https://github.com/ArkForgeLabs/Astra" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/introduction.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/basic_usage/requests.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -226,23 +226,38 @@
 }
 
 </style>
-<h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<h2 id="versions"><a class="header" href="#versions">Versions</a></h2>
-<p>This documentation is on the <a href="https://astra.arkforge.net/docs/latest">latest</a> version of Astra and will store a version for every x.0.0 release. The other versions will be listed below here when available.</p>
-<h2 id="about"><a class="header" href="#about">About</a></h2>
-<p>ArkForge Astra is an easy-to-use, fault-tolerant, extendible, and performant web server targeting <a href="https://luajit.org/">LuaJIT</a> (Lua 5.1) and built upon <a href="https://www.rust-lang.org/">Rust</a> + <a href="https://github.com/tokio-rs/axum">Axum</a>. Astra takes advantages of the Rust's performance, correctness and memory safety offering of the <a href="https://tokio.rs/">Tokio</a> async runtime, upon which Axum also runs, to write fault-tolerant and <a href="https://x.com/dhh/status/1769903387527790975">no-build</a> servers with ease.</p>
-<p>Currently Astra is used within the <a href="https://arkforge.net">ArkForge</a> for some internal and external products. However being very young and early project, it lacks battle testing. However it does not mean you cannot build software with it, as the base, axum, is already mature and Astra is a thin wrapper over it.</p>
-<h2 id="philosophy"><a class="header" href="#philosophy">Philosophy</a></h2>
-<p>The goal is to have the cake and eat it too. Obtaining the low-level advantages of Rust while having the iteration, ease and development speed of Lua. This way you can both have a small runtime and iterate over your products and servers with a very simple CI setup that ships in seconds, or even direct SSH. This is also called no-build, as there is no building and packaging stage required.</p>
-<p>In an ideal world, Astra will be able to handle majority of the common use cases, which are basic REST servers that uses a PostgreSQL or SQLite DB if needed, single server instance, and manage hundreds of thousands of users per second upon it.</p>
-<p>Astra's development style is to be as minimalist and simple as we can afford. Simplicity means decreasing as many steps as possible between the core developers and someone completely new to the project being able to pick it up and start changing it to their needs. However we do add complexity when it is required as well. Keeping the minimalistic development style also means we use minimal number of tools, and if we do use a tool, it should not be too foreign from the source. The result of this is an output of a single binary, a single lua prelude that includes batteries along with it; still having all of the goodies that the Lua language provides.</p>
+<h1 id="requests"><a class="header" href="#requests">Requests</a></h1>
+<p>Requests are provided as the first argument of the route callbacks as a table (not deseralized). Each request in the route callbacks can be accessed through its methods. The following methods are available:</p>
+<ul>
+<li>body: <code>Body</code></li>
+<li>headers: <code>table&lt;string, string&gt;</code></li>
+<li>uri: <code>string</code></li>
+<li>method: <code>string</code></li>
+</ul>
+<p>where Body has:</p>
+<ul>
+<li>text: <code>string</code></li>
+<li>json: <code>table</code></li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-lua">Astra.get("/", function(req)
+    -- access the headers
+    pretty_print(req:headers())
+
+    -- print the body as text
+    print(req:body():text())
+end)
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../basic_usage/routes.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
 
-                            <a rel="next prefetch" href="getting_started.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../basic_usage/responses.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -252,8 +267,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../basic_usage/routes.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
 
-                    <a rel="next prefetch" href="getting_started.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../basic_usage/responses.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
@@ -268,13 +286,13 @@
         </script>
 
 
-        <script src="elasticlunr.min.js"></script>
-        <script src="mark.min.js"></script>
-        <script src="searcher.js"></script>
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
 
-        <script src="clipboard.min.js"></script>
-        <script src="highlight.js"></script>
-        <script src="book.js"></script>
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
 
         <!-- Custom JS scripts -->
 

@@ -16,7 +16,10 @@ git-repository-url = "https://github.com/ArkForgeLabs/Astra"
 git-repository-icon = "fa-github"
 site-url = "/docs/latest/"
 edit-url-template = "https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/{path}"
+line-numbers = false
 
 [output.html.playground]
 copyable = true
 copy-js = true
+
+[preprocessor.alerts]

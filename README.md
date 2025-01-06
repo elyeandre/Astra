@@ -4,9 +4,10 @@
 [![Static Badge](https://img.shields.io/badge/Join-The_Discord-blue?style=flat&logo=discord&color=blue)](https://discord.com/invite/6PMjUx8x3b)
 [![Static Badge](https://img.shields.io/badge/Read_The_Docs-blue?style=flat&logo=docsdotrs&color=%23000000)](https://astra.arkforge.net/docs/latest)
 
-Experimentational web framework for Lua 5.1 running on Axum for potential use at ArkForge. The goal is to get as much performance as possible and write web server logic in lua instead for faster iteration and no-build requirements.
+Experimentational web framework for Lua 5.1 running on Axum for potential use at ArkForge. The goal is to get as much performance as possible and write web server logic in lua instead for faster iteration, fault-tolerance and no-build requirements.
 
-The performance has not been thoroughly tested, but it should be expected to be close to Rust as this is a thin wrapper. Serialization takes up most of the performance overhead and is very much a bottleneck.
+> [!Note]
+> The performance has not been thoroughly tested, but it should be expected to be close to Rust as this is a thin wrapper. However the fault-tolerance can be ensured through [error handling policies](https://github.com/ArkForgeLabs/Astra/blob/main/src/main.rs#L1-L2) set within the codebase.
 
 ## Example
 
