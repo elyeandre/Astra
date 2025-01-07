@@ -233,11 +233,16 @@
 <li>headers: <code>table&lt;string, string&gt;</code></li>
 <li>uri: <code>string</code></li>
 <li>method: <code>string</code></li>
+<li>multipart: <code>Multipart</code></li>
 </ul>
 <p>where Body has:</p>
 <ul>
 <li>text: <code>string</code></li>
 <li>json: <code>table</code></li>
+</ul>
+<p>and where Multipart has:</p>
+<ul>
+<li><code>save_file(file_path: string)</code></li>
 </ul>
 <p>Example:</p>
 <pre><code class="language-lua">Astra.get("/", function(req)

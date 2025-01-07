@@ -2,9 +2,10 @@
 
 Astra can be configured in a few ways for runtime. As of now there is no native TLS/SSL support and needs a reverse proxy such as [Caddy](https://caddyserver.com/) to handle that.
 
-However every configuration option will be available at the `Astra` global table instead. For example, changing the port and hostname is as such:
+However every configuration option will be available at the `Astra` global table instead. For example, changing the compression, port and hostname is as such:
 
 ```lua
+Astra.compression = false
 Astra.port = 8000
 Astra.hostname = "0.0.0.0"
 ```

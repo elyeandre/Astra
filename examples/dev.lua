@@ -1,10 +1,8 @@
----@diagnostic disable: redundant-parameter, param-type-mismatch
-
 --[[
     THIS IS PURELY FOR TESTING, DO NOT USE AS EXAMPLE!
 ]]
 
-require("../src/lua/astra_bundle")
+require("../src/lua/astra")
 
 -- local db = database_connect("postgres://astra_postgres:password@localhost/astr_database")
 -- db:execute("CREATE TABLE IF NOT EXISTS test (id SERIAL PRIMARY KEY, name TEXT)", {});
@@ -22,16 +20,25 @@ require("../src/lua/astra_bundle")
 Astra.get("/", function(req, res)
     res:set_status_code(300)
     res:set_header("test", "VALLLL")
-    req:body():text()
 
-    pretty_print(res:get_headers())
+    pretty_print(req:body():text())
     -- local result = db:query_one("SELECT * FROM test;", {});
     -- print(utils.pretty_table(result))
 
     return "hello from default Astra instance! " .. Astra.version
 end)
 
-Astra.get("/test/{name}/{id}", function (request, response)
+Astra.post("/", function(req)
+    pretty_print(req:headers())
+    local function test() req:multipart():save_file("something.txt") end
+    
+    -- local result = db:query_one("SELECT * FROM test;", {});
+    -- print(utils.pretty_table(result))
+
+    return "hello from default Astra instance! " .. Astra.version
+end)
+
+Astra.get("/test/{name}/{id}", function(request, response)
     pretty_print(request:uri())
 end)
 

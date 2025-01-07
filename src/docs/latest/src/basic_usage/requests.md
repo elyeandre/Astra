@@ -6,11 +6,16 @@ Requests are provided as the first argument of the route callbacks as a table (n
 * headers: `table<string, string>`
 * uri: `string`
 * method: `string`
+* multipart: `Multipart`
 
 where Body has:
 
 * text: `string`
 * json: `table`
+
+and where Multipart has:
+
+* `save_file(file_path: string)`
 
 Example:
 

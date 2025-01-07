@@ -2,171 +2,703 @@
 
 __luapack_modules__ = {
     (function()
-        local b={_version="0.1.0"}
-        function _G.pretty_print(c)
-        local function d(_a)local aa=""
-        for ba,ca in pairs(_a)do ba='['..ba..']'
-        if
-        type(ca)=="table"then aa=aa..ba..": "..d(ca)..", "else if
-        type(ca)=='string'then ca='"'..ca..'"'end;aa=aa..ba..": "..tostring(ca)..
-        ", "end end;return"{ "..string.sub(aa,1,-3).." }"end
-        if type(c)=='table'then print(d(c))else print(tostring(c))end end
-        function _G.pretty_json_table(c)local d=""
-        for _a,aa in pairs(c)do
-        if type(_a)~='number'then _a='"'.._a..'"'end
-        if type(aa)=="table"then d=d.._a..
-        ": ".._G.pretty_json_table(aa)..", "else if type(aa)==
-        'string'then aa='"'..aa..'"'end;d=d.._a..": "..
-        tostring(aa)..", "end end;return"{ "..string.sub(d,1,-3).." }"end
-        function b.parse_query(c)
-        local function d(aa)aa=string.gsub(aa,"+"," ")
-        aa=string.gsub(aa,"%%(%x%x)",function(ba)return
-        string.char(tonumber(ba,16))end)return aa end;local _a={}
-        for aa,ba in string.gmatch(c,"([^&=?]+)=([^&=?]+)")do _a[aa]=d(ba)end;return _a end
-        function string.split(c,d)local _a={}for aa in c:gmatch("([^"..d.."]+)")do
-    table.insert(_a,aa)end;return _a end;return b
-    end),
-    (function()
-        local c_a={_version="0.1.2"}local d_a
-        local _aa={["\\"]="\\",["\""]="\"",["\b"]="b",["\f"]="f",["\n"]="n",["\r"]="r",["\t"]="t"}local aaa={["/"]="/"}for _ab,aab in pairs(_aa)do aaa[aab]=_ab end;local function baa(_ab)
-        return"\\".. (_aa[_ab]or
-        string.format("u%04x",_ab:byte()))end;local function caa(_ab)return"null"end
-        local function daa(_ab,aab)
-        local bab={}aab=aab or{}
-        if aab[_ab]then error("circular reference")end;aab[_ab]=true
-        if rawget(_ab,1)~=nil or next(_ab)==nil then
-        local cab=0
-        for dab in pairs(_ab)do if type(dab)~="number"then
-        error("invalid table: mixed or invalid key types")end;cab=cab+1 end
-        if cab~=#_ab then error("invalid table: sparse array")end
-        for dab,_bb in ipairs(_ab)do table.insert(bab,d_a(_bb,aab))end;aab[_ab]=nil
-        return"["..table.concat(bab,",").."]"else
-        for cab,dab in pairs(_ab)do if type(cab)~="string"then
-        error("invalid table: mixed or invalid key types")end;table.insert(bab,d_a(cab,aab)..
-        ":"..d_a(dab,aab))end;aab[_ab]=nil
-        return"{"..table.concat(bab,",").."}"end end;local function _ba(_ab)
-        return'"'.._ab:gsub('[%z\1-\31\\"]',baa)..'"'end
-        local function aba(_ab)if
-        _ab~=_ab or _ab<=-math.huge or _ab>=math.huge then
-        error("unexpected number value '"..
-        tostring(_ab).."'")end;return
-        string.format("%.14g",_ab)end
-        local bba={["nil"]=caa,["table"]=daa,["string"]=_ba,["number"]=aba,["boolean"]=tostring}
-        d_a=function(_ab,aab)local bab=type(_ab)local cab=bba[bab]if cab then return cab(_ab,aab)end;error(
-        "unexpected type '"..bab.."'")end;function c_a.encode(_ab)return(d_a(_ab))end;local cba
-        local function dba(...)local _ab={}for i=1,select("#",...)do
-        _ab[select(i,...)]=true end;return _ab end;local _ca=dba(" ","\t","\r","\n")
-        local aca=dba(" ","\t","\r","\n","]","}",",")local bca=dba("\\","/",'"',"b","f","n","r","t","u")
-        local cca=dba("true","false","null")local dca={["true"]=true,["false"]=false,["null"]=nil}local function _da(_ab,aab,bab,cab)for i=aab,#_ab do if
-        bab[_ab:sub(i,i)]~=cab then return i end end;return#_ab+
-        1 end
-        local function ada(_ab,aab,bab)local cab=1
-        local dab=1;for i=1,aab-1 do dab=dab+1
-        if _ab:sub(i,i)=="\n"then cab=cab+1;dab=1 end end
-        error(string.format("%s at line %d col %d",bab,cab,dab))end
-        local function bda(_ab)local aab=math.floor
-        if _ab<=0x7f then return string.char(_ab)elseif _ab<=0x7ff then
-        return string.char(aab(_ab/
-        64)+192,_ab%64 +128)elseif _ab<=0xffff then
-        return string.char(aab(_ab/4096)+224,aab(_ab%4096 /64)+128,
-        _ab%64 +128)elseif _ab<=0x10ffff then return
-        string.char(aab(_ab/262144)+240,
-        aab(_ab%262144 /4096)+128,aab(_ab%4096 /64)+128,_ab%64 +128)end
-        error(string.format("invalid unicode codepoint '%x'",_ab))end
-        local function cda(_ab)local aab=tonumber(_ab:sub(1,4),16)
-        local bab=tonumber(_ab:sub(7,10),16)
-        if bab then return
-        bda((aab-0xd800)*0x400 + (bab-0xdc00)+0x10000)else return bda(aab)end end
-        local function dda(_ab,aab)local bab=""local cab=aab+1;local dab=cab
-        while cab<=#_ab do local _bb=_ab:byte(cab)
-        if _bb<32 then
-        ada(_ab,cab,"control character in string")elseif _bb==92 then bab=bab.._ab:sub(dab,cab-1)cab=cab+1
-        local abb=_ab:sub(cab,cab)
-        if abb=="u"then
-        local bbb=_ab:match("^[dD][89aAbB]%x%x\\u%x%x%x%x",cab+1)or
-        _ab:match("^%x%x%x%x",cab+1)or
-        ada(_ab,cab-1,"invalid unicode escape in string")bab=bab..cda(bbb)cab=cab+#bbb else if not bca[abb]then
-        ada(_ab,cab-1,"invalid escape char '"..abb..
-        "' in string")end;bab=bab..aaa[abb]end;dab=cab+1 elseif _bb==34 then bab=bab.._ab:sub(dab,cab-1)
-        return bab,cab+1 end;cab=cab+1 end;ada(_ab,aab,"expected closing quote for string")end
-        local function __b(_ab,aab)local bab=_da(_ab,aab,aca)local cab=_ab:sub(aab,bab-1)
-        local dab=tonumber(cab)if not dab then
-        ada(_ab,aab,"invalid number '"..cab.."'")end;return dab,bab end
-        local function a_b(_ab,aab)local bab=_da(_ab,aab,aca)local cab=_ab:sub(aab,bab-1)
-        if not cca[cab]then ada(_ab,aab,
-        "invalid literal '"..cab.."'")end;return dca[cab],bab end
-        local function b_b(_ab,aab)local bab={}local cab=1;aab=aab+1
-        while 1 do local dab;aab=_da(_ab,aab,_ca,true)if
-        _ab:sub(aab,aab)=="]"then aab=aab+1;break end;dab,aab=cba(_ab,aab)
-        bab[cab]=dab;cab=cab+1;aab=_da(_ab,aab,_ca,true)local _bb=_ab:sub(aab,aab)aab=aab+
-        1;if _bb=="]"then break end;if _bb~=","then
-        ada(_ab,aab,"expected ']' or ','")end end;return bab,aab end
-        local function c_b(_ab,aab)local bab={}aab=aab+1
-        while 1 do local cab,dab;aab=_da(_ab,aab,_ca,true)if
-        _ab:sub(aab,aab)=="}"then aab=aab+1;break end;if _ab:sub(aab,aab)~='"'then
-        ada(_ab,aab,"expected string for key")end;cab,aab=cba(_ab,aab)
-        aab=_da(_ab,aab,_ca,true)if _ab:sub(aab,aab)~=":"then
-        ada(_ab,aab,"expected ':' after key")end;aab=_da(_ab,aab+1,_ca,true)
-        dab,aab=cba(_ab,aab)bab[cab]=dab;aab=_da(_ab,aab,_ca,true)
-        local _bb=_ab:sub(aab,aab)aab=aab+1;if _bb=="}"then break end;if _bb~=","then
-        ada(_ab,aab,"expected '}' or ','")end end;return bab,aab end
-        local d_b={['"']=dda,["0"]=__b,["1"]=__b,["2"]=__b,["3"]=__b,["4"]=__b,["5"]=__b,["6"]=__b,["7"]=__b,["8"]=__b,["9"]=__b,["-"]=__b,["t"]=a_b,["f"]=a_b,["n"]=a_b,["["]=b_b,["{"]=c_b}
-        cba=function(_ab,aab)local bab=_ab:sub(aab,aab)local cab=d_b[bab]
-        if cab then return cab(_ab,aab)end
-        ada(_ab,aab,"unexpected character '"..bab.."'")end
-        function c_a.decode(_ab)if type(_ab)~="string"then
-        error("expected argument of type string, got "..type(_ab))end
-        local aab,bab=cba(_ab,_da(_ab,1,_ca,true))bab=_da(_ab,bab,_ca,true)if bab<=#_ab then
-    ada(_ab,bab,"trailing garbage")end;return aab end;return c_a
-    end),
-    (function()
+        local utils = { _version = "0.1.0" }
         
-        local function b(c,d)
-        local function _a(da,_b)
-        local ab={number="number",string="string",boolean="boolean",table="table",["function"]="function",["nil"]="nil",table_array="table"}return type(da)==ab[_b]end;local function aa(da,_b,ab)
-        return not(_b and da<_b)and not(ab and da>ab)end
-        local function ba(da,_b,ab)local bb,cb=b(da,_b)if not bb then
-        return false,ab..": "..cb end;return true end
-        local function ca(da,_b,ab)
-        if type(da)~="table"then return false,
-        ab..": Expected an array of tables, got "..type(da)end;for bb,cb in ipairs(da)do local db,_c=ba(cb,_b,ab.."["..bb.."]")if not db then
-        return false,_c end end
-        return true end
-        for da,_b in pairs(d)do local ab=c[da]local bb=_b.type;local cb=_b.required or false
-        local db=_b.min;local _c=_b.max;local ac=_b.schema;local bc=_b.default;local cc=da;if cb and ab==nil then return false,
-        "Missing required key: "..cc end;if
-        ab~=nil and not _a(ab,bb)then
-        return false,"Incorrect type for key: "..cc..". Expected "..
-        bb..", got "..type(ab)end
-        if ac and
-        type(ab)=="table"and bb=="table"then local dc,_d=ba(ab,ac,cc)
-        if not dc then return false,
-        "Error in nested table for key: "..cc..". ".._d end end
-        if bb=="table_array"and type(ab)=="table"then
-        local dc,_d=ca(ab,ac,cc)if not dc then
-        return false,"Error in array of tables for key: "..cc..". ".._d end end;if ab~=nil and not aa(ab,db,_c)then return false,
-        "Value for key "..cc.." is out of range."end;if
-        ab==nil and bc~=nil then c[da]=bc end end;for da in pairs(c)do
-    if not d[da]then return false,"Unexpected key found: "..da end end;return true end;return b
+        ---Pretty prints any table or value
+        ---@diagnostic disable-next-line: duplicate-set-field
+        function _G.pretty_print(inner_table)
+            local function pretty_print_table(table)
+                local str = ""
+        
+                -- Iterate over each key-value pair in the table
+                for k, v in pairs(table) do
+                    k = '[' .. k .. ']'
+        
+                    -- Recursively convert nested tables to JSON strings
+                    if type(v) == "table" then
+                        str = str .. k .. ": " .. pretty_print_table(v) .. ", "
+                    else
+                        -- Format string values with quotation marks
+                        if type(v) == 'string' then
+                            v = '"' .. v .. '"'
+                        end
+                        str = str .. k .. ": " .. tostring(v) .. ", "
+                    end
+                end
+        
+                return "{ " .. string.sub(str, 1, -3) .. " }"
+            end
+        
+            if type(inner_table) == 'table' then
+                print(pretty_print_table(inner_table))
+            else
+                print(tostring(inner_table))
+            end
+        end
+        
+        ---
+        ---Recursively converts a Lua table into a pretty-formatted JSON string.
+        ---@param table table The input table.
+        ---@diagnostic disable-next-line: duplicate-set-field
+        function _G.pretty_json_table(table)
+            local json_str = ""
+        
+            -- Iterate over each key-value pair in the table
+            for k, v in pairs(table) do
+                if type(k) ~= 'number' then k = '"' .. k .. '"' end
+        
+                -- Recursively convert nested tables to JSON strings
+                if type(v) == "table" then
+                    json_str = json_str .. k .. ": " .. _G.pretty_json_table(v) .. ", "
+                else
+                    -- Format string values with quotation marks
+                    if type(v) == 'string' then
+                        v = '"' .. v .. '"'
+                    end
+                    json_str = json_str .. k .. ": " .. tostring(v) .. ", "
+                end
+            end
+        
+            -- Remove the trailing comma and space, and wrap in curly braces for JSON format
+            return "{ " .. string.sub(json_str, 1, -3) .. " }"
+        end
+        
+        -- function string.trim(str)
+        --     local trimmed_str = str:match("^%s*(.-)%s*$")
+        --     return trimmed_str
+        -- end
+        
+        function utils.parse_query(str)
+            local function unescape(s)
+                s = string.gsub(s, "+", " ")
+                s = string.gsub(s, "%%(%x%x)", function(h)
+                    return string.char(tonumber(h, 16))
+                end)
+                return s
+            end
+        
+            local result_table = {}
+            for k, v in string.gmatch(str, "([^&=?]+)=([^&=?]+)") do
+                --t[k] = v
+                result_table[k] = unescape(v)
+            end
+        
+            return result_table
+        end
+        
+        ---
+        ---Splits a word into an array given the separator
+        ---@param str string The input string
+        ---@param separator string The input string
+        ---@return table array
+        ---@nodiscard
+        ---@diagnostic disable-next-line: duplicate-set-field
+        function string.split(str, separator)
+            local result_table = {}
+            for word in str:gmatch("([^" .. separator .. "]+)") do
+                table.insert(result_table, word)
+            end
+            return result_table
+        end
+        
+        return utils
+    
     end),
     (function()
-        local d={}_G.ENV={}
-        local function _a(ba)local ca=io.open(ba,'r')if not ca then
-        return nil,'File not found: '..ba end;local da=ca:read('*a')ca:close()return da end
-        local function aa(ba)local ca={}
-        for da in ba:gmatch('[^\r\n]+')do da=da:match('^%s*(.-)%s*$')
-        if da~=''and
-        da:sub(1,1)~='#'then local _b,ab=da:match('([^=]+)=(.*)')
-        _b=_b:match('^%s*(.-)%s*$')ab=ab:match('^%s*(.-)%s*$')
-        if ab:sub(1,1)=='"'and
-        ab:sub(-1,-1)=='"'then ab=ab:sub(2,-2):gsub('\\"','"')end;if ab:sub(1,1)=="'"and ab:sub(-1,-1)=="'"then
-        ab=ab:sub(2,-2)end;ca[_b]=ab end end;return ca end
-        function d:load(ba)ba=ba or'.env'local ca,da=_a(ba)if not ca then return nil,da end
-        local _b=aa(ca)
-        for ab,bb in pairs(_b)do
-        if not _G.ENV[ab]then local cb=""for _c in bb:gmatch("([^".."#".."]+)")do
-        cb=_c:gsub("%s+",""):gsub("^\"(.*)\"$","%1"):gsub("^'(.*)'$","%1")break end
-    local db=tonumber(cb)if db~=nil then _G.ENV[ab]=db else _G.ENV[ab]=cb end end end;return true end;return d
+        --
+        -- json.lua
+        --
+        -- Copyright (c) 2020 rxi
+        --
+        -- Permission is hereby granted, free of charge, to any person obtaining a copy of
+        -- this software and associated documentation files (the "Software"), to deal in
+        -- the Software without restriction, including without limitation the rights to
+        -- use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+        -- of the Software, and to permit persons to whom the Software is furnished to do
+        -- so, subject to the following conditions:
+        --
+        -- The above copyright notice and this permission notice shall be included in all
+        -- copies or substantial portions of the Software.
+        --
+        -- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        -- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        -- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        -- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        -- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        -- SOFTWARE.
+        --
+        
+        local json = { _version = "0.1.2" }
+        
+        -------------------------------------------------------------------------------
+        -- Encode
+        -------------------------------------------------------------------------------
+        
+        local encode
+        
+        local escape_char_map = {
+            ["\\"] = "\\",
+            ["\""] = "\"",
+            ["\b"] = "b",
+            ["\f"] = "f",
+            ["\n"] = "n",
+            ["\r"] = "r",
+            ["\t"] = "t",
+        }
+        
+        local escape_char_map_inv = { ["/"] = "/" }
+        for k, v in pairs(escape_char_map) do
+            escape_char_map_inv[v] = k
+        end
+        
+        
+        local function escape_char(c)
+            return "\\" .. (escape_char_map[c] or string.format("u%04x", c:byte()))
+        end
+        
+        
+        local function encode_nil(val)
+            return "null"
+        end
+        
+        
+        local function encode_table(val, stack)
+            local res = {}
+            stack = stack or {}
+        
+            -- Circular reference?
+            if stack[val] then error("circular reference") end
+        
+            stack[val] = true
+        
+            if rawget(val, 1) ~= nil or next(val) == nil then
+                -- Treat as array -- check keys are valid and it is not sparse
+                local n = 0
+                for k in pairs(val) do
+                    if type(k) ~= "number" then
+                        error("invalid table: mixed or invalid key types")
+                    end
+                    n = n + 1
+                end
+                if n ~= #val then
+                    error("invalid table: sparse array")
+                end
+                -- Encode
+                for i, v in ipairs(val) do
+                    table.insert(res, encode(v, stack))
+                end
+                stack[val] = nil
+                return "[" .. table.concat(res, ",") .. "]"
+            else
+                -- Treat as an object
+                for k, v in pairs(val) do
+                    if type(k) ~= "string" then
+                        error("invalid table: mixed or invalid key types")
+                    end
+                    table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
+                end
+                stack[val] = nil
+                return "{" .. table.concat(res, ",") .. "}"
+            end
+        end
+        
+        
+        local function encode_string(val)
+            return '"' .. val:gsub('[%z\1-\31\\"]', escape_char) .. '"'
+        end
+        
+        
+        local function encode_number(val)
+            -- Check for NaN, -inf and inf
+            if val ~= val or val <= -math.huge or val >= math.huge then
+                error("unexpected number value '" .. tostring(val) .. "'")
+            end
+            return string.format("%.14g", val)
+        end
+        
+        
+        local type_func_map = {
+            ["nil"] = encode_nil,
+            ["table"] = encode_table,
+            ["string"] = encode_string,
+            ["number"] = encode_number,
+            ["boolean"] = tostring,
+        }
+        
+        
+        encode = function(val, stack)
+            local t = type(val)
+            local f = type_func_map[t]
+            if f then
+                return f(val, stack)
+            end
+            error("unexpected type '" .. t .. "'")
+        end
+        
+        
+        function json.encode(val)
+            return (encode(val))
+        end
+        
+        -------------------------------------------------------------------------------
+        -- Decode
+        -------------------------------------------------------------------------------
+        
+        local parse
+        
+        local function create_set(...)
+            local res = {}
+            for i = 1, select("#", ...) do
+                res[select(i, ...)] = true
+            end
+            return res
+        end
+        
+        local space_chars  = create_set(" ", "\t", "\r", "\n")
+        local delim_chars  = create_set(" ", "\t", "\r", "\n", "]", "}", ",")
+        local escape_chars = create_set("\\", "/", '"', "b", "f", "n", "r", "t", "u")
+        local literals     = create_set("true", "false", "null")
+        
+        local literal_map  = {
+            ["true"] = true,
+            ["false"] = false,
+            ["null"] = nil,
+        }
+        
+        
+        local function next_char(str, idx, set, negate)
+            for i = idx, #str do
+                if set[str:sub(i, i)] ~= negate then
+                    return i
+                end
+            end
+            return #str + 1
+        end
+        
+        
+        local function decode_error(str, idx, msg)
+            local line_count = 1
+            local col_count = 1
+            for i = 1, idx - 1 do
+                col_count = col_count + 1
+                if str:sub(i, i) == "\n" then
+                    line_count = line_count + 1
+                    col_count = 1
+                end
+            end
+            error(string.format("%s at line %d col %d", msg, line_count, col_count))
+        end
+        
+        
+        local function codepoint_to_utf8(n)
+            -- http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=iws-appendixa
+            local f = math.floor
+            if n <= 0x7f then
+                return string.char(n)
+            elseif n <= 0x7ff then
+                return string.char(f(n / 64) + 192, n % 64 + 128)
+            elseif n <= 0xffff then
+                return string.char(f(n / 4096) + 224, f(n % 4096 / 64) + 128, n % 64 + 128)
+            elseif n <= 0x10ffff then
+                return string.char(f(n / 262144) + 240, f(n % 262144 / 4096) + 128,
+                    f(n % 4096 / 64) + 128, n % 64 + 128)
+            end
+            error(string.format("invalid unicode codepoint '%x'", n))
+        end
+        
+        
+        local function parse_unicode_escape(s)
+            local n1 = tonumber(s:sub(1, 4), 16)
+            local n2 = tonumber(s:sub(7, 10), 16)
+            -- Surrogate pair?
+            if n2 then
+                return codepoint_to_utf8((n1 - 0xd800) * 0x400 + (n2 - 0xdc00) + 0x10000)
+            else
+                return codepoint_to_utf8(n1)
+            end
+        end
+        
+        
+        local function parse_string(str, i)
+            local res = ""
+            local j = i + 1
+            local k = j
+        
+            while j <= #str do
+                local x = str:byte(j)
+        
+                if x < 32 then
+                    decode_error(str, j, "control character in string")
+                elseif x == 92 then -- `\`: Escape
+                    res = res .. str:sub(k, j - 1)
+                    j = j + 1
+                    local c = str:sub(j, j)
+                    if c == "u" then
+                        local hex = str:match("^[dD][89aAbB]%x%x\\u%x%x%x%x", j + 1)
+                            or str:match("^%x%x%x%x", j + 1)
+                            or decode_error(str, j - 1, "invalid unicode escape in string")
+                        res = res .. parse_unicode_escape(hex)
+                        j = j + #hex
+                    else
+                        if not escape_chars[c] then
+                            decode_error(str, j - 1, "invalid escape char '" .. c .. "' in string")
+                        end
+                        res = res .. escape_char_map_inv[c]
+                    end
+                    k = j + 1
+                elseif x == 34 then -- `"`: End of string
+                    res = res .. str:sub(k, j - 1)
+                    return res, j + 1
+                end
+        
+                j = j + 1
+            end
+        
+            decode_error(str, i, "expected closing quote for string")
+        end
+        
+        
+        local function parse_number(str, i)
+            local x = next_char(str, i, delim_chars)
+            local s = str:sub(i, x - 1)
+            local n = tonumber(s)
+            if not n then
+                decode_error(str, i, "invalid number '" .. s .. "'")
+            end
+            return n, x
+        end
+        
+        
+        local function parse_literal(str, i)
+            local x = next_char(str, i, delim_chars)
+            local word = str:sub(i, x - 1)
+            if not literals[word] then
+                decode_error(str, i, "invalid literal '" .. word .. "'")
+            end
+            return literal_map[word], x
+        end
+        
+        
+        local function parse_array(str, i)
+            local res = {}
+            local n = 1
+            i = i + 1
+            while 1 do
+                local x
+                i = next_char(str, i, space_chars, true)
+                -- Empty / end of array?
+                if str:sub(i, i) == "]" then
+                    i = i + 1
+                    break
+                end
+                -- Read token
+                x, i = parse(str, i)
+                res[n] = x
+                n = n + 1
+                -- Next token
+                i = next_char(str, i, space_chars, true)
+                local chr = str:sub(i, i)
+                i = i + 1
+                if chr == "]" then break end
+                if chr ~= "," then decode_error(str, i, "expected ']' or ','") end
+            end
+            return res, i
+        end
+        
+        
+        local function parse_object(str, i)
+            local res = {}
+            i = i + 1
+            while 1 do
+                local key, val
+                i = next_char(str, i, space_chars, true)
+                -- Empty / end of object?
+                if str:sub(i, i) == "}" then
+                    i = i + 1
+                    break
+                end
+                -- Read key
+                if str:sub(i, i) ~= '"' then
+                    decode_error(str, i, "expected string for key")
+                end
+                key, i = parse(str, i)
+                -- Read ':' delimiter
+                i = next_char(str, i, space_chars, true)
+                if str:sub(i, i) ~= ":" then
+                    decode_error(str, i, "expected ':' after key")
+                end
+                i = next_char(str, i + 1, space_chars, true)
+                -- Read value
+                val, i = parse(str, i)
+                -- Set
+                res[key] = val
+                -- Next token
+                i = next_char(str, i, space_chars, true)
+                local chr = str:sub(i, i)
+                i = i + 1
+                if chr == "}" then break end
+                if chr ~= "," then decode_error(str, i, "expected '}' or ','") end
+            end
+            return res, i
+        end
+        
+        
+        local char_func_map = {
+            ['"'] = parse_string,
+            ["0"] = parse_number,
+            ["1"] = parse_number,
+            ["2"] = parse_number,
+            ["3"] = parse_number,
+            ["4"] = parse_number,
+            ["5"] = parse_number,
+            ["6"] = parse_number,
+            ["7"] = parse_number,
+            ["8"] = parse_number,
+            ["9"] = parse_number,
+            ["-"] = parse_number,
+            ["t"] = parse_literal,
+            ["f"] = parse_literal,
+            ["n"] = parse_literal,
+            ["["] = parse_array,
+            ["{"] = parse_object,
+        }
+        
+        
+        parse = function(str, idx)
+            local chr = str:sub(idx, idx)
+            local f = char_func_map[chr]
+            if f then
+                return f(str, idx)
+            end
+            decode_error(str, idx, "unexpected character '" .. chr .. "'")
+        end
+        
+        
+        function json.decode(str)
+            if type(str) ~= "string" then
+                error("expected argument of type string, got " .. type(str))
+            end
+            local res, idx = parse(str, next_char(str, 1, space_chars, true))
+            idx = next_char(str, idx, space_chars, true)
+            if idx <= #str then
+                decode_error(str, idx, "trailing garbage")
+            end
+            return res
+        end
+        
+    return json
+    end),
+    (function()
+        ---
+        ---Schema validation function with support for nested tables and arrays of tables
+        ---@param tbl table
+        ---@param schema table
+        ---@return boolean, string | nil
+        local function validate_table(tbl, schema)
+            -- Helper function to check if a value is of the expected type
+            local function check_type(value, expectedType)
+                local TypeMap = {
+                    number = "number",
+                    string = "string",
+                    boolean = "boolean",
+                    table = "table",
+                    ["function"] = "function",
+                    ["nil"] = "nil",
+                    table_array = "table"
+                }
+                return type(value) == TypeMap[expectedType]
+            end
+        
+            -- Helper function to check if a value is within a range (if applicable)
+            local function check_range(value, min, max)
+                return not (min and value < min) and not (max and value > max)
+            end
+        
+            -- Helper function to validate nested tables
+            local function validate_nested_table(value, nestedSchema, path)
+                local isValid, err = validate_table(value, nestedSchema)
+                if not isValid then
+                    return false, path .. ": " .. err
+                end
+                return true
+            end
+        
+            -- Helper function to validate arrays of tables
+            local function validate_array_of_tables(value, arraySchema, path)
+                if type(value) ~= "table" then
+                    return false, path .. ": Expected an array of tables, got " .. type(value)
+                end
+                for i, item in ipairs(value) do
+                    local isValid, err = validate_nested_table(item, arraySchema, path .. "[" .. i .. "]")
+                    if not isValid then
+                        return false, err
+                    end
+                end
+                return true
+            end
+        
+            -- Iterate over the schema
+            for key, constraints in pairs(schema) do
+                local value = tbl[key]
+                local expectedType = constraints.type
+                local required = constraints.required or false
+                local min = constraints.min
+                local max = constraints.max
+                local nestedSchema = constraints.schema -- Schema for nested tables
+                local defaultValue = constraints.default
+                local path = key
+        
+                -- Check if the key exists in the table and is required
+                if required and value == nil then
+                    return false, "Missing required key: " .. path
+                end
+        
+                -- If the key exists, check its type
+                if value ~= nil and not check_type(value, expectedType) then
+                    return false, "Incorrect type for key: " .. path .. ". Expected " .. expectedType .. ", got " .. type(value)
+                end
+        
+                -- If the value is a nested table, validate it recursively
+                if nestedSchema and type(value) == "table" and expectedType == "table" then
+                    local isValid, err = validate_nested_table(value, nestedSchema, path)
+                    if not isValid then
+                        return false, "Error in nested table for key: " .. path .. ". " .. err
+                    end
+                end
+        
+                -- If the value is an array of tables, validate each element
+                if expectedType == "table_array" and type(value) == "table" then
+                    local isValid, err = validate_array_of_tables(value, nestedSchema, path)
+                    if not isValid then
+                        return false, "Error in array of tables for key: " .. path .. ". " .. err
+                    end
+                end
+        
+                -- Check range constraints (if applicable)
+                if value ~= nil and not check_range(value, min, max) then
+                    return false, "Value for key " .. path .. " is out of range."
+                end
+        
+                -- Apply default values if the key is missing and a default is provided
+                if value == nil and defaultValue ~= nil then
+                    tbl[key] = defaultValue
+                end
+            end
+        
+            -- Check if the table has any unexpected keys
+            for key in pairs(tbl) do
+                if not schema[key] then
+                    return false, "Unexpected key found: " .. key
+                end
+            end
+        
+            return true
+        end
+        
+        return validate_table
+    
+    end),
+    (function()
+        -- Define a dotenv object
+        local dotenv = {}
+        
+        _G.ENV = {}
+        
+        -- Define a function to read a file and return its contents as a string
+        local function readFile(filename)
+          -- Open the file in read mode
+          local file = io.open(filename, 'r')
+          -- Check if the file exists
+          if not file then
+            -- Return nil and an error message
+            return nil, 'File not found: ' .. filename
+          end
+          -- Read the whole file content
+          local content = file:read('*a')
+          -- Close the file
+          file:close()
+          -- Return the content
+          return content
+        end
+        
+        -- Define a function to parse a .env file and return a table of key-value pairs
+        local function parseEnv(content)
+          -- Create an empty table to store the pairs
+          local pairs = {}
+          -- Loop through each line in the content
+          for line in content:gmatch('[^\r\n]+') do
+            -- Trim any leading or trailing whitespace from the line
+            line = line:match('^%s*(.-)%s*$')
+            -- Ignore empty lines or lines starting with #
+            if line ~= '' and line:sub(1, 1) ~= '#' then
+              -- Split the line by the first = sign
+              local key, value = line:match('([^=]+)=(.*)')
+              -- Trim any leading or trailing whitespace from the key and value
+              key = key:match('^%s*(.-)%s*$')
+              value = value:match('^%s*(.-)%s*$')
+              -- Check if the value is surrounded by double quotes
+              if value:sub(1, 1) == '"' and value:sub(-1, -1) == '"' then
+                -- Remove the quotes and unescape any escaped characters
+                value = value:sub(2, -2):gsub('\\"', '"')
+              end
+              -- Check if the value is surrounded by single quotes
+              if value:sub(1, 1) == "'" and value:sub(-1, -1) == "'" then
+                -- Remove the quotes
+                value = value:sub(2, -2)
+              end
+              -- Store the key-value pair in the table
+              pairs[key] = value
+            end
+          end
+          -- Return the table
+          return pairs
+        end
+        
+        -- Define a function to load the environment variables from a .env file into the _G table
+        function dotenv:load(filename)
+          -- Use .env as the default filename if not provided
+          filename = filename or '.env'
+          -- Read the file content
+          local content, err = readFile(filename)
+          -- Check if there was an error
+          if not content then
+            -- Return nil and the error message
+            return nil, err
+          end
+          -- Parse the file content
+          local env_pairs = parseEnv(content)
+          -- Loop through the pairs
+          for key, value in pairs(env_pairs) do
+            -- Check if the key is not already in the _G table
+            if not _G.ENV[key] then
+              -- Clean up the value
+              local cleaned_value = ""
+              for i in value:gmatch("([^" .. "#" .. "]+)") do
+                -- Get first value and clean up
+                cleaned_value = i:gsub("%s+", ""):gsub("^\"(.*)\"$", "%1"):gsub("^'(.*)'$", "%1")
+                break
+              end
+              
+              -- Check if number
+              local number_parse = tonumber(cleaned_value)
+              if number_parse ~= nil then
+                -- Set the key-value pair in the _G table
+                _G.ENV[key] = number_parse
+              else
+                -- Set the key-value pair in the _G table
+                _G.ENV[key] = cleaned_value
+              end
+        
+            end
+          end
+          -- Return true
+          return true
+        end
+        
+        -- Return the dotenv object
+        return dotenv
+    
     end),
 }
 __luapack_cache__ = {}
@@ -200,48 +732,51 @@ dotenv:load(".env.local")
 _G.Astra = {
     version = "0.0.0",
     hostname = "127.0.0.1",
-    compression = false,
+    compression = true,
     port = 20001
 }
 
+---@diagnostic disable-next-line: duplicate-doc-alias
+---@alias callback fun(request: Request, response: Response): any
+
 ---@param path string The URL path for the request.
----@param callback fun(request: Request, response: Response): any A function that will be called when the request is made.
+---@param callback callback A function that will be called when the request is made.
 function Astra.get(path, callback)
     table.insert(Astra, { path = path, method = "get", func = callback })
 end
 
 ---@param path string The URL path for the request.
----@param callback fun(request: Request, response: Response): any A function that will be called when the request is made.
+---@param callback callback A function that will be called when the request is made.
 function Astra.post(path, callback)
     table.insert(Astra, { path = path, method = "post", func = callback })
 end
 
 ---@param path string The URL path for the request.
----@param callback fun(request: Request, response: Response): any A function that will be called when the request is made.
+---@param callback callback A function that will be called when the request is made.
 function Astra.put(path, callback)
     table.insert(Astra, { path = path, method = "put", func = callback })
 end
 
 ---@param path string The URL path for the request.
----@param callback fun(request: Request, response: Response): any A function that will be called when the request is made.
+---@param callback callback A function that will be called when the request is made.
 function Astra.delete(path, callback)
     table.insert(Astra, { path = path, method = "delete", func = callback })
 end
 
 ---@param path string The URL path for the request.
----@param callback fun(request: Request, response: Response): any A function that will be called when the request is made.
+---@param callback callback A function that will be called when the request is made.
 function Astra.options(path, callback)
     table.insert(Astra, { path = path, method = "options", func = callback })
 end
 
 ---@param path string The URL path for the request.
----@param callback fun(request: Request, response: Response): any A function that will be called when the request is made.
+---@param callback callback A function that will be called when the request is made.
 function Astra.patch(path, callback)
     table.insert(Astra, { path = path, method = "patch", func = callback })
 end
 
 ---@param path string The URL path for the request.
----@param callback fun(request: Request, response: Response): any A function that will be called when the request is made.
+---@param callback callback A function that will be called when the request is made.
 function Astra.trace(path, callback)
     table.insert(Astra, { path = path, method = "trace", func = callback })
 end
@@ -271,12 +806,22 @@ end
 ---@field json fun(): table Returns the body parsed as JSON -> Lua Table
 
 ---
+--- Represents a multipart.
+---@class Multipart
+_G.Multipart = {}
+---
+---Saves the multipart into disk
+---@param file_path string
+function Multipart:save_file(file_path) end
+
+---
 --- Represents an HTTP request.
 ---@class Request
 ---@field method fun(): string Returns the HTTP method (e.g., "GET", "POST").
 ---@field uri fun(): string Returns the URI of the request.
 ---@field headers fun(): table Returns a table containing the headers of the request.
 ---@field body fun(): Body|nil Returns the body of the request, which can be a table or a string.
+---@field multipart fun(): Multipart|nil Returns a multipart if available.
 
 ---
 --- Represents an HTTP response.

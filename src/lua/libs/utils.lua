@@ -1,5 +1,6 @@
 local utils = { _version = "0.1.0" }
 
+---Pretty prints any table or value
 ---@diagnostic disable-next-line: duplicate-set-field
 function _G.pretty_print(inner_table)
     local function pretty_print_table(table)
