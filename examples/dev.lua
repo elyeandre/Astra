@@ -4,7 +4,7 @@
     THIS IS PURELY FOR TESTING, DO NOT USE AS EXAMPLE!
 ]]
 
-require("../lua/astra_bundle")
+require("../src/lua/astra_bundle")
 
 -- local db = database_connect("postgres://astra_postgres:password@localhost/astr_database")
 -- db:execute("CREATE TABLE IF NOT EXISTS test (id SERIAL PRIMARY KEY, name TEXT)", {});

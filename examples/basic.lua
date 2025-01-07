@@ -1,6 +1,6 @@
 -- import for intellisense. This line is replaced
 -- by the bundle code during runtime
-require("../lua/astra_bundle")
+require("../src/lua/astra_bundle")
 
 
 -- A simple GET index route with text return

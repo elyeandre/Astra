@@ -63,3 +63,11 @@ end)
 ## Note
 
 This project is NOT recommended for production. It is very much experimental and at the very early staged. Contributions, however, are welcome.
+
+Some features that are missing but are planned:
+
+* [ ] Websockets
+* [ ] TLS/SSL support
+* [ ] Middleware
+* [ ] SQLite support
+* [ ] Templating

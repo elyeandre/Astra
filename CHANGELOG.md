@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### Documentation
+
+- Added basic documentation and guides ([f15be4d](https://github.com/ArkForgeLabs/Astra/commit/f15be4d9772aa0d46947f4b6225122581e040259))
+- Updated the links in the page ([f572b38](https://github.com/ArkForgeLabs/Astra/commit/f572b3897548b656aab8641718bf3ad0d272301e))
+- Updated to add versioning and a main page ([709b9d0](https://github.com/ArkForgeLabs/Astra/commit/709b9d06c71242147551c5a3725c1be143207004))
+- Started writing documentation for the project ([caed6d5](https://github.com/ArkForgeLabs/Astra/commit/caed6d5543e61c6bba1543212f269c62d9ccaeff))
+
 ## [0.6.0] - 2025-01-05
 
 ### Features
