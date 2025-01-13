@@ -8,14 +8,14 @@ require("../src/lua/astra")
 -- db:execute("CREATE TABLE IF NOT EXISTS test (id SERIAL PRIMARY KEY, name TEXT)", {});
 
 
--- new_task(function ()
---     http_request("https://myip.wtf/json", nil, function(response)
---         pretty_print(response:status_code())
---         pretty_print(response:headers())
---         pretty_print(response:remote_address())
---         pretty_print(response:body():json())
---     end)
--- end)
+new_task(function ()
+    http_request("https://myip.wtf/json", nil, function(response)
+        pretty_print(response:status_code())
+        pretty_print(response:headers())
+        pretty_print(response:remote_address())
+        pretty_print(response:body():json())
+    end)
+end)
 
 Astra.get("/", function(req, res)
     res:set_status_code(300)
