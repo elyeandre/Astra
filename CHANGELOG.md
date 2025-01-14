@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.1] - 2025-01-13
+
+### Bug Fixes
+
+- #7 ([ef7317e](https://github.com/ArkForgeLabs/Astra/commit/ef7317ea924621eca214e5d5058b2c047cceb706))
+
 ## [0.7.0] - 2025-01-07
 
 ### Documentation
