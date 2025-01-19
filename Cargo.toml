@@ -7,15 +7,6 @@ edition = "2021"
 license = "Apache-2.0"
 exclude = ["examples"]
 
-[features]
-default = ["sqlx", "compression"]
-sqlx = ["dep:sqlx"]
-compression = [
-    "dep:tower",
-    "tower-http/compression-full",
-    "tower-http/decompression-full",
-]
-
 [dependencies]
 axum = { version = "0.8.0", features = ["macros", "multipart"] }
 bytes = { version = "1.9.0", features = ["serde"] }
@@ -47,11 +38,16 @@ sqlx = { version = "0.8.2", features = [
     "json",
     "chrono",
     "uuid",
-], optional = true }
+] }
 tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
 toml = "0.8.19"
-tower = { version = "0.5.2", optional = true }
-tower-http = { version = "0.6.2", features = ["fs", "trace"] }
+tower = { version = "0.5.2" }
+tower-http = { version = "0.6.2", features = [
+    "fs",
+    "trace",
+    "compression-full",
+    "decompression-full",
+] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 uuid = { version = "1.11.0", features = ["serde", "v4"] }

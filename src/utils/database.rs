@@ -1,4 +1,3 @@
-use crate::common::LUA;
 use mlua::{LuaSerdeExt, UserData};
 use sqlx::Row;
 
@@ -29,8 +28,11 @@ impl crate::utils::LuaUtils for Database {
 }
 impl UserData for Database {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-        fn parse_sql_to_lua(row: &sqlx::postgres::PgRow) -> mlua::Result<mlua::Table> {
-            match LUA.create_table() {
+        fn parse_sql_to_lua(
+            lua: &mlua::Lua,
+            row: &sqlx::postgres::PgRow,
+        ) -> mlua::Result<mlua::Table> {
+            match lua.create_table() {
                 Ok(table) => {
                     macro_rules! push_value {
                         ($data_type:ty,$i:expr) => {{
@@ -44,9 +46,9 @@ impl UserData for Database {
                     macro_rules! push_value_lua_parsed {
                         ($data_type:ty,$i:expr) => {{
                             if let Ok(value) = row.try_get::<$data_type, usize>($i) {
-                                table.push(LUA.to_value(&value)?)?;
+                                table.push(lua.to_value(&value)?)?;
                             } else if let Ok(value) = row.try_get::<Option<$data_type>, usize>($i) {
-                                table.push(LUA.to_value(&value)?)?;
+                                table.push(lua.to_value(&value)?)?;
                             }
                         }};
                     }
@@ -79,6 +81,7 @@ impl UserData for Database {
         }
 
         fn query_builder(
+            lua: mlua::Lua,
             sql: &str,
             parameters: mlua::Table,
         ) -> sqlx::query::Query<'_, sqlx::Postgres, sqlx::postgres::PgArguments> {
@@ -98,7 +101,7 @@ impl UserData for Database {
                     mlua::Value::Integer(value) => query = query.bind(value),
                     mlua::Value::Boolean(value) => query = query.bind(value),
                     mlua::Value::Table(_) => {
-                        if let Ok(json) = LUA.from_value::<serde_json::Value>(param.clone()) {
+                        if let Ok(json) = lua.from_value::<serde_json::Value>(param.clone()) {
                             query = query.bind(json)
                         }
                     }
@@ -112,8 +115,8 @@ impl UserData for Database {
 
         methods.add_async_method(
             "execute",
-            |_, this, (sql, parameters): (String, mlua::Table)| async move {
-                let query = query_builder(&sql, parameters);
+            |lua, this, (sql, parameters): (String, mlua::Table)| async move {
+                let query = query_builder(lua.clone(), &sql, parameters);
                 match query.execute(&this.pool).await {
                     Ok(_) => Ok(()),
                     Err(e) => Err(mlua::Error::runtime(format!(
@@ -125,11 +128,11 @@ impl UserData for Database {
 
         methods.add_async_method(
             "query_one",
-            |_, this, (sql, parameters): (String, mlua::Table)| async move {
-                let query = query_builder(&sql, parameters);
+            |lua, this, (sql, parameters): (String, mlua::Table)| async move {
+                let query = query_builder(lua.clone(), &sql, parameters);
 
                 match query.fetch_one(&this.pool).await {
-                    Ok(row) => Ok(parse_sql_to_lua(&row)?),
+                    Ok(row) => Ok(parse_sql_to_lua(&lua, &row)?),
                     Err(e) => Err(mlua::Error::runtime(format!(
                         "Error executing the query: {e:#?}"
                     ))),
@@ -139,15 +142,15 @@ impl UserData for Database {
 
         methods.add_async_method(
             "query_all",
-            |_, this, (sql, parameters): (String, mlua::Table)| async move {
-                let query = query_builder(&sql, parameters);
+            |lua, this, (sql, parameters): (String, mlua::Table)| async move {
+                let query = query_builder(lua.clone(), &sql, parameters);
 
                 match query.fetch_all(&this.pool).await {
                     Ok(rows) => {
                         let mut vec = Vec::new();
 
                         for row in rows {
-                            let sql_row_lua = parse_sql_to_lua(&row)?;
+                            let sql_row_lua = parse_sql_to_lua(&lua, &row)?;
                             vec.push(sql_row_lua);
                         }
 

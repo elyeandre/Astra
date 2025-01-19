@@ -155,7 +155,6 @@ pub fn load_routes() -> Router {
         }
     }
 
-    #[cfg(feature = "compression")]
     if let Ok(should_compress) = crate::common::LUA
         .globals()
         .get::<mlua::Table>("Astra")
