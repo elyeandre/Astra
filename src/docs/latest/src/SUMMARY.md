@@ -9,12 +9,12 @@
 - [Routes](./basic_usage/routes.md)
 - [Requests](./basic_usage/requests.md)
 - [Responses](./basic_usage/responses.md)
-- [Fault Tolerance]()
-- [Deployment]()
+- [Fault Tolerance](./basic_usage/fault_tolerance.md)
+- [Deployment](./basic_usage/deployment.md)
 
 # Utilities
 
-- [About utilities]()
+- [About utilities](./utilities/about.md)
 - [Schema Validation]()
 - [Markup Language Parsers]()
 - [PostgreSQL Driver]()
