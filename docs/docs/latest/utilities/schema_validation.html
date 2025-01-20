@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Extending Astra - ArkForge Astra</title>
+        <title>Schema Validation - ArkForge Astra</title>
 
 
         <!-- Custom HTML head -->
@@ -130,7 +130,7 @@
                         <a href="https://github.com/ArkForgeLabs/Astra" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/internal_modifications/extending_astra.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/utilities/schema_validation.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -226,19 +226,80 @@
 }
 
 </style>
-<h1 id="extending-astra"><a class="header" href="#extending-astra">Extending Astra</a></h1>
-<h2 id="through-utils"><a class="header" href="#through-utils">Through Utils</a></h2>
-<p>Your point of interest will be the <code>src</code> directory. If your aim is to extend the engine, you may look into the <code>utils</code> folder upon which you can add a new file of your choice.</p>
-<p>For extensions, you need a struct that implements <code>LuaUtils</code> trait implemented which gives an async <code>lua</code> runtime context. Within it you can create a new lua function that adds your function to the global context at runtime.</p>
+<h1 id="schema-validation"><a class="header" href="#schema-validation">Schema Validation</a></h1>
+<p>Sometimes during development, your server likely recieves structured data such as JSON from outside. You likely also have a structure in mind for them. For these cases to validate that the structures are correct and to confidently go through them without risk of errors, hopefully, you can use the schema validation utility.</p>
+<p>Schema Validation essentially is a function that returns true if a given table is of a given structure. The structure is defined as a separate table that has the field names along the types and requirements. For example:</p>
+<pre><code class="language-lua">-- Your schema
+local schema = {
+    -- Type names along their types and requirements
+    id = { type = "number" },
+    name = { type = "string", required = false }
+}
+-- Your actual data
+local example = { id = "123", name = 456 }
+-- Check the validation
+local isValid, err = validateTable(example, schema)
+assert(not isValid, "Test failed: expected validation to fail")
+</code></pre>
+<p>Almost all of the native lua types are accounted for. Deeply nesting is obviously supported as well:</p>
+<pre><code class="language-lua">local schema = {
+    user = {
+        type = "table",
+        schema = {
+            profile = {
+                type = "table",
+                schema = {
+                    id = { type = "number" },
+                    name = { type = "string" }
+                }
+            }
+        }
+    }
+}
+local example = { user = { profile = { id = 123, name = "John" } } }
+local isValid, err = validateTable(example, schema)
+assert(isValid, "Test failed: " .. err)
+</code></pre>
+<p>As well as arrays:</p>
+<pre><code class="language-lua">local schema = {
+    -- normal single type array
+    numbers = { type = "array", array_item_type = "number" },
+    strings = { type = "array", array_item_type = "string" },
+    -- table array
+    entries = {
+        type = "array",
+        schema = {
+            id = { type = "number" },
+            text = { type = "string" }
+        }
+    }
+}
+
+local tbl = {
+    numbers = { 1, 2, 3 },
+    strings = { "a", "b", "c" },
+    entries = { { id = 123, text = "hey!" }, { id = "456", text = "hello!" } }
+}
+
+local isValid, err = validate_table(tbl, schema)
+if isValid then
+    print("Validation succeeded")
+else
+    print("Validation failed: " .. err)
+end
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../utilities/schema_validation.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../utilities/about.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
+                            <a rel="next prefetch" href="../internal_modifications/extending_astra.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -246,10 +307,13 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../utilities/schema_validation.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../utilities/about.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
+                    <a rel="next prefetch" href="../internal_modifications/extending_astra.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
             </nav>
 
         </div>

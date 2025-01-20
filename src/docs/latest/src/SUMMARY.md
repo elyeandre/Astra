@@ -15,7 +15,7 @@
 # Utilities
 
 - [About utilities](./utilities/about.md)
-- [Schema Validation]()
+- [Schema Validation](./utilities/schema_validation.md)
 - [Markup Language Parsers]()
 - [PostgreSQL Driver]()
 - [Async Tasks]()
