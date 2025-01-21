@@ -83,7 +83,7 @@ function utils.parse_query(str)
 end
 
 ---
----Splits a word into an array given the separator
+---Splits a sentence into an array given the separator
 ---@param str string The input string
 ---@param separator string The input string
 ---@return table array
