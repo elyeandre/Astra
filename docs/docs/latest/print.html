@@ -391,16 +391,13 @@
 
 </style>
 <h1 id="configuration"><a class="header" href="#configuration">Configuration</a></h1>
-<p>Astra can be configured in a few ways for runtime. As of now there is no native TLS/SSL support and needs a reverse proxy such as <a href="https://caddyserver.com/">Caddy</a> to handle that.</p>
+<p>Astra can be configured in a few ways for runtime. As of now there is no native TLS/SSL support and needs a reverse proxy such as <a href="https://caddyserver.com/">Caddy</a> to handle that. Check <a href="basic_usage/./deployment.html">Deployment</a> for more information.</p>
 <p>However every configuration option will be available at the <code>Astra</code> global table instead. For example, changing the compression, port and hostname is as such:</p>
 <pre><code class="language-lua">Astra.compression = false
 Astra.port = 8000
 Astra.hostname = "0.0.0.0"
 </code></pre>
-<p>There are some more configuration that can only happen upon building the runtime's binary. For example content compression and PostgreSQL driver (<code>compression</code> and <code>sqlx</code> flags respectively). These can be enabled or disabled by feature flags during build. For example to build without sqlx but with compression:</p>
-<pre><code class="language-bash">cargo build --release --no-default-features --features compression
-</code></pre>
-<p>The flags are comma separated: feature1,feature2.</p>
+<p>You can also configure other languages that compiles to Lua such as <a href="https://pluto-lang.org/">Pluto</a> and <a href="https://fennel-lang.org/">Fennel</a>, although Pluto targets Lua 5.4 which might get support by 1.0 release of Astra. Astra's api is for pure Lua however, so it will be up to you to make sure it can call the right functions and tables.</p>
 <p>In the future, there may be binaries with different combinations prebuilt as well!</p>
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
