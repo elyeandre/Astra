@@ -113,10 +113,10 @@ function Multipart:save_file(file_path) end
 ---
 --- Represents an HTTP response.
 ---@class Response
----@field set_status_code fun(new_status_code: number) Sets the HTTP status code of the response
----@field set_header fun(key: string, value: string) Sets a header
+---@field set_status_code fun(response: Response, new_status_code: number) Sets the HTTP status code of the response
+---@field set_header fun(response: Response, key: string, value: string) Sets a header
 ---@field get_headers fun(): table|nil Returns the entire headers list that so far has been set for the response
----@field remove_header fun(key: string) Removes a header from the headers list
+---@field remove_header fun(response: Response, key: string) Removes a header from the headers list
 
 ---
 --- SQLx driver for PostgreSQL

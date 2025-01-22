@@ -18,8 +18,8 @@ new_task(function ()
 end)
 
 Astra.get("/", function(req, res)
-    -- res:set_status_code(300)
-    -- res:set_header("test", "VALLLL")
+    res:set_status_code(300)
+    res:set_header("test", "VALLLL")
 
     pretty_print(req:body():text())
     -- local result = db:query_one("SELECT * FROM test;", {});

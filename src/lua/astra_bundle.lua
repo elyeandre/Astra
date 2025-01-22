@@ -87,7 +87,7 @@ __luapack_modules__ = {
         end
         
         ---
-        ---Splits a word into an array given the separator
+        ---Splits a sentence into an array given the separator
         ---@param str string The input string
         ---@param separator string The input string
         ---@return table array
@@ -497,17 +497,17 @@ __luapack_modules__ = {
         ---@return boolean, string | nil
         local function validate_table(tbl, schema)
             -- Helper function to check if a value is of the expected type
-            local function check_type(value, expectedType)
-                local TypeMap = {
+            local function check_type(value, expected_type)
+                local type_map = {
                     number = "number",
                     string = "string",
                     boolean = "boolean",
                     table = "table",
                     ["function"] = "function",
                     ["nil"] = "nil",
-                    table_array = "table"
+                    array = "table"
                 }
-                return type(value) == TypeMap[expectedType]
+                return type(value) == type_map[expected_type]
             end
         
             -- Helper function to check if a value is within a range (if applicable)
@@ -516,23 +516,36 @@ __luapack_modules__ = {
             end
         
             -- Helper function to validate nested tables
-            local function validate_nested_table(value, nestedSchema, path)
-                local isValid, err = validate_table(value, nestedSchema)
-                if not isValid then
+            local function validate_nested_table(value, nested_schema, path)
+                local is_valid, err = validate_table(value, nested_schema)
+                if not is_valid then
                     return false, path .. ": " .. err
                 end
                 return true
             end
         
             -- Helper function to validate arrays of tables
-            local function validate_array_of_tables(value, arraySchema, path)
+            local function validate_array_of_tables(value, array_schema, path)
                 if type(value) ~= "table" then
                     return false, path .. ": Expected an array of tables, got " .. type(value)
                 end
                 for i, item in ipairs(value) do
-                    local isValid, err = validate_nested_table(item, arraySchema, path .. "[" .. i .. "]")
-                    if not isValid then
+                    local is_valid, err = validate_nested_table(item, array_schema, path .. "[" .. i .. "]")
+                    if not is_valid then
                         return false, err
+                    end
+                end
+                return true
+            end
+        
+            -- Helper function to validate arrays of primitive types
+            local function validate_array_of_primitives(value, array_item_type, path)
+                if type(value) ~= "table" then
+                    return false, path .. ": Expected an array, got " .. type(value)
+                end
+                for i, item in ipairs(value) do
+                    if not check_type(item, array_item_type) then
+                        return false, path .. "[" .. i .. "]: Expected " .. array_item_type .. ", got " .. type(item)
                     end
                 end
                 return true
@@ -541,12 +554,12 @@ __luapack_modules__ = {
             -- Iterate over the schema
             for key, constraints in pairs(schema) do
                 local value = tbl[key]
-                local expectedType = constraints.type
+                local expected_type = constraints.type
                 local required = constraints.required or false
                 local min = constraints.min
                 local max = constraints.max
-                local nestedSchema = constraints.schema -- Schema for nested tables
-                local defaultValue = constraints.default
+                local nested_schema = constraints.schema -- Schema for nested tables
+                local default_value = constraints.default
                 local path = key
         
                 -- Check if the key exists in the table and is required
@@ -555,23 +568,31 @@ __luapack_modules__ = {
                 end
         
                 -- If the key exists, check its type
-                if value ~= nil and not check_type(value, expectedType) then
-                    return false, "Incorrect type for key: " .. path .. ". Expected " .. expectedType .. ", got " .. type(value)
+                if value ~= nil and not check_type(value, expected_type) then
+                    return false, "Incorrect type for key: " .. path .. ". Expected " .. expected_type .. ", got " .. type(value)
                 end
         
                 -- If the value is a nested table, validate it recursively
-                if nestedSchema and type(value) == "table" and expectedType == "table" then
-                    local isValid, err = validate_nested_table(value, nestedSchema, path)
-                    if not isValid then
+                if nested_schema and type(value) == "table" and expected_type == "table" then
+                    local is_valid, err = validate_nested_table(value, nested_schema, path)
+                    if not is_valid then
                         return false, "Error in nested table for key: " .. path .. ". " .. err
                     end
                 end
         
                 -- If the value is an array of tables, validate each element
-                if expectedType == "table_array" and type(value) == "table" then
-                    local isValid, err = validate_array_of_tables(value, nestedSchema, path)
-                    if not isValid then
+                if expected_type == "array" and type(value) == "table" and nested_schema then
+                    local is_valid, err = validate_array_of_tables(value, nested_schema, path)
+                    if not is_valid then
                         return false, "Error in array of tables for key: " .. path .. ". " .. err
+                    end
+                end
+        
+                -- If the value is an array of primitive types, validate each element
+                if expected_type == "array" and type(value) == "table" and not nested_schema then
+                    local is_valid, err = validate_array_of_primitives(value, constraints.array_item_type, path)
+                    if not is_valid then
+                        return false, "Error in array of primitives for key: " .. path .. ". " .. err
                     end
                 end
         
@@ -581,8 +602,8 @@ __luapack_modules__ = {
                 end
         
                 -- Apply default values if the key is missing and a default is provided
-                if value == nil and defaultValue ~= nil then
-                    tbl[key] = defaultValue
+                if value == nil and default_value ~= nil then
+                    tbl[key] = default_value
                 end
             end
         
@@ -826,10 +847,10 @@ function Multipart:save_file(file_path) end
 ---
 --- Represents an HTTP response.
 ---@class Response
----@field set_status_code fun(new_status_code: number) Sets the HTTP status code of the response
----@field set_header fun(key: string, value: string) Sets a header
+---@field set_status_code fun(response: Response, new_status_code: number) Sets the HTTP status code of the response
+---@field set_header fun(response: Response, key: string, value: string) Sets a header
 ---@field get_headers fun(): table|nil Returns the entire headers list that so far has been set for the response
----@field remove_header fun(key: string) Removes a header from the headers list
+---@field remove_header fun(response: Response, key: string) Removes a header from the headers list
 
 ---
 --- SQLx driver for PostgreSQL
