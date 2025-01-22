@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.3] - 2025-01-22
+
+### Miscellaneous Tasks
+
+- Updated the lua bundle ([7e5a0d5](https://github.com/ArkForgeLabs/Astra/commit/7e5a0d5e8a3605adf46c5d74907f65acec3bd8d6))
+
 ## [0.7.2] - 2025-01-22
 
 ### Bug Fixes
