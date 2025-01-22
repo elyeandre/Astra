@@ -50,4 +50,4 @@ end)
 --     return "Successfully inserted name: " .. "queries.name"
 -- end)
 
--- Astra.static_file("/examples", "examples/dev.lua")
+Astra.static_file("/asd", "examples")

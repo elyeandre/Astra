@@ -140,14 +140,22 @@ pub fn load_routes() -> Router {
             Method::Trace => match_routes!(trace),
             Method::StaticDir => {
                 if let Some(serve_path) = route_values.static_dir {
-                    router.nest_service(path, tower_http::services::ServeDir::new(serve_path))
+                    if path == "/" {
+                        router.fallback_service(tower_http::services::ServeDir::new(serve_path))
+                    } else {
+                        router.nest_service(path, tower_http::services::ServeDir::new(serve_path))
+                    }
                 } else {
                     router
                 }
             }
             Method::StaticFile => {
                 if let Some(serve_path) = route_values.static_file {
-                    router.nest_service(path, tower_http::services::ServeFile::new(serve_path))
+                    if path == "/" {
+                        router.fallback_service(tower_http::services::ServeFile::new(serve_path))
+                    } else {
+                        router.nest_service(path, tower_http::services::ServeFile::new(serve_path))
+                    }
                 } else {
                     router
                 }
