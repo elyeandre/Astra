@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.2] - 2025-01-22
+
+### Bug Fixes
+
+- #9 ([bfcbfe6](https://github.com/ArkForgeLabs/Astra/commit/bfcbfe6180a932a18759de611a8ab82eeec166c4))
+- #3, added extensive documentation on the website ([7fece9e](https://github.com/ArkForgeLabs/Astra/commit/7fece9e660af9f30400751feaaa4bb864248e539))
+- #6 added refereces to other languages ([d9028bb](https://github.com/ArkForgeLabs/Astra/commit/d9028bbd85d3127aeefef63feb5698e2697d58b0))
+
+### Documentation
+
+- Utilities section has been documented ([8aeef7a](https://github.com/ArkForgeLabs/Astra/commit/8aeef7a5c1b516b50fcaf33e6ed355ca8059d428))
+- Added schema validation docs and added single type arrays support ([f2b955b](https://github.com/ArkForgeLabs/Astra/commit/f2b955bca6a9904c91d2554f22b3147f88bc84e2))
+- Finished the basic usage section ([ad85abf](https://github.com/ArkForgeLabs/Astra/commit/ad85abf5dd6ec4141d7c6c33cd6d6365b1a1aa93))
+
+### Miscellaneous Tasks
+
+- Added banner to the README ([873abdb](https://github.com/ArkForgeLabs/Astra/commit/873abdb78d40b81552a8b458b263574cd96ef447))
+- Cleaned up unneeded context references ([41114e8](https://github.com/ArkForgeLabs/Astra/commit/41114e8316584d4f379f83ed43051660c895d2c4))
+- Added banner ([a5ace95](https://github.com/ArkForgeLabs/Astra/commit/a5ace95eb8b8463184938c043ece5691e8021f02))
+
 ## [0.7.1] - 2025-01-13
 
 ### Bug Fixes
