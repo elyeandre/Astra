@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Extra Goodies - ArkForge Astra</title>
+        <title>Extending Astra - ArkForge Astra</title>
 
 
         <!-- Custom HTML head -->
@@ -130,7 +130,7 @@
                         <a href="https://github.com/ArkForgeLabs/Astra" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/utilities/extra_goodies.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/internals/extending_astra.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -226,28 +226,82 @@
 }
 
 </style>
-<h1 id="extra-goodies"><a class="header" href="#extra-goodies">Extra Goodies</a></h1>
-<p>There are other less known utilities included with Astra that makes the life easier but are not big enough to have their own sections. These include:</p>
-<h2 id="pretty-print"><a class="header" href="#pretty-print">Pretty Print</a></h2>
-<p><code>pretty_print</code> function is a wrapper over <code>print</code> function that also lets you print tables as well as other values.</p>
-<h2 id="pretty-json-table"><a class="header" href="#pretty-json-table">Pretty JSON Table</a></h2>
-<p><code>pretty_json_table</code> recursively converts a table into a pretty formatted JSON string.</p>
-<h2 id="query-parsing"><a class="header" href="#query-parsing">Query Parsing</a></h2>
-<p><code>parse_query</code> lets you parse a URL Query into a key-value table</p>
-<h2 id="string-split"><a class="header" href="#string-split">String Split</a></h2>
-<p><code>string.split</code> splits a string according to the seperator provided and result into an array of chunks.</p>
+<h1 id="extending-astra"><a class="header" href="#extending-astra">Extending Astra</a></h1>
+<h2 id="through-utils"><a class="header" href="#through-utils">Through Utils</a></h2>
+<p>Your point of interest will be the <code>src</code> directory. If your aim is to extend the engine, you may look into the <code>utils</code> folder upon which you can add a new file of your choice.</p>
+<p>For extensions, you need a struct that implements <code>LuaUtils</code> trait implemented which gives an async <code>lua</code> runtime context. Within it you can create a new lua function that adds your function to the global context at runtime.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct MyNewExtension {
+    pub field: String,
+}
+impl crate::utils::LuaUtils for MyNewExtension {
+    async fn register_to_lua(lua: &amp;mlua::Lua) -&gt; mlua::Result&lt;()&gt; {
+        let function = lua.create_async_function(|lua, param: mlua::Value| async move {
+            /* Content */
+
+            Ok(Self { field: "Hello!".to_string() })
+        })?;
+
+        lua.globals().set("my_extension", function)
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>After this, open <code>mod.rs</code> folder, include your new extention's file, and within <code>register_utils</code> call your extension's <code>register_to_lua</code> method.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>    my_extension::MyNewExtension::register_to_lua(lua).await?;
+<span class="boring">}</span></code></pre></pre>
+<p>If you wish to return a table with methods that your lua code can call, then you need to implement mlua's <code>UserData</code> trait:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl UserData for MyNewExtension {
+    fn add_methods&lt;M: mlua::UserDataMethods&lt;Self&gt;&gt;(methods: &amp;mut M) {
+        // Add your custom method that you can call within Lua
+        methods.add_method(
+            "sync_method",
+            |lua, this, param: mlua::Value| {
+                // Your code
+                println!("{:param#?}");
+
+                Ok(())
+            },
+        );
+
+        // It can also be async
+        methods.add_async_method(
+            "async_method",
+            |lua, this, param: mlua::Value| async move {
+                // Your code
+                println!("{:param#?}");
+
+                Ok(())
+            },
+        );
+
+        // As well as mutability
+        methods.add_mut_method(
+            "sync_method",
+            |lua, this, param: String| {
+                // Your code
+                this.field = param.clone();
+                println!("{:param#?}");
+
+                Ok(())
+            },
+        );
+    }
+}
+<span class="boring">}</span></code></pre></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../utilities/dotenv.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../internals/structure.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../internals/structure.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
-                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -255,13 +309,10 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../utilities/dotenv.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../internals/structure.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../internals/structure.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
-                    </a>
             </nav>
 
         </div>

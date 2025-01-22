@@ -23,8 +23,7 @@
 - [Dotenv](./utilities/dotenv.md)
 - [Extra Goodies](./utilities/extra_goodies.md)
 
-# Internal Modifications
+# Internals
 
-- [Extending Astra](./internal_modifications/extending_astra.md)
-- [Server Structure]()
-- [CLI Commands]()
+- [Structure](./internals/structure.md)
+- [Extending Astra](./internals/extending_astra.md)
