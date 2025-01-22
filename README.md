@@ -1,4 +1,4 @@
-# Astra
+![Banner](./docs/banner.png)
 
 [![Release](https://github.com/ArkForgeLabs/Astra/actions/workflows/release.yml/badge.svg)](https://github.com/ArkForgeLabs/Astra/actions/workflows/release.yml)
 [![Static Badge](https://img.shields.io/badge/Join-The_Discord-blue?style=flat&logo=discord&color=blue)](https://discord.com/invite/6PMjUx8x3b)
@@ -66,8 +66,8 @@ This project is NOT recommended for production. It is very much experimental and
 
 Some features that are missing but are planned:
 
-* [ ] Websockets
-* [ ] TLS/SSL support
-* [ ] Middleware
-* [ ] SQLite support
-* [ ] Templating
+- [ ] Websockets
+- [ ] TLS/SSL support
+- [ ] Middleware
+- [ ] SQLite support
+- [ ] Templating
