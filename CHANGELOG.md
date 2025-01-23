@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2025-01-23
+
+### Documentation
+
+- Updated documentation on the new HTTP client ([7d7b29a](https://github.com/ArkForgeLabs/Astra/commit/7d7b29a265ba85f849fd676d9a7972fbff5b467d))
+
+### Features
+
+- Updated lua bundle for the new http client ([c7ebb12](https://github.com/ArkForgeLabs/Astra/commit/c7ebb12bae8cd973bd61c321a3c27467e61f33c7))
+- Revamped HTTP client is complete ([1f3e9ac](https://github.com/ArkForgeLabs/Astra/commit/1f3e9ace1800d8f7b615e6a0e3db889af743a235))
+- Major redesign of the http client ([0997bb9](https://github.com/ArkForgeLabs/Astra/commit/0997bb9b083ad86c7e39a169f1d98efa2a553df0))
+
 ## [0.7.3] - 2025-01-22
 
 ### Miscellaneous Tasks
