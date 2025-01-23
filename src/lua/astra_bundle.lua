@@ -882,7 +882,7 @@ function Database:query_all(sql, parameters) end
 function database_connect(url) end
 
 ---
---- Represents an HTTP response.
+--- Represents an HTTP client response.
 ---@class HTTPClientResponse
 ---@field status_code fun(): table Gets the response HTTP Status code
 ---@field body fun(): Body Gets the response HTTP Body which further can be parsed
@@ -890,12 +890,25 @@ function database_connect(url) end
 ---@field remote_address fun(): string|nil Gets the remote address of the HTTP response server
 
 ---
+--- Represents an HTTP client request.
+---@class HTTPClientRequest
+---@field set_method fun(http_request: HTTPClientRequest, method: string): HTTPClientRequest Sets the HTTP method
+---@field set_header fun(http_request: HTTPClientRequest, key: string, value: string): HTTPClientRequest Sets a header
+---@field set_headers fun(http_request: HTTPClientRequest, headers: table): HTTPClientRequest Sets all of the headers
+---@field set_form fun(http_request: HTTPClientRequest, key: string, value: string): HTTPClientRequest Sets a form
+---@field set_forms fun(http_request: HTTPClientRequest, headers: table): HTTPClientRequest Sets all of the forms
+---@field set_body fun(http_request: HTTPClientRequest, body: string): HTTPClientRequest Sets the HTTP body
+---@field set_json fun(http_request: HTTPClientRequest, json: table): HTTPClientRequest Sets the HTTP json
+---@field execute fun(): HTTPClientResponse Executes the request and returns the response
+---@field execute_task fun(http_request: HTTPClientRequest, callback: HTTPClientResponse) Executes the request as an async task and returns the response in callback
+
+---
 ---Opens a new async HTTP Request. The request is running as a task in parallel
 ---@param url string
----@param options table | function | nil Extra options to set for the request
----@param callback fun(response: HTTPClientResponse) | nil The callback to consume the content of the response
+---@return HTTPClientRequest
+---@nodiscard
 ---@diagnostic disable-next-line: missing-return, lowercase-global
-function http_request(url, options, callback) end
+function http_request(url) end
 
 ---
 ---Starts a new async task
