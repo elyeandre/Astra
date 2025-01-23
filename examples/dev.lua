@@ -7,15 +7,11 @@ require("../src/lua/astra")
 -- local db = database_connect("postgres://astra_postgres:password@localhost/astr_database")
 -- db:execute("CREATE TABLE IF NOT EXISTS test (id SERIAL PRIMARY KEY, name TEXT)", {});
 
+http_request("https://myip.wtf/json")
+    :set_method("GET")
+    :set_body("HEHE")
+    :execute()
 
-new_task(function ()
-    http_request("https://myip.wtf/json", nil, function(response)
-        pretty_print(response:status_code())
-        pretty_print(response:headers())
-        pretty_print(response:remote_address())
-        pretty_print(response:body():json())
-    end)
-end)
 
 Astra.get("/", function(req, res)
     res:set_status_code(300)
@@ -31,7 +27,7 @@ end)
 Astra.post("/", function(req)
     pretty_print(req:headers())
     local function test() req:multipart():save_file("something.txt") end
-    
+
     -- local result = db:query_one("SELECT * FROM test;", {});
     -- print(utils.pretty_table(result))
 
