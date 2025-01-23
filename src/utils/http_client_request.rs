@@ -2,21 +2,11 @@ use mlua::{LuaSerdeExt, UserData};
 use reqwest::{Client, RequestBuilder};
 use std::collections::HashMap;
 
+use crate::common::BodyLua;
+
 // TODO: Add HTTPClientResponse and change the below as HTTPClientRequest.
 // TODO: HTTPClientRequest must be chained setter
 // TODO: HTTPClientResponse will have the current UserData trait implementations
-
-#[allow(clippy::upper_case_acronyms)]
-#[allow(dead_code)]
-#[derive(Debug, Clone, Copy, serde::Deserialize, mlua::FromLua)]
-pub enum HTTPRequestMethod {
-    GET,
-    POST,
-    PUT,
-    PATCH,
-    DELETE,
-    HEAD,
-}
 
 #[derive(Debug, Clone)]
 pub struct HTTPClientRequest {
@@ -26,7 +16,6 @@ pub struct HTTPClientRequest {
     pub body: Option<String>,
     pub body_json: Option<serde_json::Value>,
     pub form: HashMap<String, String>,
-    pub callback: Option<mlua::Function>,
 }
 impl crate::utils::LuaUtils for HTTPClientRequest {
     async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
@@ -38,54 +27,12 @@ impl crate::utils::LuaUtils for HTTPClientRequest {
                 body: None,
                 body_json: None,
                 form: HashMap::new(),
-                callback: None,
             })
         })?;
         lua.globals().set("http_request", function)
     }
 }
 impl HTTPClientRequest {
-    // async fn execute_request(client: reqwest::RequestBuilder, callback: Option<mlua::Function>) {
-    //     let response = match client.send().await {
-    //         Ok(response) => {
-    //             let status_code = response.status().as_u16();
-    //             let remote_address = response.remote_addr().map(|i| i.to_string());
-    //             let headers = response
-    //                 .headers()
-    //                 .iter()
-    //                 .map(|(key, value)| {
-    //                     (
-    //                         key.to_string(),
-    //                         String::from_utf8_lossy(value.as_bytes()).to_string(),
-    //                     )
-    //                 })
-    //                 .collect::<std::collections::HashMap<String, String>>();
-
-    //             match response.bytes().await {
-    //                 Ok(bytes) => Ok(HTTPClientRequest {
-    //                     body: BodyLua::new(bytes),
-    //                     status_code,
-    //                     headers,
-    //                     remote_address,
-    //                 }),
-
-    //                 Err(e) => Err(mlua::Error::runtime(format!(
-    //                     "Error executing the HTTP Request body: {e}"
-    //                 ))),
-    //             }
-    //         }
-    //         Err(e) => Err(mlua::Error::runtime(format!(
-    //             "Error executing the HTTP Request: {e}"
-    //         ))),
-    //     };
-
-    //     if let Some(callback) = callback {
-    //         if let Err(e) = callback.call::<()>(response) {
-    //             eprintln!("Error running the HTTP Request callback: {e}");
-    //         }
-    //     }
-    // }
-
     pub fn request_builder(&self) -> RequestBuilder {
         let mut client = match self.method.to_uppercase().as_str() {
             "POST" => Client::new().post(&self.url),
@@ -115,6 +62,38 @@ impl HTTPClientRequest {
         }
 
         client
+    }
+
+    pub async fn response_to_http_client_response(
+        response: reqwest::Response,
+    ) -> HTTPClientResponse {
+        let url = response.url().to_string();
+        let status_code = response.status().as_u16();
+        let remote_address = response.remote_addr().map(|i| i.to_string());
+        let headers = response
+            .headers()
+            .iter()
+            .map(|(key, value)| {
+                (
+                    key.to_string(),
+                    String::from_utf8_lossy(value.as_bytes()).to_string(),
+                )
+            })
+            .collect::<std::collections::HashMap<String, String>>();
+
+        let body = if let Ok(bytes) = response.bytes().await {
+            BodyLua::new(bytes)
+        } else {
+            BodyLua::new(bytes::Bytes::new())
+        };
+
+        HTTPClientResponse {
+            url,
+            status_code,
+            remote_address,
+            body,
+            headers,
+        }
     }
 }
 impl UserData for HTTPClientRequest {
@@ -174,15 +153,51 @@ impl UserData for HTTPClientRequest {
         methods.add_async_method("execute", |_, this, ()| async move {
             let request = this.request_builder();
             match request.send().await {
-                Ok(response) => {
-                    println!("{response:#?}");
-                    //
-                    Ok(())
-                }
+                Ok(response) => Ok(Self::response_to_http_client_response(response).await),
                 Err(e) => Err(mlua::Error::runtime(format!(
                     "HTTP Request did not execute successfully: {e}"
                 ))),
             }
         });
+
+        methods.add_async_method(
+            "execute_task",
+            |_, this, callback: mlua::Function| async move {
+                tokio::spawn(async move {
+                    let request = this.request_builder();
+                    match request.send().await {
+                        Ok(response) => {
+                            if let Err(e) = callback
+                                .call::<()>(Self::response_to_http_client_response(response).await)
+                            {
+                                println!("Error running a task: {e}");
+                            }
+                        }
+                        Err(e) => eprintln!("HTTP Request did not execute successfully: {e}"),
+                    };
+                });
+
+                Ok(())
+            },
+        );
+    }
+}
+
+pub struct HTTPClientResponse {
+    pub url: String,
+    pub status_code: u16,
+    pub remote_address: Option<String>,
+    pub body: BodyLua,
+    pub headers: HashMap<String, String>,
+}
+impl UserData for HTTPClientResponse {
+    fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method("url", |_, this, ()| Ok(this.url.clone()));
+        methods.add_method("status_code", |_, this, ()| Ok(this.status_code));
+        methods.add_method("remote_address", |_, this, ()| {
+            Ok(this.remote_address.clone())
+        });
+        methods.add_method("body", |_, this, ()| Ok(this.body.clone()));
+        methods.add_method("headers", |_, this, ()| Ok(this.headers.clone()));
     }
 }

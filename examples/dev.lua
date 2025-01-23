@@ -7,10 +7,12 @@ require("../src/lua/astra")
 -- local db = database_connect("postgres://astra_postgres:password@localhost/astr_database")
 -- db:execute("CREATE TABLE IF NOT EXISTS test (id SERIAL PRIMARY KEY, name TEXT)", {});
 
-http_request("https://myip.wtf/json")
+local result = http_request("https://myip.wtf/json")
     :set_method("GET")
     :set_body("HEHE")
     :execute()
+
+print(result:status_code())
 
 
 Astra.get("/", function(req, res)
