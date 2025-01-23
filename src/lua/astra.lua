@@ -155,6 +155,9 @@ function database_connect(url) end
 ---@field headers fun(): table|nil Returns the entire headers list from the HTTP response
 ---@field remote_address fun(): string|nil Gets the remote address of the HTTP response server
 
+---@diagnostic disable-next-line: duplicate-doc-alias
+---@alias http_client_callback fun(response: HTTPClientResponse)
+
 ---
 --- Represents an HTTP client request.
 ---@class HTTPClientRequest
@@ -166,7 +169,7 @@ function database_connect(url) end
 ---@field set_body fun(http_request: HTTPClientRequest, body: string): HTTPClientRequest Sets the HTTP body
 ---@field set_json fun(http_request: HTTPClientRequest, json: table): HTTPClientRequest Sets the HTTP json
 ---@field execute fun(): HTTPClientResponse Executes the request and returns the response
----@field execute_task fun(http_request: HTTPClientRequest, callback: HTTPClientResponse) Executes the request as an async task
+---@field execute_task fun(http_request: HTTPClientRequest, callback: http_client_callback) Executes the request as an async task
 
 ---
 ---Opens a new async HTTP Request. The request is running as a task in parallel
