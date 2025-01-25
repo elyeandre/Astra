@@ -6,9 +6,9 @@ This documentation is on the [latest](https://astra.arkforge.net/docs/latest) ve
 
 ## About
 
-ArkForge Astra is an easy-to-use, fault-tolerant, extendible, and performant web server targeting [LuaJIT](https://luajit.org/) (Lua 5.1) and built upon [Rust](https://www.rust-lang.org/) + [Axum](https://github.com/tokio-rs/axum). Astra takes advantages of the Rust's performance, correctness and memory safety offering of the [Tokio](https://tokio.rs/) async runtime, upon which Axum also runs, to write fault-tolerant and [no-build](https://x.com/dhh/status/1769903387527790975) servers with ease.
+ArkForge Astra is an easy-to-use, fault-tolerant, extendible, and performant web server runtime targeting [Lua](https://lua.org) and [LuaJIT](https://luajit.org/), and built upon [Rust](https://www.rust-lang.org/) + [Axum](https://github.com/tokio-rs/axum). Astra takes advantages of the Rust's performance, correctness and memory safety offering of the [Tokio](https://tokio.rs/) async runtime, upon which Axum also runs, to write fault-tolerant and [no-build](https://x.com/dhh/status/1769903387527790975) servers with ease.
 
-Currently Astra is used within the [ArkForge](https://arkforge.net) for some internal and external products. However being very young and early project, it lacks battle testing. However it does not mean you cannot build software with it, as the base, axum, is already mature and Astra is a thin wrapper over it.
+Currently Astra is used within the [ArkForge](https://arkforge.net) for some internal and external products. However being very young and early project, it lacks battle testing. Even so, it does not mean you cannot build software with it, as the base, Rust and Axum, is already mature and Astra is a thin wrapper over it.
 
 ## Philosophy
 

@@ -84,6 +84,13 @@ function Astra.static_file(path, serve_path)
     table.insert(Astra, { path = path, method = "static_file", func = function() end, static_file = serve_path })
 end
 
+---
+---Runs the Astra server
+function Astra.run()
+    ---@diagnostic disable-next-line: undefined-global
+    astra_internal__start_server()
+end
+
 -- MARK: Internal
 
 ---

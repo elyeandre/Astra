@@ -20,3 +20,6 @@ end)
 Astra.get("/headers", function(req)
     return req:headers()
 end)
+
+-- Run the server
+Astra.run()

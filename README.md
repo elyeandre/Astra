@@ -4,10 +4,7 @@
 [![Static Badge](https://img.shields.io/badge/Join-The_Discord-blue?style=flat&logo=discord&color=blue)](https://discord.com/invite/6PMjUx8x3b)
 [![Static Badge](https://img.shields.io/badge/Read_The_Docs-blue?style=flat&logo=docsdotrs&color=%23000000)](https://astra.arkforge.net/docs/latest)
 
-Experimentational web framework for Lua 5.1 running on Axum for potential use at ArkForge. The goal is to get as much performance as possible and write web server logic in lua instead for faster iteration, fault-tolerance and no-build requirements.
-
-> [!Note]
-> The performance has not been thoroughly tested, but it should be expected to be close to Rust as this is a thin wrapper. However the fault-tolerance can be ensured through [error handling policies](https://github.com/ArkForgeLabs/Astra/blob/main/src/main.rs#L1-L2) set within the codebase.
+Web server runtime for Lua and LuaJIT written in Rust and running on Axum. The goal is to get as much performance as possible while writing the web server logic in lua instead for faster iteration, fault-tolerance and no-build requirements. This project is internally used here at [ArkForge](https://arkforge.net) and many others.
 
 ## Example
 
@@ -17,6 +14,12 @@ Typically in lua you can register routes like below, binded to a method
 Astra.get("/", function()
     return "hello from default Astra instance!"
 end)
+```
+
+and starting the server with
+
+```lua
+Astra.run()
 ```
 
 You can also use the local variables within routes
@@ -62,7 +65,7 @@ end)
 
 ## Note
 
-This project is NOT recommended for production. It is very much experimental and at the very early staged. Contributions, however, are welcome.
+This project is very young and not recommended for production at scale. Contributions, however, are welcome.
 
 Some features that are missing but are planned:
 
