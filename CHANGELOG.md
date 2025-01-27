@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.0] - 2025-01-27
+
+### Fix
+
+- #19 and introducing more types ([c95a4ac](https://github.com/ArkForgeLabs/Astra/commit/c95a4ac69b59a6526053a591221109a2dc846e44))
+
 ## [0.8.0] - 2025-01-23
 
 ### Documentation
