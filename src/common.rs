@@ -166,3 +166,43 @@ impl mlua::UserData for BodyLua {
         });
     }
 }
+
+#[allow(unused)]
+pub mod macros {
+    macro_rules! impl_deref {
+        ($struct:ty,$type:ty) => {
+            impl std::ops::Deref for $struct {
+                type Target = $type;
+
+                fn deref(&self) -> &Self::Target {
+                    &self.0
+                }
+            }
+            impl std::ops::DerefMut for $struct {
+                fn deref_mut(&mut self) -> &mut Self::Target {
+                    &mut self.0
+                }
+            }
+        };
+    }
+
+    macro_rules! impl_deref_field {
+        ($struct:ty,$type:ty,$field:ident) => {
+            impl std::ops::Deref for $struct {
+                type Target = $type;
+
+                fn deref(&self) -> &Self::Target {
+                    &self.$field
+                }
+            }
+            impl std::ops::DerefMut for $struct {
+                fn deref_mut(&mut self) -> &mut Self::Target {
+                    &mut self.$field
+                }
+            }
+        };
+    }
+
+    pub(crate) use impl_deref;
+    pub(crate) use impl_deref_field;
+}

@@ -7,12 +7,22 @@ require("../src/lua/astra")
 -- local db = database_connect("postgres://astra_postgres:password@localhost/astr_database")
 -- db:execute("CREATE TABLE IF NOT EXISTS test (id SERIAL PRIMARY KEY, name TEXT)", {});
 
-http_request("https://myip.wtf/json"):execute_task(function (response)
-    pretty_print(response:status_code())
-    pretty_print(response:headers())
-    pretty_print(response:remote_address())
-    pretty_print(response:body():json())
-end)
+-- http_request("https://myip.wtf/json"):execute_task(function (response)
+--     pretty_print(response:status_code())
+--     pretty_print(response:headers())
+--     pretty_print(response:remote_address())
+--     pretty_print(response:body():json())
+-- end)
+
+local task_id = spawn_interval(function ()
+    print("HOOOOO");
+end, 2000)
+print("YEE HAW");
+
+spawn_timeout(function ()
+    task_id:abort()
+    task_id:abort()
+end, 5000)
 
 
 Astra.get("/", function(req, res)

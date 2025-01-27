@@ -921,7 +921,29 @@ function database_connect(url) end
 function http_request(url) end
 
 ---
+--- Represents an async task
+---@class TaskHandler
+---@field abort fun() Aborts the running task
+
+---
 ---Starts a new async task
 ---@param callback fun() | nil The callback to run the content of the async task
+---@return TaskHandler
 ---@diagnostic disable-next-line: missing-return, lowercase-global
-function new_task(callback) end
+function spawn_task(callback) end
+
+---
+---Starts a new async task with a delay in milliseconds
+---@param callback fun() | nil The callback to run the content of the async task
+---@param timeout number The delay in milliseconds
+---@return TaskHandler
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function spawn_timeout(callback, timeout) end
+
+---
+---Starts a new async task that runs infinitely in a loop but with a delay in milliseconds
+---@param callback fun() | nil The callback to run the content of the async task
+---@param timeout number The delay in milliseconds
+---@return TaskHandler
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function spawn_interval(callback, timeout) end

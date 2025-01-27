@@ -53,7 +53,7 @@ There are also utilities provided such as a PostgreSQL, http client requests, lu
 
 ```lua
 -- spawn an async task that does not block the running thread
-new_task(function ()
+spawn_task(function ()
     -- HTTP Request to check your IP address
     http_request("https://myip.wtf/json", nil, function(response)
         pretty_print(response:status_code())
