@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.1] - 2025-01-28
+
+### Features
+
+- Now build with core and full version of Astra ([c81bd67](https://github.com/ArkForgeLabs/Astra/commit/c81bd67f21db24a2eceb4043e123ecb84a24ced0))
+
+### Miscellaneous Tasks
+
+- Updated doc ([65a2a8e](https://github.com/ArkForgeLabs/Astra/commit/65a2a8e3e2b0f9472e36708cb9ae5a7bc1ae8cca))
+- Moved everything into workspace structure ([04ff6e4](https://github.com/ArkForgeLabs/Astra/commit/04ff6e43506b2194a95ce704d1cfb77e71ec855a))
+- Updated README.md with new syntax ([c346198](https://github.com/ArkForgeLabs/Astra/commit/c3461985a2279db20eb570fd813f122f9b2ffe76))
+
 ## [0.10.0] - 2025-01-27
 
 ### Fix
