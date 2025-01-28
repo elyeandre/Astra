@@ -23,7 +23,7 @@ impl crate::utils::LuaUtils for MyNewExtension {
 }
 ```
 
-After this, open `mod.rs` folder, include your new extention's file, and within `register_utils` call your extension's `register_to_lua` method.
+After this, open `lib.rs` folder, include your new extention's file, and within `register_utils` call your extension's `register_to_lua` method.
 
 ```rust
     my_extension::MyNewExtension::register_to_lua(lua).await?;
