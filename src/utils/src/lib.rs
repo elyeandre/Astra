@@ -1,4 +1,5 @@
 mod chrono;
+mod crypto;
 mod database;
 mod http_client_request;
 mod tasks;

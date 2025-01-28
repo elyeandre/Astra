@@ -9,6 +9,7 @@ exclude = ["examples"]
 
 [workspace]
 members = ["src/common", "src/main"]
+resolver = "2"
 
 [workspace.dependencies]
 axum = { version = "0.8.0", features = [
