@@ -20,10 +20,7 @@ use clap::{command, crate_authors, crate_name, crate_version, Parser};
 enum AstraCLI {
     #[command(arg_required_else_help = true, about = "Runs a lua script")]
     Run { file_path: String },
-    #[command(
-        arg_required_else_help = true,
-        about = "Exports the packages lua bundle for import for intellisense"
-    )]
+    #[command(about = "Exports the packages lua bundle for import for intellisense")]
     ExportBundle,
 }
 
