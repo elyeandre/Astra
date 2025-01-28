@@ -2756,6 +2756,7 @@ name = "utils"
 version = "0.10.2"
 dependencies = [
  "axum",
+ "base64",
  "bytes",
  "chrono",
  "common",
