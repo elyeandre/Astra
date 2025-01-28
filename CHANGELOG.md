@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.2] - 2025-01-28
+
+### Bug Fixes
+
+- #22 export-bundle command did not execute ([5efd527](https://github.com/ArkForgeLabs/Astra/commit/5efd527e54e49f255cffee99cdd29e4efa8ecd5a))
+
 ## [0.10.1] - 2025-01-28
 
 ### Features

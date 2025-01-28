@@ -15,25 +15,31 @@ jobs:
         include:
           # Full version
           - os: ubuntu-20.04
-            flags: ""
+            name: full release ubuntu-20.04
+            flags: --features default
             artifact_name: astra
             asset_name: astra-full-linux-amd64
+
           - os: windows-2022
-            flags: ""
+            name: full release windows-2022
+            flags: --features default
             artifact_name: astra.exe
             asset_name: astra-full-windows-amd64.exe
           
           # Core version
           - os: ubuntu-20.04
+            name: core release ubuntu-20.04
             flags: "--no-default-features"
             artifact_name: astra
             asset_name: astra-core-linux-amd64
+
           - os: windows-2022
+            name: core release windows-2022
             flags: "--no-default-features"
             artifact_name: astra.exe
             asset_name: astra-core-windows-amd64.exe
 
-    name: release ${{ matrix.os }}
+    name: ${{ matrix.name }}
     runs-on: '${{ matrix.os }}'
     environment: production
 
