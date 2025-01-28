@@ -1,0 +1,33 @@
+[package]
+name = "astra"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+license.workspace = true
+exclude.workspace = true
+
+[features]
+default = ["utils"]
+utils = ["dep:utils"]
+
+[dependencies]
+mlua = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+bytes = { workspace = true }
+clap = { version = "4.5.27", features = ["cargo", "derive"] }
+dotenvy = "0.15.7"
+tower = { version = "0.5.2" }
+tower-http = { version = "0.6.2", features = [
+    "fs",
+    "trace",
+    "compression-full",
+    "decompression-full",
+] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+utils = { path = "../utils", optional = true }
+common = { path = "../common" }

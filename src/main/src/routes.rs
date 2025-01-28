@@ -1,4 +1,4 @@
-use crate::common::LUA;
+use crate::startup::LUA;
 use axum::{
     body::Body,
     http::Request,
@@ -163,7 +163,7 @@ pub fn load_routes() -> Router {
         }
     }
 
-    if let Ok(should_compress) = crate::common::LUA
+    if let Ok(should_compress) = crate::startup::LUA
         .globals()
         .get::<mlua::Table>("Astra")
         .and_then(|setting| setting.get::<bool>("compression"))

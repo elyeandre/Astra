@@ -2,7 +2,7 @@ use mlua::{LuaSerdeExt, UserData};
 use reqwest::{Client, RequestBuilder};
 use std::collections::HashMap;
 
-use crate::common::BodyLua;
+use common::BodyLua;
 
 // TODO: Add HTTPClientResponse and change the below as HTTPClientRequest.
 // TODO: HTTPClientRequest must be chained setter
@@ -17,7 +17,7 @@ pub struct HTTPClientRequest {
     pub body_json: Option<serde_json::Value>,
     pub form: HashMap<String, String>,
 }
-impl crate::utils::LuaUtils for HTTPClientRequest {
+impl crate::LuaUtils for HTTPClientRequest {
     async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
         let function = lua.create_function(|_, url: String| {
             Ok(Self {

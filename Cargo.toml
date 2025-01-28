@@ -1,4 +1,4 @@
-[package]
+[workspace.package]
 name = "astra"
 version = "0.10.0"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
@@ -7,12 +7,14 @@ edition = "2021"
 license = "Apache-2.0"
 exclude = ["examples"]
 
-[dependencies]
-axum = { version = "0.8.0", features = ["macros", "multipart"] }
-bytes = { version = "1.9.0", features = ["serde"] }
-chrono = { version = "0.4.39", features = ["serde"] }
-clap = { version = "4.5.27", features = ["cargo", "derive"] }
-dotenvy = "0.15.7"
+[workspace]
+members = ["src/common", "src/main"]
+
+[workspace.dependencies]
+axum = { version = "0.8.0", features = [
+    "macros",
+    "multipart",
+], workspace = true }
 mlua = { version = "0.10.2", features = [
     "luajit",
     "serialize",
@@ -22,36 +24,14 @@ mlua = { version = "0.10.2", features = [
     "error-send",
     "macros",
     "anyhow",
-] }
-reqwest = { version = "0.12.11", features = [
-    "json",
-    "rustls-tls",
-    "charset",
-    "http2",
-    "macos-system-configuration",
-], default-features = false }
-serde = { version = "1.0.216", features = ["derive"] }
-serde_json = "1.0.133"
-sqlx = { version = "0.8.2", features = [
-    "runtime-tokio",
-    "tls-rustls",
-    "postgres",
-    "json",
-    "chrono",
-    "uuid",
-] }
-tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
-toml = "0.8.19"
-tower = { version = "0.5.2" }
-tower-http = { version = "0.6.2", features = [
-    "fs",
-    "trace",
-    "compression-full",
-    "decompression-full",
-] }
-tracing = "0.1.41"
-tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-uuid = { version = "1.11.0", features = ["serde", "v4"] }
+], workspace = true }
+serde = { version = "1.0.216", features = ["derive"], workspace = true }
+serde_json = { version = "1.0.133", workspace = true }
+tokio = { version = "1.42.0", features = [
+    "macros",
+    "rt-multi-thread",
+], workspace = true }
+bytes = { version = "1.9.0", features = ["serde"], workspace = true }
 
 [profile.release]
 opt-level = 3
