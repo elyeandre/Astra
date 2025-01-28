@@ -37,6 +37,7 @@ pub async fn init() {
         .await
         .expect("Couldn't add prelude");
 
+    #[cfg(feature = "utils")]
     if let Err(e) = utils::register_utils(lua).await {
         println!("Error setting the util functions: {e}");
     }
