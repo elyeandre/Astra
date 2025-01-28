@@ -13,12 +13,25 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Full version
           - os: ubuntu-20.04
+            flags: ""
             artifact_name: astra
-            asset_name: astra-linux-amd64
+            asset_name: astra-full-linux-amd64
           - os: windows-2022
+            flags: ""
             artifact_name: astra.exe
-            asset_name: astra-windows-amd64.exe
+            asset_name: astra-full-windows-amd64.exe
+          
+          # Core version
+          - os: ubuntu-20.04
+            flags: "--no-default-features"
+            artifact_name: astra
+            asset_name: astra-core-linux-amd64
+          - os: windows-2022
+            flags: "--no-default-features"
+            artifact_name: astra.exe
+            asset_name: astra-core-windows-amd64.exe
 
     name: release ${{ matrix.os }}
     runs-on: '${{ matrix.os }}'
@@ -32,7 +45,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build Server
-        run: cargo build --release
+        run: cargo build --release '${{ matrix.flags }}'
 
       - name: Upload server binary to release
         uses: svenstaro/upload-release-action@v2

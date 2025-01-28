@@ -22,7 +22,7 @@ where
 }
 
 pub struct LuaTask {}
-impl crate::utils::LuaUtils for LuaTask {
+impl crate::LuaUtils for LuaTask {
     async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
         let function = lua.create_async_function(|_, callback: mlua::Function| async move {
             Ok(create_async_function(async move {
@@ -37,7 +37,7 @@ impl crate::utils::LuaUtils for LuaTask {
 }
 
 pub struct LuaTimeout {}
-impl crate::utils::LuaUtils for LuaTimeout {
+impl crate::LuaUtils for LuaTimeout {
     async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
         let function = lua.create_async_function(
             |_, (callback, sleep_length): (mlua::Function, u64)| async move {
@@ -57,7 +57,7 @@ impl crate::utils::LuaUtils for LuaTimeout {
 }
 
 pub struct LuaInterval {}
-impl crate::utils::LuaUtils for LuaInterval {
+impl crate::LuaUtils for LuaInterval {
     async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
         let function = lua.create_async_function(
             |_, (callback, sleep_length): (mlua::Function, u64)| async move {

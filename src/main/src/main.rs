@@ -3,11 +3,10 @@
 
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-mod common;
 mod requests;
 mod responses;
 mod routes;
-mod utils;
+mod startup;
 
 #[tokio::main]
 async fn main() {
@@ -20,7 +19,7 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    common::init().await;
+    startup::init().await;
 
     // get the metrics for current tokio tasks
     let metrics = tokio::runtime::Handle::current().metrics();

@@ -247,7 +247,7 @@ impl crate::utils::LuaUtils for MyNewExtension {
     }
 }
 <span class="boring">}</span></code></pre></pre>
-<p>After this, open <code>mod.rs</code> folder, include your new extention's file, and within <code>register_utils</code> call your extension's <code>register_to_lua</code> method.</p>
+<p>After this, open <code>lib.rs</code> folder, include your new extention's file, and within <code>register_utils</code> call your extension's <code>register_to_lua</code> method.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>    my_extension::MyNewExtension::register_to_lua(lua).await?;
