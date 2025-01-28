@@ -28,6 +28,14 @@ pub async fn init() {
     let lua = &LUA;
     let lib = include_str!("../../lua/astra_bundle.lua");
 
+    #[cfg(feature = "utils")]
+    let lib = {
+        let utils_lib = include_str!("../../lua/astra_utils.lua");
+        format!("{lib}\n{utils_lib}")
+    };
+    #[cfg(feature = "utils")]
+    let lib = lib.as_str();
+
     #[allow(clippy::expect_used)]
     lua.load(lib)
         .exec_async()
