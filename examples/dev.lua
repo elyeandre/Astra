@@ -71,3 +71,5 @@ end)
 -- end)
 
 Astra.static_file("/asd", "examples")
+
+Astra.run()

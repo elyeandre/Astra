@@ -26,6 +26,8 @@ enum AstraCLI {
 
 pub async fn init() {
     let lua = &LUA;
+    register_run_function().await;
+
     let lib = include_str!("../../lua/astra_bundle.lua");
 
     #[cfg(feature = "utils")]
@@ -75,8 +77,6 @@ pub async fn init() {
             std::process::exit(0);
         }
     }
-
-    register_run_function().await;
 }
 
 fn prepare_script(path: &str) -> String {
