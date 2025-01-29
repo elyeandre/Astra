@@ -14,15 +14,27 @@ require("../src/lua/astra")
 --     pretty_print(response:body():json())
 -- end)
 
-local task_id = spawn_interval(function ()
-    print("HOOOOO");
-end, 2000)
-print("YEE HAW");
+-- local task_id = spawn_interval(function ()
+--     print("HOOOOO");
+-- end, 2000)
+-- print("YEE HAW");
 
-spawn_timeout(function ()
-    task_id:abort()
-    task_id:abort()
-end, 5000)
+-- spawn_timeout(function ()
+--     task_id:abort()
+--     task_id:abort()
+-- end, 5000)
+
+local input = "MY VERY COOL STRING"
+
+local encoded = base64_encode(input)
+
+print(encoded)
+
+local decoded = base64_decode_urlsafe(encoded)
+print(decoded)
+
+print(hash("sha2_256", decoded))
+print(hash("sha3_256", decoded))
 
 
 Astra.get("/", function(req, res)

@@ -14,6 +14,7 @@ pub async fn register_utils(lua: &mlua::Lua) -> mlua::Result<()> {
     tasks::LuaTask::register_to_lua(lua).await?;
     tasks::LuaTimeout::register_to_lua(lua).await?;
     tasks::LuaInterval::register_to_lua(lua).await?;
+    crypto::LuaCrypto::register_to_lua(lua).await?;
 
     Ok(())
 }

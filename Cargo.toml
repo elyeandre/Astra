@@ -1,5 +1,4 @@
 [workspace.package]
-name = "astra"
 version = "0.10.2"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 description = "🔥 Blazingly Fast 🔥 web server runtime for Lua"
@@ -12,10 +11,7 @@ members = ["src/common", "src/main"]
 resolver = "2"
 
 [workspace.dependencies]
-axum = { version = "0.8.0", features = [
-    "macros",
-    "multipart",
-], workspace = true }
+axum = { version = "0.8.0", features = ["macros", "multipart"] }
 mlua = { version = "0.10.2", features = [
     "luajit",
     "serialize",
@@ -25,14 +21,11 @@ mlua = { version = "0.10.2", features = [
     "error-send",
     "macros",
     "anyhow",
-], workspace = true }
-serde = { version = "1.0.216", features = ["derive"], workspace = true }
-serde_json = { version = "1.0.133", workspace = true }
-tokio = { version = "1.42.0", features = [
-    "macros",
-    "rt-multi-thread",
-], workspace = true }
-bytes = { version = "1.9.0", features = ["serde"], workspace = true }
+] }
+serde = { version = "1.0.216", features = ["derive"] }
+serde_json = { version = "1.0.133" }
+tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
+bytes = { version = "1.9.0", features = ["serde"] }
 
 [profile.release]
 opt-level = 3

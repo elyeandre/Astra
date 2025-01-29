@@ -53,7 +53,7 @@ impl LuaCrypto {
 
     fn base64_decode(input: String) -> mlua::Result<String> {
         let mut output_buf = Vec::new();
-        match BASE64_STANDARD.decode_slice(input.as_bytes(), &mut output_buf) {
+        match BASE64_STANDARD.decode_vec(input.as_bytes(), &mut output_buf) {
             Ok(_) => Ok(String::from_utf8_lossy(output_buf.as_slice()).to_string()),
             Err(e) => Err(mlua::Error::runtime(format!(
                 "Could not decode the base64 encoded input: {e:?}"
@@ -63,7 +63,7 @@ impl LuaCrypto {
 
     fn base64_decode_urlsafe(input: String) -> mlua::Result<String> {
         let mut output_buf = Vec::new();
-        match BASE64_URL_SAFE.decode_slice(input.as_bytes(), &mut output_buf) {
+        match BASE64_URL_SAFE.decode_vec(input.as_bytes(), &mut output_buf) {
             Ok(_) => Ok(String::from_utf8_lossy(output_buf.as_slice()).to_string()),
             Err(e) => Err(mlua::Error::runtime(format!(
                 "Could not decode the base64 encoded input: {e:?}"
