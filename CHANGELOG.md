@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.1] - 2025-01-29
+
+### Bug Fixes
+
+- The startup function was not registered correctly ([05d2373](https://github.com/ArkForgeLabs/Astra/commit/05d2373106bd14718423218565534accb62bf5e6))
+
 ## [0.11.0] - 2025-01-29
 
 ### Documentation
