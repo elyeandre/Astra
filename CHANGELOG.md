@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.0] - 2025-01-29
+
+### Documentation
+
+- Added documentation for Crypto utility ([dfc0fc6](https://github.com/ArkForgeLabs/Astra/commit/dfc0fc606aac0ee4390a6365a9c36c18108f7b0d))
+
+### Features
+
+- Added function signatures on Lua as well ([c13087a](https://github.com/ArkForgeLabs/Astra/commit/c13087a77c698ce6239debbf6fb2eb313fe7d864))
+- Added base64 support ([02f48c4](https://github.com/ArkForgeLabs/Astra/commit/02f48c4fc991f54ecafd1ff33bd3cfd46da1a79e))
+- First edition of LuaCrypto ([20a55ae](https://github.com/ArkForgeLabs/Astra/commit/20a55aea168ea6fe4c9cac9259e0755e386c1e05))
+
 ## [0.10.2] - 2025-01-28
 
 ### Bug Fixes
