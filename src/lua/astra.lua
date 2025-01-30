@@ -6,10 +6,9 @@ _G.validate_table = require "./libs/table_schema.lua"
 
 -- MARK: Load envs
 
----
----Loads a dotenv file
----@param file_path string
-local function dotenv_load(file_path) end
+---@type fun(file_path: string)
+---@diagnostic disable-next-line: undefined-global
+_G.dotenv_load = dotenv_load
 
 _G.ENV = {}
 dotenv_load(".env")

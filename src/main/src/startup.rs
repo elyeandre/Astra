@@ -144,20 +144,22 @@ async fn register_run_function(lua: &mlua::Lua) {
 }
 
 fn dotenv_function(lua: &mlua::Lua) {
-    if let Ok(function) = lua.create_function(|lua, ()| {
+    if let Ok(function) = lua.create_function(|lua, file_name: String| {
         let env_table = lua.globals().get::<mlua::Table>("ENV")?;
 
         // if the file exists
-        if let Ok(file) = dotenvy::from_filename_iter(".env") {
-            // filter the available and parsed items
-            for (key, value) in file.filter_map(|item| {
-                if let Ok(item) = item {
-                    Some(item)
-                } else {
-                    None
+        match dotenvy::from_filename_iter(file_name) {
+            Ok(file) => {
+                // filter the available and parsed items
+                for (key, value) in file.filter_map(|item| match item {
+                    Ok(item) => Some(item),
+                    Err(_) => None,
+                }) {
+                    env_table.set(key, value)?;
                 }
-            }) {
-                env_table.set(key, value)?;
+            }
+            Err(_) => {
+                // eprintln!("Error loading a dotenv file: {e}");
             }
         }
 

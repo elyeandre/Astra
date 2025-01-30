@@ -24,17 +24,7 @@ require("../src/lua/astra")
 --     task_id:abort()
 -- end, 5000)
 
-local input = "MY VERY COOL STRING"
-
-local encoded = base64_encode(input)
-
-print(encoded)
-
-local decoded = base64_decode_urlsafe(encoded)
-print(decoded)
-
-print(hash("sha2_256", decoded))
-print(hash("sha3_256", decoded))
+-- print(ENV["SOMETHING"])
 
 
 Astra.get("/", function(req, res)
@@ -72,4 +62,4 @@ end)
 
 Astra.static_file("/asd", "examples")
 
-Astra.run()
+-- Astra.run()
