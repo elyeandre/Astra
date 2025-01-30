@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.2] - 2025-01-30
+
+### Features
+
+- Upload files with http client and save multipart files with uploaded filename ([3fbeced](https://github.com/ArkForgeLabs/Astra/commit/3fbeced38d099cbcbec50e30afadd89aaa8eb394))
+
 ## [0.12.0] - 2025-01-30
 
 ### Documentation
