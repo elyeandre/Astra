@@ -4,13 +4,21 @@ _G.utils = require "./libs/utils.lua"
 _G.json = require "./libs/json.lua"
 _G.validate_table = require "./libs/table_schema.lua"
 
--- Load envs
-local dotenv = require "./libs/dotenv.lua"
-dotenv:load(".env")
-dotenv:load(".env.production")
-dotenv:load(".env.development")
-dotenv:load(".env.test")
-dotenv:load(".env.local")
+-- MARK: Load envs
+
+---
+---Loads a dotenv file
+---@param file_path string
+local function dotenv_load(file_path) end
+
+_G.ENV = {}
+dotenv_load(".env")
+dotenv_load(".env.production")
+dotenv_load(".env.prod")
+dotenv_load(".env.development")
+dotenv_load(".env.dev")
+dotenv_load(".env.test")
+dotenv_load(".env.local")
 
 -- MARK: Astra
 

@@ -26,7 +26,10 @@ enum AstraCLI {
 
 pub async fn init() {
     let lua = &LUA;
-    register_run_function().await;
+
+    // register required global functions
+    dotenv_function(lua);
+    register_run_function(lua).await;
 
     let lib = include_str!("../../lua/astra_bundle.lua");
 
@@ -100,9 +103,9 @@ fn prepare_script(path: &str) -> String {
     filtered_lines.join("\n")
 }
 
-async fn register_run_function() {
+async fn register_run_function(lua: &mlua::Lua) {
     // Register function for running the server
-    if let Ok(function) = LUA.create_async_function(|lua, ()| async move {
+    if let Ok(function) = lua.create_async_function(|lua, ()| async move {
         // default address
         let mut listener_address = "127.0.0.1:8080".to_string();
 
@@ -134,8 +137,34 @@ async fn register_run_function() {
 
         Ok(())
     }) {
-        if let Err(e) = LUA.globals().set("astra_internal__start_server", function) {
+        if let Err(e) = lua.globals().set("astra_internal__start_server", function) {
             println!("Could not insert the function for astra_internal__start_server: {e}");
+        }
+    }
+}
+
+fn dotenv_function(lua: &mlua::Lua) {
+    if let Ok(function) = lua.create_function(|lua, ()| {
+        let env_table = lua.globals().get::<mlua::Table>("ENV")?;
+
+        // if the file exists
+        if let Ok(file) = dotenvy::from_filename_iter(".env") {
+            // filter the available and parsed items
+            for (key, value) in file.filter_map(|item| {
+                if let Ok(item) = item {
+                    Some(item)
+                } else {
+                    None
+                }
+            }) {
+                env_table.set(key, value)?;
+            }
+        }
+
+        Ok(())
+    }) {
+        if let Err(e) = lua.globals().set("dotenv_load", function) {
+            println!("Could not insert the function for dotenv_load: {e}");
         }
     }
 }
