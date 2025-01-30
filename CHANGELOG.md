@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.0] - 2025-01-30
+
+### Documentation
+
+- Updated docs on the dotenv load order and global function ([b62794f](https://github.com/ArkForgeLabs/Astra/commit/b62794fb2878412f22e7566bb69d6d6dbefde98d))
+
+### Features
+
+- Moved dotenv to a native library ([55b0086](https://github.com/ArkForgeLabs/Astra/commit/55b0086ee83522be5197af0d5aa25705ae3b4d94))
+
 ## [0.11.1] - 2025-01-29
 
 ### Bug Fixes
