@@ -51,6 +51,7 @@ function database_connect(url) end
 ---@field set_forms fun(http_request: HTTPClientRequest, headers: table): HTTPClientRequest Sets all of the forms
 ---@field set_body fun(http_request: HTTPClientRequest, body: string): HTTPClientRequest Sets the HTTP body
 ---@field set_json fun(http_request: HTTPClientRequest, json: table): HTTPClientRequest Sets the HTTP json
+---@field set_file fun(http_request: HTTPClientRequest, file_path: string): HTTPClientRequest Sets the for-upload file path
 ---@field execute fun(): HTTPClientResponse Executes the request and returns the response
 ---@field execute_task fun(http_request: HTTPClientRequest, callback: http_client_callback) Executes the request as an async task
 

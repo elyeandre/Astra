@@ -108,10 +108,16 @@ end
 --- Represents a multipart.
 ---@class Multipart
 _G.Multipart = {}
+
+---
+---Saves the multipart into disk
+---@param file_path string | nil
+function Multipart:save_file(file_path) end
+
 ---
 ---Saves the multipart into disk
 ---@param file_path string
-function Multipart:save_file(file_path) end
+function Multipart:save_file_with_filename(file_path) end
 
 ---
 --- Represents an HTTP request.

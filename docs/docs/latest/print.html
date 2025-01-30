@@ -587,7 +587,7 @@ function(request?, response?);
 </ul>
 <p>and where Multipart has:</p>
 <ul>
-<li><code>save_file(file_path: string)</code></li>
+<li><code>save_file(file_path: string | nil)</code></li>
 </ul>
 <p>Example:</p>
 <pre><code class="language-lua">Astra.get("/", function(req)
@@ -1466,6 +1466,7 @@ pretty_print(response:body():json())
   :set_forms({ key = "value" })
   :set_body("THE CONTENT OF THE BODY")
   :set_json({ key = "value" })
+  :set_file("/path/to/file")
   -- You can also execute as an async task
   :execute_task(function (result) end)
 </code></pre>

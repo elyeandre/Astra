@@ -39,8 +39,7 @@ Astra.get("/", function(req, res)
 end)
 
 Astra.post("/", function(req)
-    pretty_print(req:headers())
-    local function test() req:multipart():save_file("something.txt") end
+    req:multipart():save_file()
 
     -- local result = db:query_one("SELECT * FROM test;", {});
     -- print(utils.pretty_table(result))
@@ -62,4 +61,4 @@ end)
 
 Astra.static_file("/asd", "examples")
 
--- Astra.run()
+Astra.run()

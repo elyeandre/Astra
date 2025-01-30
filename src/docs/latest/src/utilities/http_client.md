@@ -29,6 +29,7 @@ local request_client = http_request("https://example.com")
   :set_forms({ key = "value" })
   :set_body("THE CONTENT OF THE BODY")
   :set_json({ key = "value" })
+  :set_file("/path/to/file")
   -- You can also execute as an async task
   :execute_task(function (result) end)
 ```

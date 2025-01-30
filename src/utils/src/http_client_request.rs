@@ -1,12 +1,7 @@
+use common::BodyLua;
 use mlua::{LuaSerdeExt, UserData};
 use reqwest::{Client, RequestBuilder};
 use std::collections::HashMap;
-
-use common::BodyLua;
-
-// TODO: Add HTTPClientResponse and change the below as HTTPClientRequest.
-// TODO: HTTPClientRequest must be chained setter
-// TODO: HTTPClientResponse will have the current UserData trait implementations
 
 #[derive(Debug, Clone)]
 pub struct HTTPClientRequest {
@@ -15,6 +10,7 @@ pub struct HTTPClientRequest {
     pub headers: HashMap<String, String>,
     pub body: Option<String>,
     pub body_json: Option<serde_json::Value>,
+    pub body_file: Option<String>,
     pub form: HashMap<String, String>,
 }
 impl crate::LuaUtils for HTTPClientRequest {
@@ -26,6 +22,7 @@ impl crate::LuaUtils for HTTPClientRequest {
                 headers: HashMap::new(),
                 body: None,
                 body_json: None,
+                body_file: None,
                 form: HashMap::new(),
             })
         })?;
@@ -33,7 +30,7 @@ impl crate::LuaUtils for HTTPClientRequest {
     }
 }
 impl HTTPClientRequest {
-    pub fn request_builder(&self) -> RequestBuilder {
+    pub async fn request_builder(&self) -> RequestBuilder {
         let mut client = match self.method.to_uppercase().as_str() {
             "POST" => Client::new().post(&self.url),
             "PATCH" => Client::new().patch(&self.url),
@@ -47,6 +44,29 @@ impl HTTPClientRequest {
             client.body(body.clone())
         } else if let Some(body) = &self.body_json {
             client.json(&body)
+        } else if let Some(body) = &self.body_file {
+            let path = std::path::PathBuf::from(body);
+            let path_filename = path.clone();
+
+            let file_form = reqwest::multipart::Form::new();
+            if let Ok(file_form) = file_form
+                .file(
+                    if let Some(filename) = path_filename
+                        .file_name()
+                        .and_then(|filename| filename.to_str())
+                    {
+                        filename.to_string()
+                    } else {
+                        "file.txt".to_string()
+                    },
+                    path,
+                )
+                .await
+            {
+                client.multipart(file_form)
+            } else {
+                client
+            }
         } else {
             client
         };
@@ -150,8 +170,15 @@ impl UserData for HTTPClientRequest {
             Ok(request)
         });
 
+        methods.add_method_mut("set_file", |_, this, file_path: String| {
+            let mut request = this.clone();
+            request.body_file = Some(file_path);
+
+            Ok(request)
+        });
+
         methods.add_async_method("execute", |_, this, ()| async move {
-            let request = this.request_builder();
+            let request = this.request_builder().await;
             match request.send().await {
                 Ok(response) => Ok(Self::response_to_http_client_response(response).await),
                 Err(e) => Err(mlua::Error::runtime(format!(
@@ -164,7 +191,7 @@ impl UserData for HTTPClientRequest {
             "execute_task",
             |_, this, callback: mlua::Function| async move {
                 tokio::spawn(async move {
-                    let request = this.request_builder();
+                    let request = this.request_builder().await;
                     match request.send().await {
                         Ok(response) => {
                             if let Err(e) = callback

@@ -2,20 +2,20 @@
 
 Requests are provided as the first argument of the route callbacks as a table (not deseralized). Each request in the route callbacks can be accessed through its methods. The following methods are available:
 
-* body: `Body`
-* headers: `table<string, string>`
-* uri: `string`
-* method: `string`
-* multipart: `Multipart`
+- body: `Body`
+- headers: `table<string, string>`
+- uri: `string`
+- method: `string`
+- multipart: `Multipart`
 
 where Body has:
 
-* text: `string`
-* json: `table`
+- text: `string`
+- json: `table`
 
 and where Multipart has:
 
-* `save_file(file_path: string)`
+- `save_file(file_path: string | nil)`
 
 Example:
 
