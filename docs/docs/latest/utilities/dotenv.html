@@ -227,12 +227,14 @@
 
 </style>
 <h1 id="dotenv"><a class="header" href="#dotenv">Dotenv</a></h1>
-<p>It is always a good idea to never include sensitive API keys within your server code. For these reasons we usually recommend using a <code>.env</code> file. Astra automatically loads them if they are present in the same folder into <code>_G.ENV</code> table so that it doesn't overlap with system's environment variables.</p>
+<p>It is always a good idea to never include sensitive API keys within your server code. For these reasons we usually recommend using a <code>.env</code> file. Astra automatically loads them if they are present in the same folder into <code>_G.ENV</code> table so that it doesn't overlap with system's environment variables. You can also load your own file using the global <code>dotenv_load</code> function.</p>
 <p>This is the load order of these files (They can overwrite the ones loaded previously):</p>
 <ul>
 <li>.env</li>
 <li>.env.production</li>
+<li>.env.prod</li>
 <li>.env.development</li>
+<li>.env.dev</li>
 <li>.env.test</li>
 <li>.env.local</li>
 </ul>
