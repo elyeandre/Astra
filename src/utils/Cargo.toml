@@ -7,6 +7,11 @@ edition.workspace = true
 license.workspace = true
 exclude.workspace = true
 
+[features]
+default = []
+luajit = ["mlua/luajit"]
+luau = ["mlua/luau-jit"]
+
 [dependencies]
 mlua = { workspace = true }
 axum = { workspace = true }

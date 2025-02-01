@@ -13,7 +13,6 @@ resolver = "2"
 [workspace.dependencies]
 axum = { version = "0.8.0", features = ["macros", "multipart"] }
 mlua = { version = "0.10.2", features = [
-    "luajit",
     "serialize",
     "vendored",
     "async",

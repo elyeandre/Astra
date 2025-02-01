@@ -8,8 +8,11 @@ license.workspace = true
 exclude.workspace = true
 
 [features]
-default = ["utils"]
-utils = ["dep:utils"]
+default = ["luajit"]
+luajit = ["mlua/luajit", "utils_luajit"]
+luau = ["mlua/luau-jit", "utils_luau"]
+utils_luajit = ["dep:utils", "utils/luajit"]
+utils_luau = ["dep:utils", "utils/luau"]
 
 [dependencies]
 mlua = { workspace = true }

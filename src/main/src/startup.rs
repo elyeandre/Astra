@@ -33,12 +33,12 @@ pub async fn init() {
 
     let lib = include_str!("../../lua/astra_bundle.lua");
 
-    #[cfg(feature = "utils")]
+    #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
     let lib = {
         let utils_lib = include_str!("../../lua/astra_utils.lua");
         format!("{lib}\n{utils_lib}")
     };
-    #[cfg(feature = "utils")]
+    #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
     let lib = lib.as_str();
 
     #[allow(clippy::expect_used)]
@@ -47,7 +47,7 @@ pub async fn init() {
         .await
         .expect("Couldn't add prelude");
 
-    #[cfg(feature = "utils")]
+    #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
     if let Err(e) = utils::register_utils(lua).await {
         println!("Error setting the util functions: {e}");
     }
