@@ -1,5 +1,5 @@
 [workspace.package]
-version = "0.12.2"
+version = "0.13.0"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 description = "🔥 Blazingly Fast 🔥 web server runtime for Lua"
 edition = "2021"
@@ -21,6 +21,15 @@ mlua = { version = "0.10.2", features = [
     "macros",
     "anyhow",
 ] }
+reqwest = { version = "0.12.11", features = [
+    "json",
+    "rustls-tls",
+    "charset",
+    "multipart",
+    "http2",
+    "stream",
+    "macos-system-configuration",
+], default-features = false }
 serde = { version = "1.0.216", features = ["derive"] }
 serde_json = { version = "1.0.133" }
 tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }

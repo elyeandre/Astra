@@ -20,14 +20,4 @@ async fn main() {
         .init();
 
     startup::init().await;
-
-    // get the metrics for current tokio tasks
-    let metrics = tokio::runtime::Handle::current().metrics();
-    loop {
-        // wait for them to finish
-        let alive_tasks = metrics.num_alive_tasks();
-        if alive_tasks == 0 {
-            break;
-        }
-    }
 }

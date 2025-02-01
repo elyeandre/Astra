@@ -120,7 +120,7 @@ checksum = "34ac096ce696dc2fcabef30516bb13c0a68a11d30131d3df6f04711467681b04"
 
 [[package]]
 name = "astra"
-version = "0.12.2"
+version = "0.13.0"
 dependencies = [
  "axum",
  "bytes",
@@ -128,6 +128,7 @@ dependencies = [
  "common",
  "dotenvy",
  "mlua",
+ "reqwest",
  "serde",
  "serde_json",
  "tokio",
@@ -136,6 +137,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "utils",
+ "version-compare",
 ]
 
 [[package]]
@@ -341,9 +343,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.10"
+version = "1.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13208fcbb66eaeffe09b99fffbe1af420f00a7b35aa99ad683dfc1aa76145229"
+checksum = "e4730490333d58093109dc02c23174c3f4d490998c3fed3cc8e82d57afedb9cf"
 dependencies = [
  "jobserver",
  "libc",
@@ -425,7 +427,7 @@ checksum = "5b63caa9aa9397e2d9480a9b13673856c78d8ac123288526c37d7839f2a86990"
 
 [[package]]
 name = "common"
-version = "0.12.2"
+version = "0.13.0"
 dependencies = [
  "bytes",
  "mlua",
@@ -2801,7 +2803,7 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "utils"
-version = "0.12.2"
+version = "0.13.0"
 dependencies = [
  "axum",
  "base64",
@@ -2841,6 +2843,12 @@ name = "vcpkg"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
+
+[[package]]
+name = "version-compare"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "852e951cb7832cb45cb1169900d19760cfa39b82bc0ea9c0e5a14ae88411c98b"
 
 [[package]]
 name = "version_check"

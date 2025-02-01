@@ -1,6 +1,7 @@
-pub static LUA: std::sync::LazyLock<mlua::Lua> = std::sync::LazyLock::new(mlua::Lua::new);
-
 use clap::{command, crate_authors, crate_name, crate_version, Parser};
+use std::{io::Write, sync::LazyLock};
+
+pub static LUA: LazyLock<mlua::Lua> = LazyLock::new(mlua::Lua::new);
 
 #[derive(Parser)] // requires `derive` feature
 #[command(name = "Astra")]
@@ -22,53 +23,46 @@ enum AstraCLI {
     Run { file_path: String },
     #[command(about = "Exports the packages lua bundle for import for intellisense")]
     ExportBundle,
+    #[command(about = "Updates to the latest version", alias = "update")]
+    Upgrade,
 }
 
 pub async fn init() {
     let lua = &LUA;
 
-    // register required global functions
-    dotenv_function(lua);
-    register_run_function(lua).await;
+    let lib = registration(lua).await;
 
-    let lib = include_str!("../../lua/astra_bundle.lua");
+    cli(lua, lib).await;
+}
 
-    #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
-    let lib = {
-        let utils_lib = include_str!("../../lua/astra_utils.lua");
-        format!("{lib}\n{utils_lib}")
-    };
-    #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
-    let lib = lib.as_str();
-
-    #[allow(clippy::expect_used)]
-    lua.load(lib)
-        .exec_async()
-        .await
-        .expect("Couldn't add prelude");
-
-    #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
-    if let Err(e) = utils::register_utils(lua).await {
-        println!("Error setting the util functions: {e}");
-    }
-
-    // settings
-    if let Ok(settings) = lua.globals().get::<mlua::Table>("Astra") {
-        // set the version
-        if settings.set("version", crate_version!()).is_ok() {
-            if let Err(e) = lua.globals().set("Astra", settings) {
-                println!("Error adding setting back to Astra: {e:#?}");
-            }
-        }
-    }
-
+async fn cli(lua: &mlua::Lua, lib: String) {
     // commands
     match AstraCLI::parse() {
         AstraCLI::Run { file_path } => {
+            // settings
+            if let Ok(settings) = lua.globals().get::<mlua::Table>("Astra") {
+                // set the version
+                if settings.set("version", crate_version!()).is_ok() {
+                    if let Err(e) = lua.globals().set("Astra", settings) {
+                        println!("Error adding setting back to Astra: {e:#?}");
+                    }
+                }
+            }
+
             let updated_content = prepare_script(&file_path);
             #[allow(clippy::expect_used)]
             if let Err(e) = lua.load(updated_content).exec_async().await {
                 eprintln!("Error loading lua file: {}", e);
+            }
+
+            // get the metrics for current tokio tasks
+            let metrics = tokio::runtime::Handle::current().metrics();
+            loop {
+                // wait for them to finish
+                let alive_tasks = metrics.num_alive_tasks();
+                if alive_tasks == 0 {
+                    break;
+                }
             }
         }
         AstraCLI::ExportBundle => {
@@ -79,7 +73,39 @@ pub async fn init() {
             println!("🚀 Successfully exported the bundled library!");
             std::process::exit(0);
         }
+        AstraCLI::Upgrade => {
+            #[allow(clippy::expect_used)]
+            self_update_cli()
+                .await
+                .expect("Could not update to the latest version.");
+        }
     }
+}
+
+async fn registration(lua: &mlua::Lua) -> String {
+    let lib = include_str!("../../lua/astra_bundle.lua").to_string();
+    #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
+    let lib = {
+        let utils_lib = include_str!("../../lua/astra_utils.lua");
+        format!("{lib}\n{utils_lib}")
+    };
+
+    // register required global functions
+    dotenv_function(lua);
+    register_run_function(lua).await;
+
+    #[allow(clippy::expect_used)]
+    lua.load(lib.as_str())
+        .exec_async()
+        .await
+        .expect("Couldn't add prelude");
+
+    #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
+    if let Err(e) = utils::register_utils(lua).await {
+        println!("Error setting the util functions: {e}");
+    }
+
+    lib
 }
 
 fn prepare_script(path: &str) -> String {
@@ -169,4 +195,61 @@ fn dotenv_function(lua: &mlua::Lua) {
             println!("Could not insert the function for dotenv_load: {e}");
         }
     }
+}
+
+async fn self_update_cli() -> Result<(), Box<dyn ::std::error::Error>> {
+    let latest_tag = reqwest::Client::new()
+        .get("https://api.github.com/repos/ArkForgeLabs/Astra/tags")
+        .header(reqwest::header::USER_AGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36")
+        .send()
+        .await?.json::<serde_json::Value>().await?;
+    #[allow(clippy::expect_used)]
+    let latest_tag = latest_tag
+        .as_array()
+        .expect("Could not obtain a list of releases")
+        .first()
+        .expect("Could not get the first available release")
+        .as_object()
+        .expect("Could not get the release details")
+        .get("name")
+        .expect("Could not get the tag")
+        .as_str()
+        .expect("Tag content is not in correct format");
+
+    if let Ok(is_new_version_available) =
+        version_compare::compare_to(latest_tag, crate_version!(), version_compare::Cmp::Gt)
+    {
+        if is_new_version_available {
+            println!("Updating from {} to {latest_tag}...", crate_version!());
+            #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
+            let edition = "astra-full";
+            #[cfg(not(any(feature = "utils_luajit", feature = "utils_luau")))]
+            let edition = "astra-core";
+
+            let architecture = if cfg!(windows) {
+                "windows-amd64.exe"
+            } else {
+                "linux-amd64"
+            };
+
+            let file_name = format!("{edition}-{architecture}");
+            let url = format!(
+                "https://github.com/ArkForgeLabs/Astra/releases/latest/download/{file_name}"
+            );
+
+            let content = reqwest::get(url).await?.bytes().await?;
+            std::fs::File::create(file_name.clone())?.write_all(&content)?;
+
+            #[cfg(target_os = "linux")]
+            let _ = std::process::Command::new("chmod")
+                .arg("+x")
+                .arg(file_name)
+                .spawn();
+
+            println!("Done!")
+        } else {
+            println!("Already up to date!");
+        }
+    }
+    Ok(())
 }
