@@ -226,13 +226,18 @@ async fn self_update_cli() -> Result<(), Box<dyn ::std::error::Error>> {
             #[cfg(not(any(feature = "utils_luajit", feature = "utils_luau")))]
             let edition = "astra-core";
 
+            #[cfg(feature = "luajit")]
+            let language = "luajit";
+            #[cfg(feature = "luau")]
+            let language = "luau";
+
             let architecture = if cfg!(windows) {
                 "windows-amd64.exe"
             } else {
                 "linux-amd64"
             };
 
-            let file_name = format!("{edition}-{architecture}");
+            let file_name = format!("{edition}-{language}-{architecture}");
             let url = format!(
                 "https://github.com/ArkForgeLabs/Astra/releases/latest/download/{file_name}"
             );

@@ -8,9 +8,9 @@ license.workspace = true
 exclude.workspace = true
 
 [features]
-default = ["luajit"]
-luajit = ["mlua/luajit", "utils_luajit"]
-luau = ["mlua/luau-jit", "utils_luau"]
+default = ["luajit", "utils_luajit"]
+luajit = ["mlua/luajit"]
+luau = ["mlua/luau-jit"]
 utils_luajit = ["dep:utils", "utils/luajit"]
 utils_luau = ["dep:utils", "utils/luau"]
 
