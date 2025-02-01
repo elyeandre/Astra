@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.0] - 2025-02-01
+
+### Features
+
+- Self updating command added ([d2032da](https://github.com/ArkForgeLabs/Astra/commit/d2032da8543bf528820cbc9e4289ac14d4d926c4))
+- Basic luau support ([72386df](https://github.com/ArkForgeLabs/Astra/commit/72386df547d66b39a56e1f82724ba5df6fc5b582))
+
 ## [0.12.2] - 2025-01-30
 
 ### Features
