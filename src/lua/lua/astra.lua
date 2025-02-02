@@ -115,11 +115,6 @@ _G.Multipart = {}
 function Multipart:save_file(file_path) end
 
 ---
----Saves the multipart into disk
----@param file_path string
-function Multipart:save_file_with_filename(file_path) end
-
----
 --- Represents an HTTP request.
 ---@class Request
 ---@field method fun(): string Returns the HTTP method (e.g., "GET", "POST").

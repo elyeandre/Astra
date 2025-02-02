@@ -83,10 +83,10 @@ async fn cli(lua: &mlua::Lua, lib: String) {
 }
 
 async fn registration(lua: &mlua::Lua) -> String {
-    let lib = include_str!("../../lua/astra_bundle.lua").to_string();
+    let lib = include_str!("../../lua/lua/astra_bundle.lua").to_string();
     #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
     let lib = {
-        let utils_lib = include_str!("../../lua/astra_utils.lua");
+        let utils_lib = include_str!("../../lua/lua/astra_utils.lua");
         format!("{lib}\n{utils_lib}")
     };
 

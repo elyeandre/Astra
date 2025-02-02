@@ -15,52 +15,52 @@ jobs:
         include:
           # Full version
           - os: ubuntu-20.04
-            name: full release ubuntu-20.04
+            name: full luajit release ubuntu-20.04
             flags: --features default
             artifact_name: astra
             asset_name: astra-full-luajit-linux-amd64
 
           - os: windows-2022
-            name: full release windows-2022
+            name: full luajit release windows-2022
             flags: --features default
             artifact_name: astra.exe
             asset_name: astra-full-luajit-windows-amd64.exe
 
           ## Luau
           - os: ubuntu-20.04
-            name: full release ubuntu-20.04
+            name: full luau release ubuntu-20.04
             flags: --no-default-features --features luau,utils_luau
             artifact_name: astra
             asset_name: astra-full-luau-linux-amd64
 
           - os: windows-2022
-            name: full release windows-2022
+            name: full luau release windows-2022
             flags: --no-default-features --features luau,utils_luau
             artifact_name: astra.exe
             asset_name: astra-full-luau-windows-amd64.exe
           
           # Core version
           - os: ubuntu-20.04
-            name: core release ubuntu-20.04
+            name: core luajit release ubuntu-20.04
             flags: "--no-default-features --features luajit"
             artifact_name: astra
             asset_name: astra-core-luajit-linux-amd64
 
           - os: windows-2022
-            name: core release windows-2022
+            name: core luajit release windows-2022
             flags: "--no-default-features --features luajit"
             artifact_name: astra.exe
             asset_name: astra-core-luajit-windows-amd64.exe
           
           # Luau
           - os: ubuntu-20.04
-            name: core release ubuntu-20.04
+            name: core luau release ubuntu-20.04
             flags: "--no-default-features --features luau"
             artifact_name: astra
             asset_name: astra-core-luau-linux-amd64
 
           - os: windows-2022
-            name: core release windows-2022
+            name: core luau release windows-2022
             flags: "--no-default-features --features luau"
             artifact_name: astra.exe
             asset_name: astra-core-luau-windows-amd64.exe
