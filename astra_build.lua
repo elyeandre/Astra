@@ -1,3 +1,4 @@
+--!nocheck
 --[[
     Astra's build system script written by Elham Aryanpur.
     There are many commands to automate the common tasks around.
@@ -67,6 +68,7 @@ local function print_usage()
     io.write("  help            Display this help message.\n")
     io.write("  version         Show the version information.\n")
     io.write("  pack            Bundle the lua libraries.\n")
+    io.write("  pack_luau       Bundle the luau libraries.\n")
     io.write("  changelog <TAG> Update CHANGELOG.md.\n")
     io.write("  docs            Generate documentation.\n")
 end
@@ -76,7 +78,11 @@ local function show_version()
 end
 
 local function execute_pack()
-    os.execute("cd src/lua && " .. runtime .. " pack.lua astra.lua")
+    os.execute("cd src/lua/lua && " .. runtime .. " pack.lua astra.lua")
+end
+
+local function execute_pack_luau()
+    os.execute("cd src/lua/luau && " .. runtime .. " pack.lua astra.luau")
 end
 
 local function execute_update_changelog(tag)
@@ -110,6 +116,8 @@ local function main(args)
         show_version()
     elseif command == "pack" then
         execute_pack()
+    elseif command == "pack_luau" then
+        execute_pack_luau()
     elseif command == "changelog" then
         execute_update_changelog(args[2])
     elseif command == "docs" then

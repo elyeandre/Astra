@@ -1,3 +1,4 @@
+--!nocheck
 ---@diagnostic disable: duplicate-set-field
 
 _G.utils = require "./libs/utils.lua"

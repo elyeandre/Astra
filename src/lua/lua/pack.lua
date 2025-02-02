@@ -1,4 +1,5 @@
 ---@diagnostic disable: lowercase-global
+--!nocheck
 
 -- https://github.com/turtleDev/pack.lua/blob/main/src/pack.lua
 --[[

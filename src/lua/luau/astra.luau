@@ -1,5 +1,12 @@
 --!strict
 
+local utils = require("libs/utils.luau")
+_G.utils = utils
+local json = require("libs/json.luau")
+_G.json = json
+local table_schema = require("libs/table_schema.luau")
+_G.table_schema = table_schema
+
 local Astra: {
 	[any]: RouteDetail | LogicRouteFunction | StaticRouteFunction | string | boolean | number,
 } = {
@@ -83,8 +90,8 @@ type RouteDetail = {
 	path: string,
 	method: string,
 	func: Callback,
-	static_dir: string | nil,
-	static_file: string | nil,
+	static_dir: string?,
+	static_file: string?,
 }
 
 type LogicRouteFunction = (string, Callback) -> ()
@@ -102,7 +109,7 @@ type Body = {
 
 --- Represents a multipart.
 type Multipart = {
-	save_file: (multipart: Multipart, file_path: string | nil) -> nil,
+	save_file: (multipart: Multipart, file_path: string?) -> nil,
 }
 
 type Headers = { [string]: string }
@@ -116,9 +123,9 @@ type Request = {
 	--- Returns a table containing the headers of the request.
 	headers: (request: Request) -> Headers,
 	--- Returns the body of the request, which can be a table or a string.
-	body: (request: Request) -> Body | nil,
+	body: (request: Request) -> Body?,
 	--- Returns a multipart if available.
-	multipart: (request: Request) -> Multipart | nil,
+	multipart: (request: Request) -> Multipart?,
 }
 
 type Response = {
@@ -127,7 +134,7 @@ type Response = {
 	--- Sets a header
 	set_header: (response: Response, key: string, value: string) -> nil,
 	--- Returns the entire headers list that so far has been set for the response
-	get_headers: (response: Response) -> Headers | nil,
+	get_headers: (response: Response) -> Headers?,
 	--- Removes a header from the headers list
 	remove_header: (response: Response, key: string) -> nil,
 }

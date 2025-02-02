@@ -67,8 +67,15 @@ async fn cli(lua: &mlua::Lua, lib: String) {
         }
         AstraCLI::ExportBundle => {
             #[allow(clippy::expect_used)]
-            std::fs::write("./astra_bundle.lua", lib)
-                .expect("Could not export the bundled library");
+            {
+                #[cfg(feature = "luajit")]
+                std::fs::write("./astra_bundle.lua", lib)
+                    .expect("Could not export the bundled library");
+
+                #[cfg(feature = "luau")]
+                std::fs::write("./astra_bundle.luau", lib)
+                    .expect("Could not export the bundled library");
+            }
 
             println!("🚀 Successfully exported the bundled library!");
             std::process::exit(0);
@@ -83,11 +90,28 @@ async fn cli(lua: &mlua::Lua, lib: String) {
 }
 
 async fn registration(lua: &mlua::Lua) -> String {
-    let lib = include_str!("../../lua/lua/astra_bundle.lua").to_string();
-    #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
+    #[cfg(feature = "luajit")]
     let lib = {
-        let utils_lib = include_str!("../../lua/lua/astra_utils.lua");
-        format!("{lib}\n{utils_lib}")
+        let lib = include_str!("../../lua/lua/astra_bundle.lua").to_string();
+        #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
+        let lib = {
+            let utils_lib = include_str!("../../lua/lua/astra_utils.lua");
+            format!("{lib}\n{utils_lib}")
+        };
+
+        lib
+    };
+
+    #[cfg(feature = "luau")]
+    let lib = {
+        let lib = include_str!("../../lua/luau/astra_bundle.luau").to_string();
+        #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
+        let lib = {
+            let utils_lib = include_str!("../../lua/luau/astra_utils.luau");
+            format!("{lib}\n{utils_lib}")
+        };
+
+        lib
     };
 
     // register required global functions

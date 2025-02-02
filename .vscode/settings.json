@@ -1,0 +1,7 @@
+{
+    "luau-lsp.ignoreGlobs": [
+        "src/lua/lua/**",
+        "/home/elhamaryanpur/Desktop/Projects/ArkForge/OSS/astra/src/lua/pack.lua"
+    ],
+    "luau-lsp.platform.type": "standard"
+}

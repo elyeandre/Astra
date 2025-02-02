@@ -1,24 +1,26 @@
+--!nocheck
+
 local utils = { _version = "0.1.0" }
 
 ---Pretty prints any table or value
 ---@diagnostic disable-next-line: duplicate-set-field
 function _G.pretty_print(inner_table)
-    local function pretty_print_table(table)
+    local function pretty_print_table(table_to_print)
         local str = ""
 
         -- Iterate over each key-value pair in the table
-        for k, v in pairs(table) do
-            k = '[' .. k .. ']'
+        for key, value in pairs(table_to_print) do
+            key = '[' .. key .. ']'
 
             -- Recursively convert nested tables to JSON strings
-            if type(v) == "table" then
-                str = str .. k .. ": " .. pretty_print_table(v) .. ", "
+            if type(value) == "table" then
+                str = str .. key .. ": " .. pretty_print_table(value) .. ", "
             else
                 -- Format string values with quotation marks
-                if type(v) == 'string' then
-                    v = '"' .. v .. '"'
+                if type(value) == 'string' then
+                    value = '"' .. value .. '"'
                 end
-                str = str .. k .. ": " .. tostring(v) .. ", "
+                str = str .. key .. ": " .. tostring(value) .. ", "
             end
         end
 
@@ -34,24 +36,24 @@ end
 
 ---
 ---Recursively converts a Lua table into a pretty-formatted JSON string.
----@param table table The input table.
+---@param table_to_convert table The input table.
 ---@diagnostic disable-next-line: duplicate-set-field
-function _G.pretty_json_table(table)
+function _G.pretty_json_table(table_to_convert)
     local json_str = ""
 
     -- Iterate over each key-value pair in the table
-    for k, v in pairs(table) do
-        if type(k) ~= 'number' then k = '"' .. k .. '"' end
+    for key, value in pairs(table_to_convert) do
+        if type(key) ~= 'number' then key = '"' .. key .. '"' end
 
         -- Recursively convert nested tables to JSON strings
-        if type(v) == "table" then
-            json_str = json_str .. k .. ": " .. _G.pretty_json_table(v) .. ", "
+        if type(value) == "table" then
+            json_str = json_str .. key .. ": " .. _G.pretty_json_table(value) .. ", "
         else
             -- Format string values with quotation marks
-            if type(v) == 'string' then
-                v = '"' .. v .. '"'
+            if type(value) == 'string' then
+                value = '"' .. value .. '"'
             end
-            json_str = json_str .. k .. ": " .. tostring(v) .. ", "
+            json_str = json_str .. key .. ": " .. tostring(value) .. ", "
         end
     end
 
@@ -64,19 +66,19 @@ end
 --     return trimmed_str
 -- end
 
-function utils.parse_query(str)
-    local function unescape(s)
-        s = string.gsub(s, "+", " ")
-        s = string.gsub(s, "%%(%x%x)", function(h)
-            return string.char(tonumber(h, 16))
+function utils.parse_query(query_str)
+    local function unescape(escaped_str)
+        escaped_str = string.gsub(escaped_str, "+", " ")
+        escaped_str = string.gsub(escaped_str, "%%(%x%x)", function(hex_val)
+            return string.char(tonumber(hex_val, 16))
         end)
-        return s
+        return escaped_str
     end
 
     local result_table = {}
-    for k, v in string.gmatch(str, "([^&=?]+)=([^&=?]+)") do
+    for key, value in string.gmatch(query_str, "([^&=?]+)=([^&=?]+)") do
         --t[k] = v
-        result_table[k] = unescape(v)
+        result_table[key] = unescape(value)
     end
 
     return result_table
@@ -84,14 +86,14 @@ end
 
 ---
 ---Splits a sentence into an array given the separator
----@param str string The input string
----@param separator string The input string
+---@param input_str string The input string
+---@param separator_str string The input string
 ---@return table array
 ---@nodiscard
 ---@diagnostic disable-next-line: duplicate-set-field
-function string.split(str, separator)
+function string.split(input_str, separator_str)
     local result_table = {}
-    for word in str:gmatch("([^" .. separator .. "]+)") do
+    for word in input_str:gmatch("([^" .. separator_str .. "]+)") do
         table.insert(result_table, word)
     end
     return result_table
