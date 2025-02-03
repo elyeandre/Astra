@@ -1,68 +1,72 @@
 --!strict
 
-local utils = require("libs/utils.luau")
-_G.utils = utils
-local json = require("libs/json.luau")
-_G.json = json
-local table_schema = require("libs/table_schema.luau")
-_G.table_schema = table_schema
+-- local utils = require("libs/utils.luau")
+-- local json = require("libs/json.luau")
+-- local table_schema = require("libs/table_schema.luau")
 
-local Astra: {
-	[any]: RouteDetail | LogicRouteFunction | StaticRouteFunction | string | boolean | number,
-} = {
-	version = "0.0.0",
-	hostname = "127.0.0.1",
-	compression = true,
-	port = 20001,
-}
+_G.Astra = {}
+_G.Astra.__index = _G.Astra
+function _G.Astra.new()
+	print("HASDKNASD")
+	local self = setmetatable({}, _G.Astra)
 
---- @param path string The URL path for the request.
---- @param callback callback A function that will be called when the request is made.
-function Astra.get(path: string, callback: Callback)
-	table.insert(Astra, { path = path, method = "get", func = callback })
+	self.version = "0.0.0"
+	self.hostname = "127.0.0.1"
+	self.compression = true
+	self.port = 20001
+	self.routes = {}
+
+	return self
 end
 
 --- @param path string The URL path for the request.
 --- @param callback callback A function that will be called when the request is made.
-function Astra.post(path: string, callback: Callback)
-	table.insert(Astra, { path = path, method = "post", func = callback })
+function _G.Astra:get(path: string, callback: Callback)
+	print("HEHE")
+	table.insert(self.routes, { path = path, method = "get", func = callback })
 end
 
 --- @param path string The URL path for the request.
 --- @param callback callback A function that will be called when the request is made.
-function Astra.put(path: string, callback: Callback)
-	table.insert(Astra, { path = path, method = "put", func = callback })
+function _G.Astra:post(path: string, callback: Callback)
+	table.insert(self.routes, { path = path, method = "post", func = callback })
 end
 
 --- @param path string The URL path for the request.
 --- @param callback callback A function that will be called when the request is made.
-function Astra.delete(path: string, callback: Callback)
-	table.insert(Astra, { path = path, method = "delete", func = callback })
+function _G.Astra:put(path: string, callback: Callback)
+	table.insert(self.routes, { path = path, method = "put", func = callback })
 end
 
 --- @param path string The URL path for the request.
 --- @param callback callback A function that will be called when the request is made.
-function Astra.options(path: string, callback: Callback)
-	table.insert(Astra, { path = path, method = "options", func = callback })
+function _G.Astra:delete(path: string, callback: Callback)
+	table.insert(self.routes, { path = path, method = "delete", func = callback })
 end
 
 --- @param path string The URL path for the request.
 --- @param callback callback A function that will be called when the request is made.
-function Astra.patch(path: string, callback: Callback)
-	table.insert(Astra, { path = path, method = "patch", func = callback })
+function _G.Astra:options(path: string, callback: Callback)
+	table.insert(self.routes, { path = path, method = "options", func = callback })
 end
 
 --- @param path string The URL path for the request.
 --- @param callback callback A function that will be called when the request is made.
-function Astra.trace(path: string, callback: Callback)
-	table.insert(Astra, { path = path, method = "trace", func = callback })
+function _G.Astra:patch(path: string, callback: Callback)
+	table.insert(self.routes, { path = path, method = "patch", func = callback })
+end
+
+--- @param path string The URL path for the request.
+--- @param callback callback A function that will be called when the request is made.
+function _G.Astra:trace(path: string, callback: Callback)
+	table.insert(self.routes, { path = path, method = "trace", func = callback })
 end
 
 --- Registers a static folder to serve
 --- @param serve_path string The directory path relatively
 --- @param path string The URL path for the request.
-function Astra.static_dir(path: string, serve_path: string)
-	table.insert(Astra, {
+function _G.Astra:static_dir(path: string, serve_path: string)
+	table.insert(self.routes, {
 		path = path,
 		method = "static_dir",
 		func = function()
@@ -75,8 +79,8 @@ end
 --- Registers a static file to serve
 --- @param serve_path string The file path relatively
 --- @param path string The URL path for the request.
-function Astra.static_file(path: string, serve_path: string)
-	table.insert(Astra, {
+function _G.Astra:static_file(path: string, serve_path: string)
+	table.insert(self.routes, {
 		path = path,
 		method = "static_file",
 		func = function()
@@ -84,6 +88,17 @@ function Astra.static_file(path: string, serve_path: string)
 		end,
 		static_file = serve_path,
 	})
+end
+
+--- @START_REMOVING_RUNTIME
+local astra_internal__start_server = function()
+	print("Function exists and is called!")
+end
+--- @END_REMOVING_RUNTIME
+
+--- Runs the _G.Astra server
+function _G.Astra:run()
+	astra_internal__start_server()
 end
 
 type RouteDetail = {
@@ -138,3 +153,7 @@ type Response = {
 	--- Removes a header from the headers list
 	remove_header: (response: Response, key: string) -> nil,
 }
+
+--- @START_REMOVING_RUNTIME
+return {}
+--- @END_REMOVING_RUNTIME

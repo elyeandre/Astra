@@ -4,6 +4,7 @@
 
 type AnyTable = { [any]: any }
 
+--- @START_REMOVING_PACK
 --- Represents an HTTP body.
 type Body = {
 	--- Returns the body as text
@@ -11,6 +12,7 @@ type Body = {
 	--- Returns the body parsed as JSON -> Lua Table
 	json: (body: Body) -> { [any]: any },
 }
+--- @END_REMOVING_PACK
 
 --- SQLx driver for PostgreSQL
 type Database = {

@@ -52,7 +52,7 @@ async fn cli(lua: &mlua::Lua, lib: String) {
             let updated_content = prepare_script(&file_path);
             #[allow(clippy::expect_used)]
             if let Err(e) = lua.load(updated_content).exec_async().await {
-                eprintln!("Error loading lua file: {}", e);
+                eprintln!("{}", e);
             }
 
             // get the metrics for current tokio tasks
@@ -90,13 +90,53 @@ async fn cli(lua: &mlua::Lua, lib: String) {
 }
 
 async fn registration(lua: &mlua::Lua) -> String {
+    let (lib, cleaned_lib) = prepare_prelude();
+
+    // register required global functions
+    dotenv_function(lua);
+    register_run_function(lua).await;
+
+    // #[allow(clippy::expect_used)]
+    // lua.load(cleaned_lib.as_str())
+    //     .exec_async()
+    //     .await
+    //     .expect("Couldn't add prelude");
+
+    #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
+    if let Err(e) = utils::register_utils(lua).await {
+        println!("Error setting the util functions: {e}");
+    }
+
+    lib
+}
+
+fn prepare_prelude() -> (String, String) {
+    fn filter(input: String, start: &str, end: &str) -> String {
+        let mut new_lines = Vec::new();
+        let mut removing = false;
+        for i in input.lines() {
+            if i.contains(start) {
+                removing = true;
+                continue;
+            } else if i.contains(end) {
+                removing = false;
+                continue;
+            }
+
+            if !removing {
+                new_lines.push(i);
+            }
+        }
+        new_lines.join("\n")
+    }
+
     #[cfg(feature = "luajit")]
     let lib = {
         let lib = include_str!("../../lua/lua/astra_bundle.lua").to_string();
         #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
         let lib = {
             let utils_lib = include_str!("../../lua/lua/astra_utils.lua");
-            format!("{lib}\n{utils_lib}")
+            format!("{utils_lib}\n{lib}")
         };
 
         lib
@@ -108,28 +148,21 @@ async fn registration(lua: &mlua::Lua) -> String {
         #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
         let lib = {
             let utils_lib = include_str!("../../lua/luau/astra_utils.luau");
-            format!("{lib}\n{utils_lib}")
+            format!("{utils_lib}\n{lib}")
         };
 
         lib
     };
 
-    // register required global functions
-    dotenv_function(lua);
-    register_run_function(lua).await;
+    let lib = filter(lib, "--- @START_REMOVING_PACK", "--- @END_REMOVING_PACK");
 
-    #[allow(clippy::expect_used)]
-    lua.load(lib.as_str())
-        .exec_async()
-        .await
-        .expect("Couldn't add prelude");
+    let cleaned_lib = filter(
+        lib.clone(),
+        "--- @START_REMOVING_RUNTIME",
+        "--- @END_REMOVING_RUNTIME",
+    );
 
-    #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
-    if let Err(e) = utils::register_utils(lua).await {
-        println!("Error setting the util functions: {e}");
-    }
-
-    lib
+    (lib, cleaned_lib)
 }
 
 fn prepare_script(path: &str) -> String {
@@ -142,11 +175,13 @@ fn prepare_script(path: &str) -> String {
     // Filter out lines that start with "require" and contain "astra.lua" or "astra.bundle.lua"
     let filtered_lines: Vec<String> = lines
         .into_iter()
-        .filter(|line| {
-            !(line.starts_with("require")
-                && (line.contains("astra") || line.contains("astra_bundle")))
+        .filter_map(|line| {
+            if !(line.contains("require") && line.contains("astra_bundle")) {
+                Some(line.to_string())
+            } else {
+                None
+            }
         })
-        .map(|line| line.to_string()) // Convert to String
         .collect();
 
     // Join the filtered lines back into a single string
