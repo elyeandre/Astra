@@ -284,6 +284,11 @@ async fn self_update_cli() -> Result<(), Box<dyn ::std::error::Error>> {
             );
 
             let content = reqwest::get(url).await?.bytes().await?;
+
+            // if let Some(bin_name) = std::env::args().collect::<Vec<_>>().first() {
+            //     let path = std::path::PathBuf::from(bin_name);
+            //     let file_name = path.file_name();
+            // }
             std::fs::File::create(file_name.clone())?.write_all(&content)?;
 
             #[cfg(target_os = "linux")]

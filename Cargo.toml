@@ -7,7 +7,7 @@ license = "Apache-2.0"
 exclude = ["examples"]
 
 [workspace]
-members = ["src/common", "src/main"]
+members = ["src/common", "src/lua_bin"]
 resolver = "2"
 
 [workspace.dependencies]
