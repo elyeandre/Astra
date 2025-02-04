@@ -67,15 +67,8 @@ async fn cli(lua: &mlua::Lua, lib: String) {
         }
         AstraCLI::ExportBundle => {
             #[allow(clippy::expect_used)]
-            {
-                #[cfg(feature = "luajit")]
-                std::fs::write("./astra_bundle.lua", lib)
-                    .expect("Could not export the bundled library");
-
-                #[cfg(feature = "luau")]
-                std::fs::write("./astra_bundle.luau", lib)
-                    .expect("Could not export the bundled library");
-            }
+            std::fs::write("./astra_bundle.lua", lib)
+                .expect("Could not export the bundled library");
 
             println!("🚀 Successfully exported the bundled library!");
             std::process::exit(0);
@@ -96,11 +89,13 @@ async fn registration(lua: &mlua::Lua) -> String {
     dotenv_function(lua);
     register_run_function(lua).await;
 
-    // #[allow(clippy::expect_used)]
-    // lua.load(cleaned_lib.as_str())
-    //     .exec_async()
-    //     .await
-    //     .expect("Couldn't add prelude");
+    // ! TRY TO REMOVE THE PRELUDE
+
+    #[allow(clippy::expect_used)]
+    lua.load(cleaned_lib.as_str())
+        .exec_async()
+        .await
+        .expect("Couldn't add prelude");
 
     #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
     if let Err(e) = utils::register_utils(lua).await {
@@ -130,24 +125,11 @@ fn prepare_prelude() -> (String, String) {
         new_lines.join("\n")
     }
 
-    #[cfg(feature = "luajit")]
     let lib = {
-        let lib = include_str!("../../lua/lua/astra_bundle.lua").to_string();
+        let lib = include_str!("../../lua/astra_bundle.lua").to_string();
         #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
         let lib = {
-            let utils_lib = include_str!("../../lua/lua/astra_utils.lua");
-            format!("{utils_lib}\n{lib}")
-        };
-
-        lib
-    };
-
-    #[cfg(feature = "luau")]
-    let lib = {
-        let lib = include_str!("../../lua/luau/astra_bundle.luau").to_string();
-        #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
-        let lib = {
-            let utils_lib = include_str!("../../lua/luau/astra_utils.luau");
+            let utils_lib = include_str!("../../lua/astra_utils.lua");
             format!("{utils_lib}\n{lib}")
         };
 
