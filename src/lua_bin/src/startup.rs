@@ -1,7 +1,9 @@
 use clap::{command, crate_authors, crate_name, crate_version, Parser};
 use std::{io::Write, sync::LazyLock};
+use tokio::sync::OnceCell;
 
 pub static LUA: LazyLock<mlua::Lua> = LazyLock::new(mlua::Lua::new);
+pub static SCRIPT_PATH: OnceCell<String> = OnceCell::const_new();
 
 #[derive(Parser)] // requires `derive` feature
 #[command(name = "Astra")]
@@ -39,6 +41,11 @@ async fn cli(lua: &mlua::Lua, lib: String) {
     // commands
     match AstraCLI::parse() {
         AstraCLI::Run { file_path } => {
+            #[allow(clippy::expect_used)]
+            SCRIPT_PATH
+                .set(file_path.clone())
+                .expect("Could not set the script path to OnceCell");
+
             // settings
             if let Ok(settings) = lua.globals().get::<mlua::Table>("Astra") {
                 // set the version
@@ -87,6 +94,10 @@ async fn registration(lua: &mlua::Lua) -> String {
 
     // register required global functions
     dotenv_function(lua);
+    #[allow(clippy::expect_used)]
+    crate::fileio::register_fileio_functions(lua)
+        .await
+        .expect("Could not register File IO functions");
     register_run_function(lua).await;
 
     // ! TRY TO REMOVE THE PRELUDE
