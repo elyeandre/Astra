@@ -133,19 +133,24 @@ function Multipart:save_file(file_path) end
 ---@field get_headers fun(): table|nil Returns the entire headers list that so far has been set for the response
 ---@field remove_header fun(response: Response, key: string) Removes a header from the headers list
 
+---@class FileType
+---@field is_file fun(): boolean
+---@field is_dir fun(): boolean
+---@field is_symlink fun(): boolean
+
+---@class DirEntry
+---@field file_name fun(): string Returns the file_name of the entry
+---@field file_type fun(): FileType
+---@field path fun(): string Returns the path of each entry in the list
+
 --- @START_REMOVING_RUNTIME
 _G.AstraIO = {
-	---Reads a file into string
+	---Returns the content of the directory
 	---@param path string Path to the file
-	---@return string
-	read = function(path)
-		return ""
+	---@return DirEntry[]
+	read_dir = function(path)
+		return {}
 	end,
-
-	---Writes a string to the file
-	---@param path string Path to the file
-	---@param content string Content to write to the file
-	write = function(path, content) end,
 
 	---Returns the path of the current directory
 	---@return string
