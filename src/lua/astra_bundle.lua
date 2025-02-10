@@ -791,14 +791,6 @@ end
 
 -- MARK: Internal
 
---- @START_REMOVING_RUNTIME
-_G.AstraIO = {
-    ---Returns the path of the current running script
-    ---@return string
-	get_script_path = function() return "" end,
-}
---- @END_REMOVING_RUNTIME
-
 ---
 --- Represents an HTTP body.
 ---@class Body
@@ -831,3 +823,36 @@ function Multipart:save_file(file_path) end
 ---@field set_header fun(response: Response, key: string, value: string) Sets a header
 ---@field get_headers fun(): table|nil Returns the entire headers list that so far has been set for the response
 ---@field remove_header fun(response: Response, key: string) Removes a header from the headers list
+
+---@class FileType
+---@field is_file fun(file_type: FileType): boolean
+---@field is_dir fun(file_type: FileType): boolean
+---@field is_symlink fun(file_type: FileType): boolean
+
+---@class DirEntry
+---@field file_name fun(dir_entry: DirEntry): string Returns the file_name of the entry
+---@field file_type fun(dir_entry: DirEntry): FileType
+---@field path fun(dir_entry: DirEntry): string Returns the path of each entry in the list
+
+--- @START_REMOVING_RUNTIME
+_G.AstraIO = {
+	---Returns the content of the directory
+	---@param path string Path to the file
+	---@return DirEntry[]
+	read_dir = function(path)
+		return {}
+	end,
+
+	---Returns the path of the current directory
+	---@return string
+	get_current_dir = function()
+		return ""
+	end,
+
+	---Returns the path of the current running script
+	---@return string
+	get_script_path = function()
+		return ""
+	end,
+}
+--- @END_REMOVING_RUNTIME

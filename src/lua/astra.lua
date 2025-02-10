@@ -134,14 +134,14 @@ function Multipart:save_file(file_path) end
 ---@field remove_header fun(response: Response, key: string) Removes a header from the headers list
 
 ---@class FileType
----@field is_file fun(): boolean
----@field is_dir fun(): boolean
----@field is_symlink fun(): boolean
+---@field is_file fun(file_type: FileType): boolean
+---@field is_dir fun(file_type: FileType): boolean
+---@field is_symlink fun(file_type: FileType): boolean
 
 ---@class DirEntry
----@field file_name fun(): string Returns the file_name of the entry
----@field file_type fun(): FileType
----@field path fun(): string Returns the path of each entry in the list
+---@field file_name fun(dir_entry: DirEntry): string Returns the file_name of the entry
+---@field file_type fun(dir_entry: DirEntry): FileType
+---@field path fun(dir_entry: DirEntry): string Returns the path of each entry in the list
 
 --- @START_REMOVING_RUNTIME
 _G.AstraIO = {
