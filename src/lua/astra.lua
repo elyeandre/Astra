@@ -1,9 +1,10 @@
 --!nocheck
 ---@diagnostic disable: duplicate-set-field
 
-_G.utils = require "./libs/utils.lua"
-_G.json = require "./libs/json.lua"
-_G.validate_table = require "./libs/table_schema.lua"
+_G.utils = require("./libs/utils.lua")
+_G.json = require("./libs/json.lua")
+_G.validate_table = require("./libs/table_schema.lua")
+_G.import = require("./libs/import.lua")
 
 -- MARK: Load envs
 
@@ -23,10 +24,10 @@ dotenv_load(".env.local")
 -- MARK: Astra
 
 _G.Astra = {
-    version = "0.0.0",
-    hostname = "127.0.0.1",
-    compression = true,
-    port = 20001
+	version = "0.0.0",
+	hostname = "127.0.0.1",
+	compression = true,
+	port = 20001,
 }
 
 ---@diagnostic disable-next-line: duplicate-doc-alias
@@ -35,43 +36,43 @@ _G.Astra = {
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra.get(path, callback)
-    table.insert(Astra, { path = path, method = "get", func = callback })
+	table.insert(Astra, { path = path, method = "get", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra.post(path, callback)
-    table.insert(Astra, { path = path, method = "post", func = callback })
+	table.insert(Astra, { path = path, method = "post", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra.put(path, callback)
-    table.insert(Astra, { path = path, method = "put", func = callback })
+	table.insert(Astra, { path = path, method = "put", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra.delete(path, callback)
-    table.insert(Astra, { path = path, method = "delete", func = callback })
+	table.insert(Astra, { path = path, method = "delete", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra.options(path, callback)
-    table.insert(Astra, { path = path, method = "options", func = callback })
+	table.insert(Astra, { path = path, method = "options", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra.patch(path, callback)
-    table.insert(Astra, { path = path, method = "patch", func = callback })
+	table.insert(Astra, { path = path, method = "patch", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra.trace(path, callback)
-    table.insert(Astra, { path = path, method = "trace", func = callback })
+	table.insert(Astra, { path = path, method = "trace", func = callback })
 end
 
 ---
@@ -79,7 +80,7 @@ end
 ---@param path string The URL path for the request.
 ---@param serve_path string The directory path relatively
 function Astra.static_dir(path, serve_path)
-    table.insert(Astra, { path = path, method = "static_dir", func = function() end, static_dir = serve_path })
+	table.insert(Astra, { path = path, method = "static_dir", func = function() end, static_dir = serve_path })
 end
 
 ---
@@ -87,14 +88,14 @@ end
 ---@param path string The URL path for the request.
 ---@param serve_path string The directory path relatively
 function Astra.static_file(path, serve_path)
-    table.insert(Astra, { path = path, method = "static_file", func = function() end, static_file = serve_path })
+	table.insert(Astra, { path = path, method = "static_file", func = function() end, static_file = serve_path })
 end
 
 ---
 ---Runs the Astra server
 function Astra.run()
-    ---@diagnostic disable-next-line: undefined-global
-    astra_internal__start_server()
+	---@diagnostic disable-next-line: undefined-global
+	astra_internal__start_server()
 end
 
 -- MARK: Internal
@@ -132,3 +133,30 @@ function Multipart:save_file(file_path) end
 ---@field get_headers fun(): table|nil Returns the entire headers list that so far has been set for the response
 ---@field remove_header fun(response: Response, key: string) Removes a header from the headers list
 
+--- @START_REMOVING_RUNTIME
+_G.AstraIO = {
+	---Reads a file into string
+	---@param path string Path to the file
+	---@return string
+	read = function(path)
+		return ""
+	end,
+
+	---Writes a string to the file
+	---@param path string Path to the file
+	---@param content string Content to write to the file
+	write = function(path, content) end,
+
+	---Returns the path of the current directory
+	---@return string
+	get_current_dir = function()
+		return ""
+	end,
+
+	---Returns the path of the current running script
+	---@return string
+	get_script_path = function()
+		return ""
+	end,
+}
+--- @END_REMOVING_RUNTIME

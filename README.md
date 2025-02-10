@@ -1,6 +1,6 @@
 ![Banner](./docs/banner.png)
 
-[![Release](https://github.com/ArkForgeLabs/Astra/actions/workflows/release.yml/badge.svg)](https://github.com/ArkForgeLabs/Astra/actions/workflows/release.yml)
+[![Release](https://github.com/ArkForgeLabs/Astra/actions/workflows/lua_release.yml/badge.svg)](https://github.com/ArkForgeLabs/Astra/actions/workflows/lua_release.yml)
 [![Static Badge](https://img.shields.io/badge/Join-The_Discord-blue?style=flat&logo=discord&color=blue)](https://discord.com/invite/6PMjUx8x3b)
 [![Static Badge](https://img.shields.io/badge/Read_The_Docs-blue?style=flat&logo=docsdotrs&color=%23000000)](https://astra.arkforge.net/docs/latest)
 

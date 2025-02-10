@@ -32,12 +32,10 @@ enum AstraCLI {
 pub async fn init() {
     let lua = &LUA;
 
-    let lib = registration(lua).await;
-
-    cli(lua, lib).await;
+    cli(lua).await;
 }
 
-async fn cli(lua: &mlua::Lua, lib: String) {
+async fn cli(lua: &mlua::Lua) {
     // commands
     match AstraCLI::parse() {
         AstraCLI::Run { file_path } => {
@@ -45,6 +43,8 @@ async fn cli(lua: &mlua::Lua, lib: String) {
             SCRIPT_PATH
                 .set(file_path.clone())
                 .expect("Could not set the script path to OnceCell");
+
+            let _ = registration(lua).await;
 
             // settings
             if let Ok(settings) = lua.globals().get::<mlua::Table>("Astra") {
@@ -73,6 +73,8 @@ async fn cli(lua: &mlua::Lua, lib: String) {
             }
         }
         AstraCLI::ExportBundle => {
+            let lib = registration(lua).await;
+
             #[allow(clippy::expect_used)]
             std::fs::write("./astra_bundle.lua", lib)
                 .expect("Could not export the bundled library");
@@ -94,23 +96,21 @@ async fn registration(lua: &mlua::Lua) -> String {
 
     // register required global functions
     dotenv_function(lua);
-    #[allow(clippy::expect_used)]
-    crate::fileio::register_fileio_functions(lua)
-        .await
-        .expect("Could not register File IO functions");
     register_run_function(lua).await;
+    if let Err(e) = crate::fileio::register_fileio_functions(lua).await {
+        eprintln!("Could not register File IO functions:\n{e}");
+    }
 
     // ! TRY TO REMOVE THE PRELUDE
 
-    #[allow(clippy::expect_used)]
-    lua.load(cleaned_lib.as_str())
-        .exec_async()
-        .await
-        .expect("Couldn't add prelude");
+    // println!("{cleaned_lib}");
 
+    if let Err(e) = lua.load(cleaned_lib.as_str()).exec_async().await {
+        eprintln!("Couldn't add prelude:\n{e}");
+    }
     #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
     if let Err(e) = utils::register_utils(lua).await {
-        println!("Error setting the util functions: {e}");
+        eprintln!("Error setting the util functions:\n{e}");
     }
 
     lib
