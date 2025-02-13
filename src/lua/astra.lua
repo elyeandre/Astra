@@ -133,6 +133,8 @@ function Multipart:save_file(file_path) end
 ---@field get_headers fun(): table|nil Returns the entire headers list that so far has been set for the response
 ---@field remove_header fun(response: Response, key: string) Removes a header from the headers list
 
+-- MARK: FileIO
+
 ---@class FileType
 ---@field is_file fun(file_type: FileType): boolean
 ---@field is_dir fun(file_type: FileType): boolean
@@ -143,8 +145,26 @@ function Multipart:save_file(file_path) end
 ---@field file_type fun(dir_entry: DirEntry): FileType
 ---@field path fun(dir_entry: DirEntry): string Returns the path of each entry in the list
 
+---@class FileMetadata
+---@field last_accessed fun(file_metadata: FileMetadata): number
+---@field created_at fun(file_metadata: FileMetadata): number
+---@field last_modified fun(file_metadata: FileMetadata): number
+---@field file_type fun(file_metadata: FileMetadata): FileType
+---@field file_permissions fun(file_metadata: FileMetadata): FileIOPermissions
+
+---@class FileIOPermissions
+---@field is_readonly fun(file_io_permissions: FileIOPermissions): boolean
+---@field set_readonly fun(file_io_permissions: FileIOPermissions, value: boolean)
+
 --- @START_REMOVING_RUNTIME
 _G.AstraIO = {
+	---Returns the metadata of a file or directory
+	---@param path string
+	---@return FileMetadata
+	get_metadata = function(path)
+		return {}
+	end,
+
 	---Returns the content of the directory
 	---@param path string Path to the file
 	---@return DirEntry[]
@@ -163,5 +183,17 @@ _G.AstraIO = {
 	get_script_path = function()
 		return ""
 	end,
+
+	---Removes a file
+	---@param path string Path to the file
+	remove = function(path) end,
+
+	---Removes a directory
+	---@param path string Path to the directory
+	remove_dir = function(path) end,
+
+	---Removes a directory recursively
+	---@param path string Path to the directory
+	remove_dir_all = function(path) end,
 }
 --- @END_REMOVING_RUNTIME
