@@ -2,27 +2,29 @@
 
 __luapack_modules__ = {
     (function()
+        --!nocheck
+        
         local utils = { _version = "0.1.0" }
         
         ---Pretty prints any table or value
         ---@diagnostic disable-next-line: duplicate-set-field
         function _G.pretty_print(inner_table)
-            local function pretty_print_table(table)
+            local function pretty_print_table(table_to_print)
                 local str = ""
         
                 -- Iterate over each key-value pair in the table
-                for k, v in pairs(table) do
-                    k = '[' .. k .. ']'
+                for key, value in pairs(table_to_print) do
+                    key = '[' .. key .. ']'
         
                     -- Recursively convert nested tables to JSON strings
-                    if type(v) == "table" then
-                        str = str .. k .. ": " .. pretty_print_table(v) .. ", "
+                    if type(value) == "table" then
+                        str = str .. key .. ": " .. pretty_print_table(value) .. ", "
                     else
                         -- Format string values with quotation marks
-                        if type(v) == 'string' then
-                            v = '"' .. v .. '"'
+                        if type(value) == 'string' then
+                            value = '"' .. value .. '"'
                         end
-                        str = str .. k .. ": " .. tostring(v) .. ", "
+                        str = str .. key .. ": " .. tostring(value) .. ", "
                     end
                 end
         
@@ -38,24 +40,24 @@ __luapack_modules__ = {
         
         ---
         ---Recursively converts a Lua table into a pretty-formatted JSON string.
-        ---@param table table The input table.
+        ---@param table_to_convert table The input table.
         ---@diagnostic disable-next-line: duplicate-set-field
-        function _G.pretty_json_table(table)
+        function _G.pretty_json_table(table_to_convert)
             local json_str = ""
         
             -- Iterate over each key-value pair in the table
-            for k, v in pairs(table) do
-                if type(k) ~= 'number' then k = '"' .. k .. '"' end
+            for key, value in pairs(table_to_convert) do
+                if type(key) ~= 'number' then key = '"' .. key .. '"' end
         
                 -- Recursively convert nested tables to JSON strings
-                if type(v) == "table" then
-                    json_str = json_str .. k .. ": " .. _G.pretty_json_table(v) .. ", "
+                if type(value) == "table" then
+                    json_str = json_str .. key .. ": " .. _G.pretty_json_table(value) .. ", "
                 else
                     -- Format string values with quotation marks
-                    if type(v) == 'string' then
-                        v = '"' .. v .. '"'
+                    if type(value) == 'string' then
+                        value = '"' .. value .. '"'
                     end
-                    json_str = json_str .. k .. ": " .. tostring(v) .. ", "
+                    json_str = json_str .. key .. ": " .. tostring(value) .. ", "
                 end
             end
         
@@ -68,19 +70,19 @@ __luapack_modules__ = {
         --     return trimmed_str
         -- end
         
-        function utils.parse_query(str)
-            local function unescape(s)
-                s = string.gsub(s, "+", " ")
-                s = string.gsub(s, "%%(%x%x)", function(h)
-                    return string.char(tonumber(h, 16))
+        function utils.parse_query(query_str)
+            local function unescape(escaped_str)
+                escaped_str = string.gsub(escaped_str, "+", " ")
+                escaped_str = string.gsub(escaped_str, "%%(%x%x)", function(hex_val)
+                    return string.char(tonumber(hex_val, 16))
                 end)
-                return s
+                return escaped_str
             end
         
             local result_table = {}
-            for k, v in string.gmatch(str, "([^&=?]+)=([^&=?]+)") do
+            for key, value in string.gmatch(query_str, "([^&=?]+)=([^&=?]+)") do
                 --t[k] = v
-                result_table[k] = unescape(v)
+                result_table[key] = unescape(value)
             end
         
             return result_table
@@ -88,14 +90,14 @@ __luapack_modules__ = {
         
         ---
         ---Splits a sentence into an array given the separator
-        ---@param str string The input string
-        ---@param separator string The input string
+        ---@param input_str string The input string
+        ---@param separator_str string The input string
         ---@return table array
         ---@nodiscard
         ---@diagnostic disable-next-line: duplicate-set-field
-        function string.split(str, separator)
+        function string.split(input_str, separator_str)
             local result_table = {}
-            for word in str:gmatch("([^" .. separator .. "]+)") do
+            for word in input_str:gmatch("([^" .. separator_str .. "]+)") do
                 table.insert(result_table, word)
             end
             return result_table
@@ -492,10 +494,10 @@ __luapack_modules__ = {
     (function()
         ---
         ---Schema validation function with support for nested tables and arrays of tables
-        ---@param tbl table
+        ---@param input_table table
         ---@param schema table
         ---@return boolean, string | nil
-        local function validate_table(tbl, schema)
+        local function validate_table(input_table, schema)
             -- Helper function to check if a value is of the expected type
             local function check_type(value, expected_type)
                 local type_map = {
@@ -553,7 +555,7 @@ __luapack_modules__ = {
         
             -- Iterate over the schema
             for key, constraints in pairs(schema) do
-                local value = tbl[key]
+                local value = input_table[key]
                 local expected_type = constraints.type
                 local required = constraints.required or false
                 local min = constraints.min
@@ -603,12 +605,12 @@ __luapack_modules__ = {
         
                 -- Apply default values if the key is missing and a default is provided
                 if value == nil and default_value ~= nil then
-                    tbl[key] = default_value
+                    input_table[key] = default_value
                 end
             end
         
             -- Check if the table has any unexpected keys
-            for key in pairs(tbl) do
+            for key in pairs(input_table) do
                 if not schema[key] then
                     return false, "Unexpected key found: " .. key
                 end
@@ -618,6 +620,57 @@ __luapack_modules__ = {
         end
         
         return validate_table
+    
+    end),
+    (function()
+        local import_lua_dir = AstraIO.get_script_path():match("(.*[/\\])") or ""
+        
+        ---Converts a path relative to the current directory to realpath relative to root.
+        --
+        ---@param path string to be resolved
+        ---@param __dirname string of calling script
+        ---@return string
+        local function resolve_relative(path, __dirname)
+        	-- Split the path into parts
+        	local function split_path(p)
+        		local result = {}
+        		for part in p:gmatch("[^/\\]+") do
+        			table.insert(result, part)
+        		end
+        		return result
+        	end
+        
+        	local segments = split_path(__dirname)
+        	local parts = split_path(path)
+        
+        	for i, part in ipairs(parts) do
+        		if part == ".." then
+        			table.remove(segments)
+        		elseif part == "." or part == "" then
+        		-- Ignore current directory and empty segments
+        		else
+        			table.insert(segments, part)
+        		end
+        	end
+        
+        	return table.concat(segments, "/")
+        end
+        
+        ---The lua-import module provides a function,
+        ---the function takes single single string argument which is a glob pattern.
+        ---The return value is the module refered by the glob pattern.
+        --
+        ---@param path any
+        local function import(path)
+        	local resolved_path = resolve_relative(path, import_lua_dir)
+        	local ok, result = pcall(require, resolved_path)
+        	if not ok then
+        		error("Failed to load module at path: " .. resolved_path .. "\nError: " .. result)
+        	end
+        	return result
+        end
+        
+        return import
     
     end),
 }
@@ -632,11 +685,18 @@ __luapack_require__ = function(idx)
     return module
 end
 
+--!nocheck
 ---@diagnostic disable: duplicate-set-field
 
 _G.utils = __luapack_require__(1)
+
 _G.json = __luapack_require__(2)
+
 _G.validate_table = __luapack_require__(3)
+
+_G.import = __luapack_require__(4)
+
+
 -- MARK: Load envs
 
 ---@type fun(file_path: string)
@@ -655,10 +715,10 @@ dotenv_load(".env.local")
 -- MARK: Astra
 
 _G.Astra = {
-    version = "0.0.0",
-    hostname = "127.0.0.1",
-    compression = true,
-    port = 20001
+	version = "0.0.0",
+	hostname = "127.0.0.1",
+	compression = true,
+	port = 20001,
 }
 
 ---@diagnostic disable-next-line: duplicate-doc-alias
@@ -667,43 +727,43 @@ _G.Astra = {
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra.get(path, callback)
-    table.insert(Astra, { path = path, method = "get", func = callback })
+	table.insert(Astra, { path = path, method = "get", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra.post(path, callback)
-    table.insert(Astra, { path = path, method = "post", func = callback })
+	table.insert(Astra, { path = path, method = "post", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra.put(path, callback)
-    table.insert(Astra, { path = path, method = "put", func = callback })
+	table.insert(Astra, { path = path, method = "put", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra.delete(path, callback)
-    table.insert(Astra, { path = path, method = "delete", func = callback })
+	table.insert(Astra, { path = path, method = "delete", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra.options(path, callback)
-    table.insert(Astra, { path = path, method = "options", func = callback })
+	table.insert(Astra, { path = path, method = "options", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra.patch(path, callback)
-    table.insert(Astra, { path = path, method = "patch", func = callback })
+	table.insert(Astra, { path = path, method = "patch", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra.trace(path, callback)
-    table.insert(Astra, { path = path, method = "trace", func = callback })
+	table.insert(Astra, { path = path, method = "trace", func = callback })
 end
 
 ---
@@ -711,7 +771,7 @@ end
 ---@param path string The URL path for the request.
 ---@param serve_path string The directory path relatively
 function Astra.static_dir(path, serve_path)
-    table.insert(Astra, { path = path, method = "static_dir", func = function() end, static_dir = serve_path })
+	table.insert(Astra, { path = path, method = "static_dir", func = function() end, static_dir = serve_path })
 end
 
 ---
@@ -719,14 +779,14 @@ end
 ---@param path string The URL path for the request.
 ---@param serve_path string The directory path relatively
 function Astra.static_file(path, serve_path)
-    table.insert(Astra, { path = path, method = "static_file", func = function() end, static_file = serve_path })
+	table.insert(Astra, { path = path, method = "static_file", func = function() end, static_file = serve_path })
 end
 
 ---
 ---Runs the Astra server
 function Astra.run()
-    ---@diagnostic disable-next-line: undefined-global
-    astra_internal__start_server()
+	---@diagnostic disable-next-line: undefined-global
+	astra_internal__start_server()
 end
 
 -- MARK: Internal
@@ -748,11 +808,6 @@ _G.Multipart = {}
 function Multipart:save_file(file_path) end
 
 ---
----Saves the multipart into disk
----@param file_path string
-function Multipart:save_file_with_filename(file_path) end
-
----
 --- Represents an HTTP request.
 ---@class Request
 ---@field method fun(): string Returns the HTTP method (e.g., "GET", "POST").
@@ -769,3 +824,84 @@ function Multipart:save_file_with_filename(file_path) end
 ---@field get_headers fun(): table|nil Returns the entire headers list that so far has been set for the response
 ---@field remove_header fun(response: Response, key: string) Removes a header from the headers list
 
+-- MARK: FileIO
+
+---@class FileType
+---@field is_file fun(file_type: FileType): boolean
+---@field is_dir fun(file_type: FileType): boolean
+---@field is_symlink fun(file_type: FileType): boolean
+
+---@class DirEntry
+---@field file_name fun(dir_entry: DirEntry): string Returns the file_name of the entry
+---@field file_type fun(dir_entry: DirEntry): FileType
+---@field path fun(dir_entry: DirEntry): string Returns the path of each entry in the list
+
+---@class FileMetadata
+---@field last_accessed fun(file_metadata: FileMetadata): number
+---@field created_at fun(file_metadata: FileMetadata): number
+---@field last_modified fun(file_metadata: FileMetadata): number
+---@field file_type fun(file_metadata: FileMetadata): FileType
+---@field file_permissions fun(file_metadata: FileMetadata): FileIOPermissions
+
+---@class FileIOPermissions
+---@field is_readonly fun(file_io_permissions: FileIOPermissions): boolean
+---@field set_readonly fun(file_io_permissions: FileIOPermissions, value: boolean)
+
+--- @START_REMOVING_RUNTIME
+_G.AstraIO = {
+	---Returns the metadata of a file or directory
+	---@param path string
+	---@return FileMetadata
+	get_metadata = function(path)
+		return {}
+	end,
+
+	---Returns the content of the directory
+	---@param path string Path to the file
+	---@return DirEntry[]
+	read_dir = function(path)
+		return {}
+	end,
+
+	---Returns the path of the current directory
+	---@return string
+	get_current_dir = function()
+		return ""
+	end,
+
+	---Returns the path of the current running script
+	---@return string
+	get_script_path = function()
+		return ""
+	end,
+
+	---Changes the current directory
+	---@param path string Path to the directory
+	change_dir = function(path) end,
+
+	---Checks if a path exists
+	---@param path string Path to the file or directory
+	---@return boolean
+	exists = function(path) return false end,
+
+	---Creates a directory
+	---@param path string Path to the directory
+	create_dir = function(path) end,
+
+	---Creates a directory recursively
+	---@param path string Path to the directory
+	create_dir_all = function(path) end,
+
+	---Removes a file
+	---@param path string Path to the file
+	remove = function(path) end,
+
+	---Removes a directory
+	---@param path string Path to the directory
+	remove_dir = function(path) end,
+
+	---Removes a directory recursively
+	---@param path string Path to the directory
+	remove_dir_all = function(path) end,
+}
+--- @END_REMOVING_RUNTIME

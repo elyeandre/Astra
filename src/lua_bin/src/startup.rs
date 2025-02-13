@@ -1,7 +1,9 @@
 use clap::{command, crate_authors, crate_name, crate_version, Parser};
 use std::{io::Write, sync::LazyLock};
+use tokio::sync::OnceCell;
 
 pub static LUA: LazyLock<mlua::Lua> = LazyLock::new(mlua::Lua::new);
+pub static SCRIPT_PATH: OnceCell<String> = OnceCell::const_new();
 
 #[derive(Parser)] // requires `derive` feature
 #[command(name = "Astra")]
@@ -30,15 +32,20 @@ enum AstraCLI {
 pub async fn init() {
     let lua = &LUA;
 
-    let lib = registration(lua).await;
-
-    cli(lua, lib).await;
+    cli(lua).await;
 }
 
-async fn cli(lua: &mlua::Lua, lib: String) {
+async fn cli(lua: &mlua::Lua) {
     // commands
     match AstraCLI::parse() {
         AstraCLI::Run { file_path } => {
+            #[allow(clippy::expect_used)]
+            SCRIPT_PATH
+                .set(file_path.clone())
+                .expect("Could not set the script path to OnceCell");
+
+            let _ = registration(lua).await;
+
             // settings
             if let Ok(settings) = lua.globals().get::<mlua::Table>("Astra") {
                 // set the version
@@ -66,6 +73,8 @@ async fn cli(lua: &mlua::Lua, lib: String) {
             }
         }
         AstraCLI::ExportBundle => {
+            let lib = registration(lua).await;
+
             #[allow(clippy::expect_used)]
             std::fs::write("./astra_bundle.lua", lib)
                 .expect("Could not export the bundled library");
@@ -88,18 +97,20 @@ async fn registration(lua: &mlua::Lua) -> String {
     // register required global functions
     dotenv_function(lua);
     register_run_function(lua).await;
+    if let Err(e) = crate::fileio::register_fileio_functions(lua).await {
+        eprintln!("Could not register File IO functions:\n{e}");
+    }
 
     // ! TRY TO REMOVE THE PRELUDE
 
-    #[allow(clippy::expect_used)]
-    lua.load(cleaned_lib.as_str())
-        .exec_async()
-        .await
-        .expect("Couldn't add prelude");
+    // println!("{cleaned_lib}");
 
+    if let Err(e) = lua.load(cleaned_lib.as_str()).exec_async().await {
+        eprintln!("Couldn't add prelude:\n{e}");
+    }
     #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
     if let Err(e) = utils::register_utils(lua).await {
-        println!("Error setting the util functions: {e}");
+        eprintln!("Error setting the util functions:\n{e}");
     }
 
     lib
