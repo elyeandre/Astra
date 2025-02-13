@@ -37,6 +37,38 @@ pub async fn register_fileio_functions(lua: &mlua::Lua) -> mlua::Result<()> {
     )?;
 
     astra_io.set(
+        "exists",
+        lua.create_function(|_, path: String| match std::fs::exists(path) {
+            Ok(result) => Ok(result),
+            Err(e) => Err(mlua::Error::runtime(e)),
+        })?,
+    )?;
+
+    astra_io.set(
+        "change_dir",
+        lua.create_function(|_, path: String| match std::env::set_current_dir(path) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(mlua::Error::runtime(e)),
+        })?,
+    )?;
+
+    astra_io.set(
+        "create_dir",
+        lua.create_function(|_, path: String| match std::fs::create_dir(path) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(mlua::Error::runtime(e)),
+        })?,
+    )?;
+
+    astra_io.set(
+        "create_dir_all",
+        lua.create_function(|_, path: String| match std::fs::create_dir_all(path) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(mlua::Error::runtime(e)),
+        })?,
+    )?;
+
+    astra_io.set(
         "remove",
         lua.create_function(|_, path: String| match std::fs::remove_file(path) {
             Ok(_) => Ok(()),

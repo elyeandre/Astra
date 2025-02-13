@@ -184,6 +184,23 @@ _G.AstraIO = {
 		return ""
 	end,
 
+	---Changes the current directory
+	---@param path string Path to the directory
+	change_dir = function(path) end,
+
+	---Checks if a path exists
+	---@param path string Path to the file or directory
+	---@return boolean
+	exists = function(path) return false end,
+
+	---Creates a directory
+	---@param path string Path to the directory
+	create_dir = function(path) end,
+
+	---Creates a directory recursively
+	---@param path string Path to the directory
+	create_dir_all = function(path) end,
+
 	---Removes a file
 	---@param path string Path to the file
 	remove = function(path) end,
