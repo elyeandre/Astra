@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.14.0] - 2025-02-13
+
+### Bug Fixes
+
+- Annotations being wrong ([4ef8bf3](https://github.com/ArkForgeLabs/Astra/commit/4ef8bf3ab09099ca8496988d8ab961873b4b124c))
+
+### Documentation
+
+- Added documentation for the FileIO ([f871c43](https://github.com/ArkForgeLabs/Astra/commit/f871c43c1ecf3f7197ba2932fe10a2001b34a25d))
+
+### Features
+
+- Added chdir, exists, create_dir and create_dir_all ([479f9ab](https://github.com/ArkForgeLabs/Astra/commit/479f9ab2d8d6c6236645c691384f661b6e447639))
+- Added remove, remove dir, and metadata functions ([7bb4152](https://github.com/ArkForgeLabs/Astra/commit/7bb41527b88c9681dc7f09e20f238adb415d22ab))
+- Added annotations for read dir ([d4f7fee](https://github.com/ArkForgeLabs/Astra/commit/d4f7feefb633967a40def8fb32a5b6220b2549cf))
+- Added import to the global context ([6ea4b64](https://github.com/ArkForgeLabs/Astra/commit/6ea4b6436edac57599e36226b95b4c7b2c3798b4))
+- Added basic relative imports and filesystem functions ([142330c](https://github.com/ArkForgeLabs/Astra/commit/142330c407cb37659fb07e3d550b93f2d3134adf))
+
+### Miscellaneous Tasks
+
+- Updated version ([ae479cf](https://github.com/ArkForgeLabs/Astra/commit/ae479cfd58218cf463b10717599302d581269d16))
+
 ## [0.13.0] - 2025-02-01
 
 ### Features
