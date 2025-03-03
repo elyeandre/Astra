@@ -697,7 +697,6 @@ __luapack_require__ = function(idx)
     return module
 end
 
---!nocheck
 ---@diagnostic disable: duplicate-set-field
 
 _G.utils = __luapack_require__(1)
@@ -738,65 +737,65 @@ _G.Astra = {
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
-function Astra.get(path, callback)
-	table.insert(Astra, { path = path, method = "get", func = callback })
+function Astra:get(path, callback)
+	table.insert(self, { path = path, method = "get", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
-function Astra.post(path, callback)
-	table.insert(Astra, { path = path, method = "post", func = callback })
+function Astra:post(path, callback)
+	table.insert(self, { path = path, method = "post", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
-function Astra.put(path, callback)
-	table.insert(Astra, { path = path, method = "put", func = callback })
+function Astra:put(path, callback)
+	table.insert(self, { path = path, method = "put", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
-function Astra.delete(path, callback)
-	table.insert(Astra, { path = path, method = "delete", func = callback })
+function Astra:delete(path, callback)
+	table.insert(self, { path = path, method = "delete", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
-function Astra.options(path, callback)
-	table.insert(Astra, { path = path, method = "options", func = callback })
+function Astra:options(path, callback)
+	table.insert(self, { path = path, method = "options", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
-function Astra.patch(path, callback)
-	table.insert(Astra, { path = path, method = "patch", func = callback })
+function Astra:patch(path, callback)
+	table.insert(self, { path = path, method = "patch", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
-function Astra.trace(path, callback)
-	table.insert(Astra, { path = path, method = "trace", func = callback })
+function Astra:trace(path, callback)
+	table.insert(self, { path = path, method = "trace", func = callback })
 end
 
 ---
 ---Registers a static folder to serve
 ---@param path string The URL path for the request.
 ---@param serve_path string The directory path relatively
-function Astra.static_dir(path, serve_path)
-	table.insert(Astra, { path = path, method = "static_dir", func = function() end, static_dir = serve_path })
+function Astra:static_dir(path, serve_path)
+	table.insert(self, { path = path, method = "static_dir", func = function() end, static_dir = serve_path })
 end
 
 ---
 ---Registers a static file to serve
 ---@param path string The URL path for the request.
 ---@param serve_path string The directory path relatively
-function Astra.static_file(path, serve_path)
-	table.insert(Astra, { path = path, method = "static_file", func = function() end, static_file = serve_path })
+function Astra:static_file(path, serve_path)
+	table.insert(self, { path = path, method = "static_file", func = function() end, static_file = serve_path })
 end
 
 ---
 ---Runs the Astra server
-function Astra.run()
+function Astra:run()
 	---@diagnostic disable-next-line: undefined-global
 	astra_internal__start_server()
 end

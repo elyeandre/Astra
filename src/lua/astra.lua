@@ -92,7 +92,7 @@ end
 
 ---
 ---Runs the Astra server
-function Astra.run()
+function Astra:run()
 	---@diagnostic disable-next-line: undefined-global
 	astra_internal__start_server()
 end
