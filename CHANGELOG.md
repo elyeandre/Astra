@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.14.1] - 2025-03-03
+
+### Documentation
+
+- Updated docs for the new syntax ([a2b2e1e](https://github.com/ArkForgeLabs/Astra/commit/a2b2e1e3e6f36d110ab2be2459b7cc47caa898f4))
+
+### Miscellaneous Tasks
+
+- Updated the syntax to be more clear ([0cf5339](https://github.com/ArkForgeLabs/Astra/commit/0cf5339c576ccde529fe5a9c5b9980789f582047))
+- Moved the import and bundle ignore code to lua require override ([4ef1490](https://github.com/ArkForgeLabs/Astra/commit/4ef1490c1c471daa4b435c44c9a13bb511b5cca9))
+
 ## [0.14.0] - 2025-02-13
 
 ### Bug Fixes
