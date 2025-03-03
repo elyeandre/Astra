@@ -305,14 +305,14 @@
 <h2 id="dev-environment"><a class="header" href="#dev-environment">Dev environment</a></h2>
 <p>For development, we recommend a linux machine with <a href="https://code.visualstudio.com/">visual studio code</a> (or <a href="https://vscodium.com/">alternative</a>) along with the <a href="https://marketplace.visualstudio.com/items?itemName=sumneko.lua">lua extension</a>.</p>
 <p>After your setup is complete, you will want to obtain a prebuilt binary of the runtime from the <a href="https://github.com/ArkForgeLabs/Astra/releases">releases page</a>. Alternatively you can get it with <code>wget</code> as well. For example for version 0.6.0:</p>
-<pre><code class="language-bash">wget https://github.com/ArkForgeLabs/Astra/releases/download/v0.6.0/astra-linux-amd64
+<pre><code class="language-bash">wget https://github.com/ArkForgeLabs/Astra/releases/latest/download/astra-full-luajit-linux-amd64
 </code></pre>
 <p>There are also windows binaries available if you are working on Windows, however we mostly assume your server instance will likely run linux, hence more support is geared towards it.</p>
 <p>After getting your binary on linux, you'll want to change permissions to make it executable:</p>
 <pre><code class="language-bash">chmod +x astra-linux-amd64
 </code></pre>
 <p>Each release likely contains updates to the packaged bundle lua code that contains definitions you might need during development which you can omit and ignore during production release. You can obtain them through:</p>
-<pre><code class="language-bash">./astra-linux-amd64 export-bundle
+<pre><code class="language-bash">./astra-full-luajit-linux-amd64 export-bundle
 </code></pre>
 <p>which will create a new file called <code>astra_bundle.lua</code>. You can include it in your code to get intellisense and references for the available functions. The import will be ignored during runtime as Astra will use it's own packaged bundle internally instead.</p>
 <p>The reason for this is because Astra includes many global functions that includes the server itself along utilities. These are loaded at start of a runtime. These functions are not written in lua, and are written in Rust and intended to be used by the runtime binary. Hence changing the bundled lua code does not affect anything. There are some pure lua utilities for example JSON parser, table validation, pretty printing, ... which are also included in the bundle by default, but you can ignore them if you wish.</p>
@@ -399,7 +399,7 @@ Astra.port = 8000
 Astra.hostname = "0.0.0.0"
 
 -- run the server with
-Astra.run()
+Astra:run()
 </code></pre>
 <p>You can also configure other languages that compiles to Lua such as <a href="https://pluto-lang.org/">Pluto</a> and <a href="https://fennel-lang.org/">Fennel</a>, although Pluto targets Lua 5.4 which might get support by 1.0 release of Astra. Astra's api is for pure Lua however, so it will be up to you to make sure it can call the right functions and tables.</p>
 <p>In the future, there may be binaries with different combinations prebuilt as well!</p>
@@ -473,7 +473,7 @@ Astra.run()
 <h1 id="routes"><a class="header" href="#routes">Routes</a></h1>
 <p>The <code>Astra</code> global table holds all of the route details. The routes are loaded at the start of the runtime and cannot be dynamically modified later on. There are also methods within the <code>Astra</code> table that makes it easy to add new routes. For example:</p>
 <pre><code class="language-lua">-- A simple GET index route with text return
-Astra.get("/", function()
+Astra:get("/", function()
     return "hello from default Astra instance! " .. Astra.version
 end)
 </code></pre>
@@ -590,7 +590,7 @@ function(request?, response?);
 <li><code>save_file(file_path: string | nil)</code></li>
 </ul>
 <p>Example:</p>
-<pre><code class="language-lua">Astra.get("/", function(req)
+<pre><code class="language-lua">Astra:get("/", function(req)
     -- access the headers
     pretty_print(req:headers())
 
@@ -674,7 +674,7 @@ end)
 <li><code>get_headers()</code>: <code>table&lt;string, string&gt;</code></li>
 </ul>
 <p>Example:</p>
-<pre><code class="language-lua">Astra.get("/", function(req, res)
+<pre><code class="language-lua">Astra:get("/", function(req, res)
     -- set header code
     res:set_status_code(300)
     -- set headers
@@ -908,8 +908,8 @@ end)
 <h1 id="astra-io"><a class="header" href="#astra-io">Astra IO</a></h1>
 <p>Astra provides some IO functionality to help extend the standard library. This is included by default and not as a utility.</p>
 <h2 id="relative-imports"><a class="header" href="#relative-imports">Relative imports</a></h2>
-<p>You can use the <code>import</code> function to include code and modules relatively. This is similar to the Lua's <code>require</code> function. For example:</p>
-<pre><code class="language-lua">local mylib = import("./folder/lib")
+<p>You can use the <code>require</code> function to include code and modules relatively. For example:</p>
+<pre><code class="language-lua">local mylib = require("./folder/lib")
 </code></pre>
 <h2 id="astraio"><a class="header" href="#astraio">AstraIO</a></h2>
 <p>Is a global table that contains the IO functions. The current list is as follows:</p>

@@ -11,7 +11,7 @@ Web server runtime for Lua and LuaJIT written in Rust and running on Axum. The g
 Typically in lua you can register routes like below, binded to a method
 
 ```lua
-Astra.get("/", function()
+Astra:get("/", function()
     return "hello from default Astra instance!"
 end)
 ```
@@ -19,14 +19,14 @@ end)
 and starting the server with
 
 ```lua
-Astra.run()
+Astra:run()
 ```
 
 You can also use the local variables within routes
 
 ```lua
 local counter = 0
-Astra.get("/count", function()
+Astra:get("/count", function()
     counter = counter + 1
     -- and also can return JSON
     return { counter }
@@ -36,7 +36,7 @@ end)
 Requests and Responses and their configuration are provided when needed
 
 ```lua
-Astra.get("/", function(req, res)
+Astra:get("/", function(req, res)
     -- set header code
     res:set_status_code(300)
     -- set headers

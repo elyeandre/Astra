@@ -230,14 +230,14 @@
 <h2 id="dev-environment"><a class="header" href="#dev-environment">Dev environment</a></h2>
 <p>For development, we recommend a linux machine with <a href="https://code.visualstudio.com/">visual studio code</a> (or <a href="https://vscodium.com/">alternative</a>) along with the <a href="https://marketplace.visualstudio.com/items?itemName=sumneko.lua">lua extension</a>.</p>
 <p>After your setup is complete, you will want to obtain a prebuilt binary of the runtime from the <a href="https://github.com/ArkForgeLabs/Astra/releases">releases page</a>. Alternatively you can get it with <code>wget</code> as well. For example for version 0.6.0:</p>
-<pre><code class="language-bash">wget https://github.com/ArkForgeLabs/Astra/releases/download/v0.6.0/astra-linux-amd64
+<pre><code class="language-bash">wget https://github.com/ArkForgeLabs/Astra/releases/latest/download/astra-full-luajit-linux-amd64
 </code></pre>
 <p>There are also windows binaries available if you are working on Windows, however we mostly assume your server instance will likely run linux, hence more support is geared towards it.</p>
 <p>After getting your binary on linux, you'll want to change permissions to make it executable:</p>
 <pre><code class="language-bash">chmod +x astra-linux-amd64
 </code></pre>
 <p>Each release likely contains updates to the packaged bundle lua code that contains definitions you might need during development which you can omit and ignore during production release. You can obtain them through:</p>
-<pre><code class="language-bash">./astra-linux-amd64 export-bundle
+<pre><code class="language-bash">./astra-full-luajit-linux-amd64 export-bundle
 </code></pre>
 <p>which will create a new file called <code>astra_bundle.lua</code>. You can include it in your code to get intellisense and references for the available functions. The import will be ignored during runtime as Astra will use it's own packaged bundle internally instead.</p>
 <p>The reason for this is because Astra includes many global functions that includes the server itself along utilities. These are loaded at start of a runtime. These functions are not written in lua, and are written in Rust and intended to be used by the runtime binary. Hence changing the bundled lua code does not affect anything. There are some pure lua utilities for example JSON parser, table validation, pretty printing, ... which are also included in the bundle by default, but you can ignore them if you wish.</p>

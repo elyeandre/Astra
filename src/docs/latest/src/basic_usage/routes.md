@@ -4,7 +4,7 @@ The `Astra` global table holds all of the route details. The routes are loaded a
 
 ```lua
 -- A simple GET index route with text return
-Astra.get("/", function()
+Astra:get("/", function()
     return "hello from default Astra instance! " .. Astra.version
 end)
 ```
@@ -20,19 +20,19 @@ function(request?, response?);
 
 The following route types are supported as of now:
 
-* GET
-* POST
-* PUT
-* PATCH
-* PARSE
-* DELETE
-* OPTIONS
-* TRACE
+- GET
+- POST
+- PUT
+- PATCH
+- PARSE
+- DELETE
+- OPTIONS
+- TRACE
 
 All lowercase and snake_case when calling with astra of course. There are two additional ones available:
 
-* STATIC_DIR
-* STATIC_FILE
+- STATIC_DIR
+- STATIC_FILE
 
 Which does as expected, serves a file or directory over a route.
 

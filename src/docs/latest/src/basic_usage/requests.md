@@ -20,7 +20,7 @@ and where Multipart has:
 Example:
 
 ```lua
-Astra.get("/", function(req)
+Astra:get("/", function(req)
     -- access the headers
     pretty_print(req:headers())
 

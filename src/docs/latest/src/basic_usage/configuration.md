@@ -11,7 +11,7 @@ Astra.port = 8000
 Astra.hostname = "0.0.0.0"
 
 -- run the server with
-Astra.run()
+Astra:run()
 ```
 
 You can also configure other languages that compiles to Lua such as [Pluto](https://pluto-lang.org/) and [Fennel](https://fennel-lang.org/), although Pluto targets Lua 5.4 which might get support by 1.0 release of Astra. Astra's api is for pure Lua however, so it will be up to you to make sure it can call the right functions and tables.

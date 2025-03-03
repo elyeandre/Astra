@@ -144,7 +144,7 @@
           id="code-block-pre"
         ><code class="language-lua" style="overflow-x: auto;">-- You can also use the local variables within routes
 local counter = 0
-Astra.get("/count", function(request, response)
+Astra:get("/count", function(request, response)
     -- consume the request body
     print(request:body():text())
 

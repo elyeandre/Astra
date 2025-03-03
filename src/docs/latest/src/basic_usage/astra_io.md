@@ -4,10 +4,10 @@ Astra provides some IO functionality to help extend the standard library. This i
 
 ## Relative imports
 
-You can use the `import` function to include code and modules relatively. This is similar to the Lua's `require` function. For example:
+You can use the `require` function to include code and modules relatively. For example:
 
 ```lua
-local mylib = import("./folder/lib")
+local mylib = require("./folder/lib")
 ```
 
 ## AstraIO

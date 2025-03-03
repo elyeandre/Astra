@@ -229,8 +229,8 @@
 <h1 id="astra-io"><a class="header" href="#astra-io">Astra IO</a></h1>
 <p>Astra provides some IO functionality to help extend the standard library. This is included by default and not as a utility.</p>
 <h2 id="relative-imports"><a class="header" href="#relative-imports">Relative imports</a></h2>
-<p>You can use the <code>import</code> function to include code and modules relatively. This is similar to the Lua's <code>require</code> function. For example:</p>
-<pre><code class="language-lua">local mylib = import("./folder/lib")
+<p>You can use the <code>require</code> function to include code and modules relatively. For example:</p>
+<pre><code class="language-lua">local mylib = require("./folder/lib")
 </code></pre>
 <h2 id="astraio"><a class="header" href="#astraio">AstraIO</a></h2>
 <p>Is a global table that contains the IO functions. The current list is as follows:</p>

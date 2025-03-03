@@ -229,7 +229,7 @@
 <h1 id="routes"><a class="header" href="#routes">Routes</a></h1>
 <p>The <code>Astra</code> global table holds all of the route details. The routes are loaded at the start of the runtime and cannot be dynamically modified later on. There are also methods within the <code>Astra</code> table that makes it easy to add new routes. For example:</p>
 <pre><code class="language-lua">-- A simple GET index route with text return
-Astra.get("/", function()
+Astra:get("/", function()
     return "hello from default Astra instance! " .. Astra.version
 end)
 </code></pre>
