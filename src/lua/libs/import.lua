@@ -1,4 +1,5 @@
 local import_lua_dir = AstraIO.get_script_path():match("(.*[/\\])") or ""
+local old_require = require
 
 ---Converts a path relative to the current directory to realpath relative to root.
 --
@@ -38,11 +39,23 @@ end
 ---@param path any
 local function import(path)
 	local resolved_path = resolve_relative(path, import_lua_dir)
-	local ok, result = pcall(require, resolved_path)
+	---@diagnostic disable-next-line: param-type-mismatch
+	local ok, result = pcall(old_require, resolved_path)
 	if not ok then
 		error("Failed to load module at path: " .. resolved_path .. "\nError: " .. result)
 	end
 	return result
 end
 
-return import
+---
+---Loads the given module, returns any value returned by the given module(`true` when `nil`).
+---
+---@param modname string
+---@return unknown
+return function (modname)
+	if modname:find("astra_bundle") then
+		return {}
+	else
+		return import(modname)
+	end
+end

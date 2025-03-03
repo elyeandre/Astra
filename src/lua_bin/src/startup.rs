@@ -163,22 +163,7 @@ fn prepare_script(path: &str) -> String {
     #[allow(clippy::expect_used)]
     let user_file = std::fs::read_to_string(path).expect("Couldn't read file");
 
-    let lines: Vec<&str> = user_file.lines().collect();
-
-    // Filter out lines that start with "require" and contain "astra.lua" or "astra.bundle.lua"
-    let filtered_lines: Vec<String> = lines
-        .into_iter()
-        .filter_map(|line| {
-            if !(line.contains("require") && line.contains("astra_bundle")) {
-                Some(line.to_string())
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    // Join the filtered lines back into a single string
-    filtered_lines.join("\n")
+    user_file
 }
 
 async fn register_run_function(lua: &mlua::Lua) {
