@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.15.0] - 2025-03-04
+
+### Bug Fixes
+
+- #31 ([b1b4d4d](https://github.com/ArkForgeLabs/Astra/commit/b1b4d4d8ec9deba359a5a6bc542b8aa205d3d174))
+- Exporting bundled code errors ([34c0e00](https://github.com/ArkForgeLabs/Astra/commit/34c0e00e563592352db28ee543e223891621a3be))
+
 ## [0.14.1] - 2025-03-03
 
 ### Documentation
