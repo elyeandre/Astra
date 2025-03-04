@@ -56,9 +56,10 @@ async fn cli(lua: &mlua::Lua) {
                 }
             }
 
-            let updated_content = prepare_script(&file_path);
             #[allow(clippy::expect_used)]
-            if let Err(e) = lua.load(updated_content).exec_async().await {
+            let user_file = std::fs::read_to_string(file_path).expect("Couldn't read file");
+            #[allow(clippy::expect_used)]
+            if let Err(e) = lua.load(user_file).exec_async().await {
                 eprintln!("{}", e);
             }
 
@@ -100,15 +101,11 @@ async fn registration(lua: &mlua::Lua) -> String {
     let (lib, cleaned_lib) = prepare_prelude();
 
     // register required global functions
-    dotenv_function(lua);
+    crate::essential_utils::essential_utils_registration(lua);
     register_run_function(lua).await;
     if let Err(e) = crate::fileio::register_fileio_functions(lua).await {
         eprintln!("Could not register File IO functions:\n{e}");
     }
-
-    // ! TRY TO REMOVE THE PRELUDE
-
-    // println!("{cleaned_lib}");
 
     if let Err(e) = lua.load(cleaned_lib.as_str()).exec_async().await {
         eprintln!("Couldn't add prelude:\n{e}");
@@ -163,14 +160,6 @@ fn prepare_prelude() -> (String, String) {
     (lib, cleaned_lib)
 }
 
-fn prepare_script(path: &str) -> String {
-    // Filter out lines that start with "require" and contain "astra.lua" or "astra.bundle.lua"
-    #[allow(clippy::expect_used)]
-    let user_file = std::fs::read_to_string(path).expect("Couldn't read file");
-
-    user_file
-}
-
 async fn register_run_function(lua: &mlua::Lua) {
     // Register function for running the server
     if let Ok(function) = lua.create_async_function(|lua, ()| async move {
@@ -211,35 +200,7 @@ async fn register_run_function(lua: &mlua::Lua) {
     }
 }
 
-fn dotenv_function(lua: &mlua::Lua) {
-    if let Ok(function) = lua.create_function(|lua, file_name: String| {
-        let env_table = lua.globals().get::<mlua::Table>("ENV")?;
-
-        // if the file exists
-        match dotenvy::from_filename_iter(file_name) {
-            Ok(file) => {
-                // filter the available and parsed items
-                for (key, value) in file.filter_map(|item| match item {
-                    Ok(item) => Some(item),
-                    Err(_) => None,
-                }) {
-                    env_table.set(key, value)?;
-                }
-            }
-            Err(_) => {
-                // eprintln!("Error loading a dotenv file: {e}");
-            }
-        }
-
-        Ok(())
-    }) {
-        if let Err(e) = lua.globals().set("dotenv_load", function) {
-            println!("Could not insert the function for dotenv_load: {e}");
-        }
-    }
-}
-
-async fn self_update_cli() -> Result<(), Box<dyn ::std::error::Error>> {
+pub async fn self_update_cli() -> Result<(), Box<dyn ::std::error::Error>> {
     let latest_tag = reqwest::Client::new()
         .get("https://api.github.com/repos/ArkForgeLabs/Astra/tags")
         .header(reqwest::header::USER_AGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36")

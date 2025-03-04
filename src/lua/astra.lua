@@ -1,7 +1,6 @@
 ---@diagnostic disable: duplicate-set-field
 
 _G.utils = require("./libs/utils.lua")
-_G.json = require("./libs/json.lua")
 _G.validate_table = require("./libs/table_schema.lua")
 _G.require = require("./libs/import.lua")
 
@@ -120,6 +119,7 @@ function Multipart:save_file(file_path) end
 ---@class Request
 ---@field method fun(): string Returns the HTTP method (e.g., "GET", "POST").
 ---@field uri fun(): string Returns the URI of the request.
+---@field queries fun(): table Returns the query list.
 ---@field headers fun(): table Returns a table containing the headers of the request.
 ---@field body fun(): Body|nil Returns the body of the request, which can be a table or a string.
 ---@field multipart fun(): Multipart|nil Returns a multipart if available.

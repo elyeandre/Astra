@@ -19,7 +19,7 @@
 - [Schema Validation](./utilities/schema_validation.md)
 - [Markup Language Parsers](./utilities/markup_languages.md)
 - [Crypto](./utilities/crypto.md)
-- [PostgreSQL Driver](./utilities/postgresql_driver.md)
+- [PostgreSQL Driver](./utilities/sql_driver.md)
 - [Async Tasks](./utilities/async_tasks.md)
 - [HTTP Client](./utilities/http_client.md)
 - [Dotenv](./utilities/dotenv.md)

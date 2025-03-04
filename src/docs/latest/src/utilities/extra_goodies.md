@@ -10,10 +10,6 @@ There are other less known utilities included with Astra that makes the life eas
 
 `pretty_json_table` recursively converts a table into a pretty formatted JSON string.
 
-## Query Parsing
-
-`parse_query` lets you parse a URL Query into a key-value table
-
 ## String Split
 
 `string.split` splits a string according to the seperator provided and result into an array of chunks.

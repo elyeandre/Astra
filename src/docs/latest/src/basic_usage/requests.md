@@ -5,6 +5,7 @@ Requests are provided as the first argument of the route callbacks as a table (n
 - body: `Body`
 - headers: `table<string, string>`
 - uri: `string`
+- queries: `table<any, any>`
 - method: `string`
 - multipart: `Multipart`
 

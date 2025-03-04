@@ -4,7 +4,7 @@ use axum::{
     http::{request::Parts, Request},
 };
 use common::BodyLua;
-use mlua::UserData;
+use mlua::{LuaSerdeExt, UserData};
 use std::collections::HashMap;
 use tokio::io::AsyncWriteExt;
 
@@ -38,6 +38,14 @@ impl UserData for RequestLua {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
         methods.add_method("method", |_, this, ()| Ok(this.parts.method.to_string()));
         methods.add_method("uri", |_, this, ()| Ok(this.parts.uri.to_string()));
+        methods.add_method("queries", |lua, this, ()| {
+            match axum::extract::Query::<serde_json::Value>::try_from_uri(&this.parts.uri) {
+                Ok(queries) => lua.to_value(&queries.clone().take()),
+                Err(e) => Err(mlua::Error::runtime(format!(
+                    "Could not parse queries: {e:?}"
+                ))),
+            }
+        });
         methods.add_async_method("multipart", |_, this, ()| async move {
             match this.bytes.clone() {
                 Some(bytes) => {

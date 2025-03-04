@@ -3,6 +3,7 @@
 
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+mod essential_utils;
 mod fileio;
 mod requests;
 mod responses;
