@@ -24,7 +24,7 @@ enum AstraCLI {
     #[command(arg_required_else_help = true, about = "Runs a lua script")]
     Run { file_path: String },
     #[command(about = "Exports the packages lua bundle for import for intellisense")]
-    ExportBundle,
+    ExportBundle { file_path: Option<String> },
     #[command(about = "Updates to the latest version", alias = "update")]
     Upgrade,
 }
@@ -72,12 +72,17 @@ async fn cli(lua: &mlua::Lua) {
                 }
             }
         }
-        AstraCLI::ExportBundle => {
-            let lib = registration(lua).await;
+        AstraCLI::ExportBundle { file_path } => {
+            let (lib, _) = prepare_prelude();
+
+            let file_path = if let Some(file_path) = file_path {
+                file_path
+            } else {
+                "astra_bundle.lua".to_string()
+            };
 
             #[allow(clippy::expect_used)]
-            std::fs::write("./astra_bundle.lua", lib)
-                .expect("Could not export the bundled library");
+            std::fs::write(file_path, lib).expect("Could not export the bundled library");
 
             println!("🚀 Successfully exported the bundled library!");
             std::process::exit(0);
