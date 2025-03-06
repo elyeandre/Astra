@@ -22,7 +22,11 @@ pub static SCRIPT_PATH: OnceCell<String> = OnceCell::const_new();
 )]
 enum AstraCLI {
     #[command(arg_required_else_help = true, about = "Runs a lua script")]
-    Run { file_path: String },
+    Run {
+        file_path: String,
+        #[clap(trailing_var_arg = true, allow_hyphen_values = true)]
+        extra_args: Option<Vec<String>>,
+    },
     #[command(about = "Exports the packages lua bundle for import for intellisense")]
     ExportBundle { file_path: Option<String> },
     #[command(about = "Updates to the latest version", alias = "update")]
@@ -38,13 +42,36 @@ pub async fn init() {
 async fn cli(lua: &mlua::Lua) {
     // commands
     match AstraCLI::parse() {
-        AstraCLI::Run { file_path } => {
+        AstraCLI::Run {
+            file_path,
+            extra_args,
+        } => {
             #[allow(clippy::expect_used)]
             SCRIPT_PATH
                 .set(file_path.clone())
                 .expect("Could not set the script path to OnceCell");
 
             let _ = registration(lua).await;
+
+            // args
+            if let Some(extra_args) = extra_args {
+                if let Ok(args) = lua.create_table() {
+                    // file path
+                    if let Err(e) = args.set(0, file_path.clone()) {
+                        eprintln!("Error adding arg to the args list: {e:?}");
+                    }
+
+                    for (args_length, value) in extra_args.into_iter().enumerate() {
+                        if let Err(e) = args.set((args_length + 1) as i32, value) {
+                            eprintln!("Error adding arg to the args list: {e:?}");
+                        }
+                    }
+
+                    if let Err(e) = lua.globals().set("arg", args) {
+                        eprintln!("Error setting the global variable ARGS: {e:?}");
+                    }
+                }
+            }
 
             // settings
             if let Ok(settings) = lua.globals().get::<mlua::Table>("Astra") {
