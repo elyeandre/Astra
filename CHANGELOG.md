@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.15.1] - 2025-03-06
+
+### Bug Fixes
+
+- #36 ([90ff3bb](https://github.com/ArkForgeLabs/Astra/commit/90ff3bb410092fd3e7bc73edda7c837053c4d94f))
+
+### Features
+
+- Added commandline arguments to lua ([374160c](https://github.com/ArkForgeLabs/Astra/commit/374160cd02cd04a370d1935af19de8db5e2e7c31))
+
 ## [0.15.0] - 2025-03-04
 
 ### Bug Fixes
