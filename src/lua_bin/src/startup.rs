@@ -1,4 +1,4 @@
-use clap::{command, crate_authors, crate_name, crate_version, Parser};
+use clap::{Parser, command, crate_authors, crate_name, crate_version};
 use std::{io::Write, sync::LazyLock};
 use tokio::sync::OnceCell;
 
@@ -246,31 +246,28 @@ pub async fn self_update_cli() -> Result<(), Box<dyn ::std::error::Error>> {
             );
 
             let content = reqwest::get(url).await?.bytes().await?;
+            let current_file_name = std::env::current_exe()?.to_string_lossy().to_string();
 
-            let file_name = if let Some(bin_name) = std::env::args().collect::<Vec<_>>().first() {
-                let path = std::path::PathBuf::from(bin_name);
-                if let Some(file_name_inner) = path.file_name() {
-                    if let Some(file_name) = file_name_inner.to_str() {
-                        file_name.to_string()
-                    } else {
-                        file_name
-                    }
-                } else {
-                    file_name
-                }
-            } else {
-                file_name
-            };
+            std::fs::File::create(format!("{file_name}-{}", latest_tag))?.write_all(&content)?;
 
-            std::fs::File::create(file_name.clone())?.write_all(&content)?;
+            std::fs::rename(
+                current_file_name.clone(),
+                format!("{current_file_name}_old"),
+            )?;
+            std::fs::rename(
+                format!("{file_name}-{}", latest_tag),
+                current_file_name.clone(),
+            )?;
+
+            std::fs::remove_file(format!("{current_file_name}_old"))?;
 
             #[cfg(target_os = "linux")]
             let _ = std::process::Command::new("chmod")
                 .arg("+x")
-                .arg(file_name)
+                .arg(current_file_name)
                 .spawn();
 
-            println!("Done!")
+            println!("Done! Enjoy!")
         } else {
             println!("Already up to date!");
         }
