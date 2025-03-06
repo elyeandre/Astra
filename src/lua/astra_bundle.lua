@@ -185,7 +185,13 @@ __luapack_modules__ = {
     end),
     (function()
         local import_lua_dir = AstraIO.get_script_path():match("(.*[/\\])") or ""
-        local old_require = require
+        
+        ---@diagnostic disable-next-line: duplicate-doc-alias
+        ---@alias importFun fun(moduleName: string): any
+        
+        ---@type importFun
+        ---@diagnostic disable-next-line: assign-type-mismatch
+        local import = require
         
         ---Converts a path relative to the current directory to realpath relative to root.
         --
@@ -221,30 +227,21 @@ __luapack_modules__ = {
         ---The lua-import module provides a function,
         ---the function takes single single string argument which is a glob pattern.
         ---The return value is the module refered by the glob pattern.
-        --
-        ---@param path any
-        local function import(path)
-        	local resolved_path = resolve_relative(path, import_lua_dir)
+        ---@param moduleName string
+        ---@return any
+        ---@diagnostic disable-next-line: redefined-local
+        local function import(moduleName)
+        	local resolved_path = resolve_relative(moduleName, import_lua_dir)
         	---@diagnostic disable-next-line: param-type-mismatch
-        	local ok, result = pcall(old_require, resolved_path)
+        	local ok, result = pcall(require, resolved_path)
         	if not ok then
         		error("Failed to load module at path: " .. resolved_path .. "\nError: " .. result)
         	end
         	return result
         end
         
-        ---
-        ---Loads the given module, returns any value returned by the given module(`true` when `nil`).
-        ---
-        ---@param modname string
-        ---@return unknown
-        return function (modname)
-        	if modname:find("astra_bundle") then
-        		return {}
-        	else
-        		return import(modname)
-        	end
-    end
+        return import
+    
     end),
 }
 __luapack_cache__ = {}
@@ -264,7 +261,7 @@ _G.utils = __luapack_require__(1)
 
 _G.validate_table = __luapack_require__(2)
 
-_G.require = __luapack_require__(3)
+_G.import = __luapack_require__(3)
 
 
 -- MARK: Load envs

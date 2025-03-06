@@ -2,7 +2,7 @@
 
 _G.utils = require("./libs/utils.lua")
 _G.validate_table = require("./libs/table_schema.lua")
-_G.require = require("./libs/import.lua")
+_G.import = require("./libs/import.lua")
 
 -- MARK: Load envs
 
