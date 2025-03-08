@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.17.0] - 2025-03-08
+
+### Bug Fixes
+
+- #34 ([b8e53e3](https://github.com/ArkForgeLabs/Astra/commit/b8e53e3a8a21ce63e5aa6581c70ab547936f20fb))
+
+### Documentation
+
+- Updated download config ([0dc904c](https://github.com/ArkForgeLabs/Astra/commit/0dc904c47ac61cc07d0cda58765c7d3c7b1806d1))
+- Updated docs for the new reform ([8a535b4](https://github.com/ArkForgeLabs/Astra/commit/8a535b4b23b99a8d8d9286df36b90c8d1b3d8b4d))
+
+### Features
+
+- Added support for Lua 5.1, 5.2, 5.3 and 5.4 ([0a3d3d7](https://github.com/ArkForgeLabs/Astra/commit/0a3d3d7cf1d1cb6c81dfc6f0c20a696e596f01fa))
+
+### Miscellaneous Tasks
+
+- Moved away from workspace to a single crate ([5bb3adb](https://github.com/ArkForgeLabs/Astra/commit/5bb3adb43c91b02d48145bb8bb7c6324b61589d2))
+- Moved utils into the main runtime ([b879098](https://github.com/ArkForgeLabs/Astra/commit/b879098dce03ad388959f6088e1ed6e766169b4e))
+- Renamed the folder from `lua_bin` to `astra` ([beb9738](https://github.com/ArkForgeLabs/Astra/commit/beb9738635754024ce8c751f0725d0baa1ee8a70))
+
 ## [0.16.0] - 2025-03-08
 
 ### Bug Fixes
