@@ -1,13 +1,17 @@
 # SQL Driver
 
-If your server requires access to an SQL database such as PostgreSQL, Astra provides utilities for basic connection and querying.
+If your server requires access to an SQL database such as PostgreSQL and SQLite, Astra provides utilities for basic connection and querying.
 
 ```lua
 -- connect to your db
-local db = database_connect("postgres://astra_postgres:password@localhost/astr_database")
+local db = database_connect("postgres", "postgres://astra_postgres:password@localhost/astr_database")
 
 -- You can execute queries to the database along with optional parameters
-db:execute("CREATE TABLE IF NOT EXISTS test (id SERIAL PRIMARY KEY, name TEXT)", {});
+db:execute([[
+    CREATE TABLE IF NOT EXISTS test (id SERIAL PRIMARY KEY, name TEXT);
+
+    INSERT INTO TABLE test(name) VALUES ('Astra');
+]], {});
 
 -- And finally query either one which returns a single result or
 local result = db:query_one("SELECT * FROM test;", {});

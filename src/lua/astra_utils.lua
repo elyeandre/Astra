@@ -2,7 +2,7 @@
 -- MARK: Utils
 
 ---
---- SQLx driver for PostgreSQL
+--- SQLx driver
 ---@class Database
 _G.Database = {}
 
@@ -23,11 +23,11 @@ function Database:query_one(sql, parameters) end
 function Database:query_all(sql, parameters) end
 
 ---
----Opens a new PostgreSQL connection using the provided URL and returns a table representing the connection.
+---Opens a new SQL connection using the provided URL and returns a table representing the connection.
 ---@param database_type "sqlite"|"postgres" The type of database to connect to.
----@param url string The URL of the PostgreSQL database to connect to.
+---@param url string The URL of the SQL database to connect to.
 ---@param max_connections number? Max number of connections to the database pool
----@return Database Database that represents the PostgreSQL connection.
+---@return Database Database that represents the SQL connection.
 ---@nodiscard
 ---@diagnostic disable-next-line: missing-return, lowercase-global
 function database_connect(database_type, url, max_connections) end
