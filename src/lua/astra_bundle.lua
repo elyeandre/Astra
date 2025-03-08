@@ -230,7 +230,7 @@ __luapack_modules__ = {
         ---@param moduleName string
         ---@return any
         ---@diagnostic disable-next-line: redefined-local
-        local function import(moduleName)
+        function import(moduleName)
         	local resolved_path = resolve_relative(moduleName, import_lua_dir)
         	---@diagnostic disable-next-line: param-type-mismatch
         	local ok, result = pcall(require, resolved_path)
