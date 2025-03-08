@@ -7,7 +7,7 @@ For development, we recommend a linux machine with [visual studio code](https://
 After your setup is complete, you will want to obtain a prebuilt binary of the runtime from the [releases page](https://github.com/ArkForgeLabs/Astra/releases). Alternatively you can get it with `wget` as well. For example for version 0.6.0:
 
 ```bash
-wget https://github.com/ArkForgeLabs/Astra/releases/latest/download/astra-full-luajit-linux-amd64
+wget https://github.com/ArkForgeLabs/Astra/releases/latest/download/astra-luajit-linux-amd64
 ```
 
 There are also windows binaries available if you are working on Windows, however we mostly assume your server instance will likely run linux, hence more support is geared towards it.
@@ -21,7 +21,7 @@ chmod +x astra-linux-amd64
 Each release likely contains updates to the packaged bundle lua code that contains definitions you might need during development which you can omit and ignore during production release. You can obtain them through:
 
 ```bash
-./astra-full-luajit-linux-amd64 export-bundle
+./astra-luajit-linux-amd64 export-bundle
 ```
 
 which will create a new file called `astra_bundle.lua`. You can include it in your code to get intellisense and references for the available functions. The import will be ignored during runtime as Astra will use it's own packaged bundle internally instead.
