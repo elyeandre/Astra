@@ -71,5 +71,4 @@ Some features that are missing but are planned:
 - [ ] Websockets
 - [ ] TLS/SSL support
 - [ ] Middleware
-- [ ] SQLite support
 - [ ] Templating
