@@ -7,7 +7,7 @@ During development of your web servers, you might need some cryptography functio
 Currently Astra provides SHA2 and SHA3 (both 256 and 512 variants) hashing functions.
 
 ```lua
-hash("sha2_512", "MY INPUT")
+Crypto.hash("sha2_512", "MY INPUT")
 ```
 
 ## Base64
@@ -17,9 +17,9 @@ Astra also provides encoding and decoding of base64 strings, including URL safe 
 ```lua
 local input = "MY VERY COOL STRING"
 
-local encoded = base64_encode(input)
+local encoded = Crypto.base64_encode(input)
 print(encoded)
 
-local decoded = base64_decode(encoded)
+local decoded = Crypto.base64_decode(encoded)
 print(decoded)
 ```

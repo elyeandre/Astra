@@ -227,15 +227,15 @@
 
 </style>
 <h1 id="extending-astra"><a class="header" href="#extending-astra">Extending Astra</a></h1>
-<h2 id="through-utils"><a class="header" href="#through-utils">Through Utils</a></h2>
-<p>Your point of interest will be the <code>src</code> directory. If your aim is to extend the engine, you may look into the <code>utils</code> folder upon which you can add a new file of your choice.</p>
-<p>For extensions, you need a struct that implements <code>LuaUtils</code> trait implemented which gives an async <code>lua</code> runtime context. Within it you can create a new lua function that adds your function to the global context at runtime.</p>
+<h2 id="through-components"><a class="header" href="#through-components">Through Components</a></h2>
+<p>Your point of interest will be the <code>src</code> directory. If your aim is to extend the engine, you may look into the <code>components</code> folder upon which you can add a new file of your choice.</p>
+<p>For extensions, you need a struct that implements <code>LuaComponents</code> trait implemented which gives an async <code>lua</code> runtime context. Within it you can create a new lua function that adds your function to the global context at runtime.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>pub struct MyNewExtension {
     pub field: String,
 }
-impl crate::utils::LuaUtils for MyNewExtension {
+impl crate::components::LuaComponents for MyNewExtension {
     async fn register_to_lua(lua: &amp;mlua::Lua) -&gt; mlua::Result&lt;()&gt; {
         let function = lua.create_async_function(|lua, param: mlua::Value| async move {
             /* Content */
@@ -247,7 +247,7 @@ impl crate::utils::LuaUtils for MyNewExtension {
     }
 }
 <span class="boring">}</span></code></pre></pre>
-<p>After this, open <code>lib.rs</code> folder, include your new extention's file, and within <code>register_utils</code> call your extension's <code>register_to_lua</code> method.</p>
+<p>After this, open <code>mod.rs</code> folder, include your new extention's file, and within <code>register_components</code> call your extension's <code>register_to_lua</code> method.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>    my_extension::MyNewExtension::register_to_lua(lua).await?;

@@ -1,16 +1,16 @@
 # Extending Astra
 
-## Through Utils
+## Through Components
 
-Your point of interest will be the `src` directory. If your aim is to extend the engine, you may look into the `utils` folder upon which you can add a new file of your choice.
+Your point of interest will be the `src` directory. If your aim is to extend the engine, you may look into the `components` folder upon which you can add a new file of your choice.
 
-For extensions, you need a struct that implements `LuaUtils` trait implemented which gives an async `lua` runtime context. Within it you can create a new lua function that adds your function to the global context at runtime.
+For extensions, you need a struct that implements `LuaComponents` trait implemented which gives an async `lua` runtime context. Within it you can create a new lua function that adds your function to the global context at runtime.
 
 ```rust
 pub struct MyNewExtension {
     pub field: String,
 }
-impl crate::utils::LuaUtils for MyNewExtension {
+impl crate::components::LuaComponents for MyNewExtension {
     async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
         let function = lua.create_async_function(|lua, param: mlua::Value| async move {
             /* Content */
@@ -23,7 +23,7 @@ impl crate::utils::LuaUtils for MyNewExtension {
 }
 ```
 
-After this, open `lib.rs` folder, include your new extention's file, and within `register_utils` call your extension's `register_to_lua` method.
+After this, open `mod.rs` folder, include your new extention's file, and within `register_components` call your extension's `register_to_lua` method.
 
 ```rust
     my_extension::MyNewExtension::register_to_lua(lua).await?;
