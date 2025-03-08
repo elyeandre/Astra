@@ -1,9 +1,9 @@
+use crate::components::BodyLua;
 use axum::{
     body::Body,
     extract::{FromRequest, Multipart, State},
     http::{Request, request::Parts},
 };
-use common::BodyLua;
 use mlua::{LuaSerdeExt, UserData};
 use std::collections::HashMap;
 use tokio::io::AsyncWriteExt;

@@ -71,7 +71,7 @@ impl LuaCrypto {
         }
     }
 }
-impl crate::LuaUtils for LuaCrypto {
+impl crate::components::AstraComponent for LuaCrypto {
     async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
         let hash_function = lua.create_function(|_, (hash_type, input): (String, String)| {
             Ok(Self::hash(hash_type, input))

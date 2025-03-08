@@ -3,13 +3,8 @@
 
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-mod essential_utils;
-mod fileio;
-mod requests;
-mod responses;
-mod routes;
-mod startup;
-mod utils;
+mod cli;
+mod components;
 
 #[tokio::main]
 async fn main() {
@@ -22,5 +17,5 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    startup::init().await;
+    cli::init().await;
 }

@@ -1,4 +1,7 @@
-use crate::startup::LUA;
+use crate::{
+    cli::LUA,
+    components::http::{requests, responses, routes},
+};
 use axum::{
     Router,
     body::Body,
@@ -36,7 +39,7 @@ pub async fn route(
     request: Request<Body>,
 ) -> axum::response::Response {
     let request = {
-        match lua.create_userdata(crate::requests::RequestLua::new(request).await) {
+        match lua.create_userdata(requests::RequestLua::new(request).await) {
             Ok(v) => Some(v),
             Err(e) => {
                 eprintln!("Could not construct request: {e:#?}");
@@ -68,7 +71,7 @@ pub async fn route(
     };
 
     // if a response userdata can be created
-    match lua.create_userdata(crate::responses::ResponseLua::new()) {
+    match lua.create_userdata(responses::ResponseLua::new()) {
         Ok(response_details) => {
             response = handle_result(
                 details
@@ -77,8 +80,7 @@ pub async fn route(
                     .await,
             );
 
-            if let Ok(response_details) = response_details.borrow::<crate::responses::ResponseLua>()
-            {
+            if let Ok(response_details) = response_details.borrow::<responses::ResponseLua>() {
                 *response.status_mut() = response_details.status_code;
 
                 for (key, value) in response_details.headers.iter() {
@@ -97,8 +99,7 @@ pub async fn route(
 }
 
 pub fn load_routes() -> Router {
-    #[allow(clippy::expect_used)]
-    let lua = LUA.get().expect("Could not get a valid Lua VM");
+    let lua = &LUA;
 
     let mut router = Router::new();
     let mut routes = Vec::new();
@@ -108,7 +109,7 @@ pub fn load_routes() -> Router {
         .unwrap()
         .for_each(|_key: mlua::Value, entry: mlua::Value| {
             if let Some(entry) = entry.as_table() {
-                routes.push(crate::routes::Route {
+                routes.push(routes::Route {
                     path: lua.from_value(entry.get("path")?)?,
                     static_dir: lua.from_value(entry.get("static_dir")?)?,
                     static_file: lua.from_value(entry.get("static_file")?)?,

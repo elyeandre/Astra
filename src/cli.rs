@@ -1,8 +1,8 @@
 use clap::{Parser, command, crate_authors, crate_name, crate_version};
-use std::io::Write;
+use std::{io::Write, sync::LazyLock};
 use tokio::sync::OnceCell;
 
-pub static LUA: OnceCell<mlua::Lua> = OnceCell::const_new();
+pub static LUA: LazyLock<mlua::Lua> = LazyLock::new(mlua::Lua::new);
 pub static SCRIPT_PATH: OnceCell<String> = OnceCell::const_new();
 
 #[derive(Parser)] // requires `derive` feature
@@ -24,10 +24,8 @@ enum AstraCLI {
     #[command(arg_required_else_help = true, about = "Runs a lua script")]
     Run {
         file_path: String,
-        #[arg(long, short = 'c', action = clap::ArgAction::SetTrue)]
+        #[arg(long, short = 'c', action = clap::ArgAction::SetTrue, default_value = "true")]
         core: bool,
-        #[arg(long, short = 'c')]
-        lua_version: String,
         #[clap(trailing_var_arg = true, allow_hyphen_values = true)]
         extra_args: Option<Vec<String>>,
     },
@@ -42,26 +40,14 @@ enum AstraCLI {
 }
 
 pub async fn init() {
-    cli().await;
-}
-
-async fn cli() {
     // commands
     match AstraCLI::parse() {
         AstraCLI::Run {
             file_path,
             core,
-            lua_version,
             extra_args,
         } => {
-            let lua = LUA
-                .get_or_init(|| async {
-                    match lua_version.as_str() {
-                        "luau" => lua_vm_luau::mlua::Lua::new(),
-                        _ => lua_vm_luajit::mlua::Lua::new(),
-                    }
-                })
-                .await;
+            let lua = &LUA;
 
             #[allow(clippy::expect_used)]
             SCRIPT_PATH
@@ -145,19 +131,16 @@ async fn registration(lua: &mlua::Lua, include_utils: bool) -> String {
     let (lib, cleaned_lib) = prepare_prelude(include_utils);
 
     // register required global functions
-    crate::essential_utils::essential_utils_registration(lua);
-    register_run_function(lua).await;
-    if let Err(e) = crate::fileio::register_fileio_functions(lua).await {
-        eprintln!("Could not register File IO functions:\n{e}");
+    crate::components::global_functions::essential_global_functions(lua);
+
+    if include_utils {
+        if let Err(e) = crate::components::register_components(lua).await {
+            eprintln!("Error setting the util functions:\n{e}");
+        }
     }
 
     if let Err(e) = lua.load(cleaned_lib.as_str()).exec_async().await {
         eprintln!("Couldn't add prelude:\n{e}");
-    }
-    if include_utils {
-        if let Err(e) = utils::register_utils(lua).await {
-            eprintln!("Error setting the util functions:\n{e}");
-        }
     }
 
     lib
@@ -184,10 +167,10 @@ fn prepare_prelude(include_utils: bool) -> (String, String) {
     }
 
     let lib = {
-        let lib = include_str!("../../lua/astra_bundle.lua").to_string();
+        let lib = include_str!("./lua/astra_bundle.lua").to_string();
 
         if include_utils {
-            let utils_lib = include_str!("../../lua/astra_utils.lua");
+            let utils_lib = include_str!("./lua/astra_utils.lua");
             format!("{utils_lib}\n{lib}")
         } else {
             lib
@@ -203,46 +186,6 @@ fn prepare_prelude(include_utils: bool) -> (String, String) {
     );
 
     (lib, cleaned_lib)
-}
-
-async fn register_run_function(lua: &mlua::Lua) {
-    // Register function for running the server
-    if let Ok(function) = lua.create_async_function(|lua, ()| async move {
-        // default address
-        let mut listener_address = "127.0.0.1:8080".to_string();
-
-        if let Ok(settings) = lua.globals().get::<mlua::Table>("Astra") {
-            let mut hostname = "127.0.0.1".to_string();
-            if let Ok(new_hostname) = settings.get::<String>("hostname") {
-                hostname = new_hostname;
-            }
-
-            let mut port = 8080;
-            if let Ok(new_port) = settings.get::<u16>("port") {
-                port = new_port;
-            }
-
-            listener_address = format!("{hostname}:{port}");
-        }
-
-        #[allow(clippy::unwrap_used)]
-        let listener = tokio::net::TcpListener::bind(listener_address.clone())
-            .await
-            .unwrap();
-
-        println!("🚀 Listening at: http://{listener_address}");
-
-        #[allow(clippy::unwrap_used)]
-        axum::serve(listener, crate::routes::load_routes())
-            .await
-            .unwrap();
-
-        Ok(())
-    }) {
-        if let Err(e) = lua.globals().set("astra_internal__start_server", function) {
-            println!("Could not insert the function for astra_internal__start_server: {e}");
-        }
-    }
 }
 
 pub async fn self_update_cli() -> Result<(), Box<dyn ::std::error::Error>> {

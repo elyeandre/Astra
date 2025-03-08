@@ -1,4 +1,5 @@
-[workspace.package]
+[package]
+name = "astra"
 version = "0.16.0"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 description = "🔥 Blazingly Fast 🔥 web server runtime for Lua"
@@ -6,12 +7,17 @@ edition = "2024"
 license = "Apache-2.0"
 exclude = ["examples"]
 
-[workspace]
-members = ["src/astra"]
-resolver = "2"
+[features]
+default = ["luajit"]
+luajit = ["mlua/luajit"]
+luajit52 = ["mlua/luajit52"]
+luau = ["mlua/luau"]
+lua51 = ["mlua/lua51"]
+lua52 = ["mlua/lua52"]
+lua53 = ["mlua/lua53"]
+lua54 = ["mlua/lua54"]
 
-[workspace.dependencies]
-axum = { version = "0.8.0", features = ["macros", "multipart"] }
+[dependencies]
 mlua = { version = "0.10.2", features = [
     "serialize",
     "vendored",
@@ -21,6 +27,9 @@ mlua = { version = "0.10.2", features = [
     "macros",
     "anyhow",
 ] }
+
+# http
+axum = { version = "0.8.0", features = ["macros", "multipart"] }
 reqwest = { version = "0.12.11", features = [
     "json",
     "rustls-tls",
@@ -30,10 +39,43 @@ reqwest = { version = "0.12.11", features = [
     "stream",
     "macos-system-configuration",
 ], default-features = false }
+tower = { version = "0.5.2" }
+tower-http = { version = "0.6.2", features = [
+    "fs",
+    "trace",
+    "compression-full",
+    "decompression-full",
+] }
+
+# data formats
 serde = { version = "1.0.216", features = ["derive"] }
 serde_json = { version = "1.0.133" }
-tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
+uuid = { version = "1.11.0", features = ["serde", "v4"] }
+toml = "0.8.19"
+sha2 = "0.10.8"
+sha3 = "0.10.8"
+base64 = "0.22.1"
 bytes = { version = "1.9.0", features = ["serde"] }
+chrono = { version = "0.4.39", features = ["serde"] }
+
+# runtime
+tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
+clap = { version = "4.5.27", features = ["cargo", "derive"] }
+dotenvy = "0.15.7"
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+version-compare = "0.2.0"
+
+# database
+sqlx = { version = "0.8.2", features = [
+    "runtime-tokio",
+    "tls-rustls",
+    "postgres",
+    "sqlite",
+    "json",
+    "chrono",
+    "uuid",
+] }
 
 [profile.release]
 opt-level = 3

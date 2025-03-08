@@ -1,105 +1,108 @@
-use crate::startup::SCRIPT_PATH;
+use crate::cli::SCRIPT_PATH;
 use mlua::UserData;
 
-pub async fn register_fileio_functions(lua: &mlua::Lua) -> mlua::Result<()> {
-    let astra_io = lua.create_table()?;
+pub struct FileIO {}
+impl crate::components::AstraComponent for FileIO {
+    async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
+        let astra_io = lua.create_table()?;
 
-    astra_io.set(
-        "get_metadata",
-        lua.create_function(|_, path: String| match std::fs::metadata(path) {
-            Ok(result) => Ok(AstraFileMetadata(result)),
-            Err(e) => Err(mlua::Error::runtime(e)),
-        })?,
-    )?;
+        astra_io.set(
+            "get_metadata",
+            lua.create_function(|_, path: String| match std::fs::metadata(path) {
+                Ok(result) => Ok(AstraFileMetadata(result)),
+                Err(e) => Err(mlua::Error::runtime(e)),
+            })?,
+        )?;
 
-    astra_io.set(
-        "read_dir",
-        lua.create_function(|_, path: String| match std::fs::read_dir(path) {
-            Ok(result) => Ok(result
-                .filter_map(|entry| {
-                    if let Ok(entry) = entry {
-                        Some(AstraDirEntry(entry))
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>()),
-            Err(e) => Err(mlua::Error::runtime(e)),
-        })?,
-    )?;
+        astra_io.set(
+            "read_dir",
+            lua.create_function(|_, path: String| match std::fs::read_dir(path) {
+                Ok(result) => Ok(result
+                    .filter_map(|entry| {
+                        if let Ok(entry) = entry {
+                            Some(AstraDirEntry(entry))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>()),
+                Err(e) => Err(mlua::Error::runtime(e)),
+            })?,
+        )?;
 
-    astra_io.set(
-        "get_current_dir",
-        lua.create_function(|_, ()| match std::env::current_dir() {
-            Ok(result) => Ok(result),
-            Err(e) => Err(mlua::Error::runtime(e)),
-        })?,
-    )?;
+        astra_io.set(
+            "get_current_dir",
+            lua.create_function(|_, ()| match std::env::current_dir() {
+                Ok(result) => Ok(result),
+                Err(e) => Err(mlua::Error::runtime(e)),
+            })?,
+        )?;
 
-    astra_io.set(
-        "exists",
-        lua.create_function(|_, path: String| match std::fs::exists(path) {
-            Ok(result) => Ok(result),
-            Err(e) => Err(mlua::Error::runtime(e)),
-        })?,
-    )?;
+        astra_io.set(
+            "exists",
+            lua.create_function(|_, path: String| match std::fs::exists(path) {
+                Ok(result) => Ok(result),
+                Err(e) => Err(mlua::Error::runtime(e)),
+            })?,
+        )?;
 
-    astra_io.set(
-        "change_dir",
-        lua.create_function(|_, path: String| match std::env::set_current_dir(path) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(mlua::Error::runtime(e)),
-        })?,
-    )?;
+        astra_io.set(
+            "change_dir",
+            lua.create_function(|_, path: String| match std::env::set_current_dir(path) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(mlua::Error::runtime(e)),
+            })?,
+        )?;
 
-    astra_io.set(
-        "create_dir",
-        lua.create_function(|_, path: String| match std::fs::create_dir(path) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(mlua::Error::runtime(e)),
-        })?,
-    )?;
+        astra_io.set(
+            "create_dir",
+            lua.create_function(|_, path: String| match std::fs::create_dir(path) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(mlua::Error::runtime(e)),
+            })?,
+        )?;
 
-    astra_io.set(
-        "create_dir_all",
-        lua.create_function(|_, path: String| match std::fs::create_dir_all(path) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(mlua::Error::runtime(e)),
-        })?,
-    )?;
+        astra_io.set(
+            "create_dir_all",
+            lua.create_function(|_, path: String| match std::fs::create_dir_all(path) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(mlua::Error::runtime(e)),
+            })?,
+        )?;
 
-    astra_io.set(
-        "remove",
-        lua.create_function(|_, path: String| match std::fs::remove_file(path) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(mlua::Error::runtime(e)),
-        })?,
-    )?;
+        astra_io.set(
+            "remove",
+            lua.create_function(|_, path: String| match std::fs::remove_file(path) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(mlua::Error::runtime(e)),
+            })?,
+        )?;
 
-    astra_io.set(
-        "remove_dir",
-        lua.create_function(|_, path: String| match std::fs::remove_dir(path) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(mlua::Error::runtime(e)),
-        })?,
-    )?;
+        astra_io.set(
+            "remove_dir",
+            lua.create_function(|_, path: String| match std::fs::remove_dir(path) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(mlua::Error::runtime(e)),
+            })?,
+        )?;
 
-    astra_io.set(
-        "remove_dir_all",
-        lua.create_function(|_, path: String| match std::fs::remove_dir_all(path) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(mlua::Error::runtime(e)),
-        })?,
-    )?;
+        astra_io.set(
+            "remove_dir_all",
+            lua.create_function(|_, path: String| match std::fs::remove_dir_all(path) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(mlua::Error::runtime(e)),
+            })?,
+        )?;
 
-    astra_io.set(
-        "get_script_path",
-        lua.create_function(|_, ()| Ok(SCRIPT_PATH.get().cloned()))?,
-    )?;
+        astra_io.set(
+            "get_script_path",
+            lua.create_function(|_, ()| Ok(SCRIPT_PATH.get().cloned()))?,
+        )?;
 
-    lua.globals().set("AstraIO", astra_io)?;
+        lua.globals().set("AstraIO", astra_io)?;
 
-    Ok(())
+        Ok(())
+    }
 }
 
 struct AstraFileMetadata(std::fs::Metadata);
