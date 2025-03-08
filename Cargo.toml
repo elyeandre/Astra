@@ -1,5 +1,5 @@
 [workspace.package]
-version = "0.15.2"
+version = "0.16.0"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 description = "🔥 Blazingly Fast 🔥 web server runtime for Lua"
 edition = "2024"

@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.16.0] - 2025-03-08
+
+### Bug Fixes
+
+- #11 ([7fe2bb8](https://github.com/ArkForgeLabs/Astra/commit/7fe2bb8636ae55929ad259e55885259443cb8c13))
+
+### Documentation
+
+- Updated documentation about the SQL driver ([648f0a6](https://github.com/ArkForgeLabs/Astra/commit/648f0a67f5bc2d4c927e98ebae2965d4bdcb5de3))
+
+### Features
+
+- Added sqlite support ([f387584](https://github.com/ArkForgeLabs/Astra/commit/f38758425458ebe37ae492dfa63f9e8b4aa00934))
+
 ## [0.15.1] - 2025-03-06
 
 ### Bug Fixes
