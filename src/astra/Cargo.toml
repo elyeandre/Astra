@@ -8,11 +8,9 @@ license.workspace = true
 exclude.workspace = true
 
 [features]
-default = ["luajit", "utils_luajit"]
+default = ["luajit"]
 luajit = ["mlua/luajit"]
 luau = ["mlua/luau-jit"]
-utils_luajit = ["dep:utils", "utils/luajit"]
-utils_luau = ["dep:utils", "utils/luau"]
 
 [dependencies]
 mlua = { workspace = true }
@@ -33,6 +31,6 @@ tower-http = { version = "0.6.2", features = [
 ] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-utils = { path = "../utils", optional = true }
+utils = { path = "../utils" }
 common = { path = "../common" }
 version-compare = "0.2.0"

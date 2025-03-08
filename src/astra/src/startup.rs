@@ -24,11 +24,17 @@ enum AstraCLI {
     #[command(arg_required_else_help = true, about = "Runs a lua script")]
     Run {
         file_path: String,
+        #[arg(long, short = 'c', action = clap::ArgAction::SetTrue)]
+        core: bool,
         #[clap(trailing_var_arg = true, allow_hyphen_values = true)]
         extra_args: Option<Vec<String>>,
     },
     #[command(about = "Exports the packages lua bundle for import for intellisense")]
-    ExportBundle { file_path: Option<String> },
+    ExportBundle {
+        file_path: Option<String>,
+        #[arg(long, short = 'c', action = clap::ArgAction::SetTrue)]
+        core: bool,
+    },
     #[command(about = "Updates to the latest version", alias = "update")]
     Upgrade,
 }
@@ -44,6 +50,7 @@ async fn cli(lua: &mlua::Lua) {
     match AstraCLI::parse() {
         AstraCLI::Run {
             file_path,
+            core,
             extra_args,
         } => {
             #[allow(clippy::expect_used)]
@@ -51,7 +58,7 @@ async fn cli(lua: &mlua::Lua) {
                 .set(file_path.clone())
                 .expect("Could not set the script path to OnceCell");
 
-            let _ = registration(lua).await;
+            let _ = registration(lua, core).await;
 
             // args
             if let Some(extra_args) = extra_args {
@@ -100,8 +107,8 @@ async fn cli(lua: &mlua::Lua) {
                 }
             }
         }
-        AstraCLI::ExportBundle { file_path } => {
-            let (lib, _) = prepare_prelude();
+        AstraCLI::ExportBundle { file_path, core } => {
+            let (lib, _) = prepare_prelude(core);
 
             let file_path = if let Some(file_path) = file_path {
                 file_path
@@ -124,8 +131,8 @@ async fn cli(lua: &mlua::Lua) {
     }
 }
 
-async fn registration(lua: &mlua::Lua) -> String {
-    let (lib, cleaned_lib) = prepare_prelude();
+async fn registration(lua: &mlua::Lua, include_utils: bool) -> String {
+    let (lib, cleaned_lib) = prepare_prelude(include_utils);
 
     // register required global functions
     crate::essential_utils::essential_utils_registration(lua);
@@ -137,15 +144,16 @@ async fn registration(lua: &mlua::Lua) -> String {
     if let Err(e) = lua.load(cleaned_lib.as_str()).exec_async().await {
         eprintln!("Couldn't add prelude:\n{e}");
     }
-    #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
-    if let Err(e) = utils::register_utils(lua).await {
-        eprintln!("Error setting the util functions:\n{e}");
+    if include_utils {
+        if let Err(e) = utils::register_utils(lua).await {
+            eprintln!("Error setting the util functions:\n{e}");
+        }
     }
 
     lib
 }
 
-fn prepare_prelude() -> (String, String) {
+fn prepare_prelude(include_utils: bool) -> (String, String) {
     fn filter(input: String, start: &str, end: &str) -> String {
         let mut new_lines = Vec::new();
         let mut removing = false;
@@ -167,13 +175,13 @@ fn prepare_prelude() -> (String, String) {
 
     let lib = {
         let lib = include_str!("../../lua/astra_bundle.lua").to_string();
-        #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
-        let lib = {
+
+        if include_utils {
             let utils_lib = include_str!("../../lua/astra_utils.lua");
             format!("{utils_lib}\n{lib}")
-        };
-
-        lib
+        } else {
+            lib
+        }
     };
 
     let lib = filter(lib, "--- @START_REMOVING_PACK", "--- @END_REMOVING_PACK");
@@ -230,7 +238,10 @@ async fn register_run_function(lua: &mlua::Lua) {
 pub async fn self_update_cli() -> Result<(), Box<dyn ::std::error::Error>> {
     let latest_tag = reqwest::Client::new()
         .get("https://api.github.com/repos/ArkForgeLabs/Astra/tags")
-        .header(reqwest::header::USER_AGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36")
+        .header(
+            reqwest::header::USER_AGENT,
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
+        )
         .send()
         .await?.json::<serde_json::Value>().await?;
     #[allow(clippy::expect_used)]
@@ -251,10 +262,6 @@ pub async fn self_update_cli() -> Result<(), Box<dyn ::std::error::Error>> {
     {
         if is_new_version_available {
             println!("Updating from {} to {latest_tag}...", crate_version!());
-            #[cfg(any(feature = "utils_luajit", feature = "utils_luau"))]
-            let edition = "astra-full";
-            #[cfg(not(any(feature = "utils_luajit", feature = "utils_luau")))]
-            let edition = "astra-core";
 
             #[cfg(feature = "luajit")]
             let language = "luajit";
@@ -267,7 +274,7 @@ pub async fn self_update_cli() -> Result<(), Box<dyn ::std::error::Error>> {
                 "linux-amd64"
             };
 
-            let file_name = format!("{edition}-{language}-{architecture}");
+            let file_name = format!("{language}-{architecture}");
             let url = format!(
                 "https://github.com/ArkForgeLabs/Astra/releases/latest/download/{file_name}"
             );
