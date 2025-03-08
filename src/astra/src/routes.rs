@@ -1,10 +1,10 @@
 use crate::startup::LUA;
 use axum::{
+    Router,
     body::Body,
     http::Request,
     response::IntoResponse,
     routing::{delete, get, options, patch, post, put, trace},
-    Router,
 };
 use mlua::LuaSerdeExt;
 
@@ -30,9 +30,13 @@ pub struct Route {
     pub function: mlua::Function,
 }
 
-pub async fn route(details: Route, request: Request<Body>) -> axum::response::Response {
+pub async fn route(
+    lua: &mlua::Lua,
+    details: Route,
+    request: Request<Body>,
+) -> axum::response::Response {
     let request = {
-        match LUA.create_userdata(crate::requests::RequestLua::new(request).await) {
+        match lua.create_userdata(crate::requests::RequestLua::new(request).await) {
             Ok(v) => Some(v),
             Err(e) => {
                 eprintln!("Could not construct request: {e:#?}");
@@ -43,31 +47,28 @@ pub async fn route(details: Route, request: Request<Body>) -> axum::response::Re
     };
     let mut response: axum::http::Response<Body>;
 
-    #[inline]
-    fn handle_result(result: mlua::Result<mlua::Value>) -> axum::http::Response<Body> {
-        match result {
-            Ok(value) => match value {
-                mlua::Value::String(plain) => plain.to_string_lossy().into_response(),
-                mlua::Value::Table(_) => match LUA.from_value::<serde_json::Value>(value.clone()) {
-                    Ok(result) => axum::Json(result).into_response(),
-                    Err(e) => {
-                        eprintln!("Result Parsing Error: {e}");
+    let handle_result = |result: mlua::Result<mlua::Value>| match result {
+        Ok(value) => match value {
+            mlua::Value::String(plain) => plain.to_string_lossy().into_response(),
+            mlua::Value::Table(_) => match lua.from_value::<serde_json::Value>(value.clone()) {
+                Ok(result) => axum::Json(result).into_response(),
+                Err(e) => {
+                    eprintln!("Result Parsing Error: {e}");
 
-                        axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
-                    }
-                },
-                _ => axum::http::StatusCode::OK.into_response(),
+                    axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
+                }
             },
-            Err(e) => {
-                eprintln!("Route Calling Error: {e}");
+            _ => axum::http::StatusCode::OK.into_response(),
+        },
+        Err(e) => {
+            eprintln!("Route Calling Error: {e}");
 
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
-            }
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
         }
-    }
+    };
 
     // if a response userdata can be created
-    match LUA.create_userdata(crate::responses::ResponseLua::new()) {
+    match lua.create_userdata(crate::responses::ResponseLua::new()) {
         Ok(response_details) => {
             response = handle_result(
                 details
@@ -96,19 +97,22 @@ pub async fn route(details: Route, request: Request<Body>) -> axum::response::Re
 }
 
 pub fn load_routes() -> Router {
+    #[allow(clippy::expect_used)]
+    let lua = LUA.get().expect("Could not get a valid Lua VM");
+
     let mut router = Router::new();
     let mut routes = Vec::new();
     #[allow(clippy::unwrap_used)]
-    LUA.globals()
+    lua.globals()
         .get::<mlua::Table>("Astra")
         .unwrap()
         .for_each(|_key: mlua::Value, entry: mlua::Value| {
             if let Some(entry) = entry.as_table() {
                 routes.push(crate::routes::Route {
-                    path: LUA.from_value(entry.get("path")?)?,
-                    static_dir: LUA.from_value(entry.get("static_dir")?)?,
-                    static_file: LUA.from_value(entry.get("static_file")?)?,
-                    method: LUA.from_value(entry.get("method")?)?,
+                    path: lua.from_value(entry.get("path")?)?,
+                    static_dir: lua.from_value(entry.get("static_dir")?)?,
+                    static_file: lua.from_value(entry.get("static_file")?)?,
+                    method: lua.from_value(entry.get("method")?)?,
                     function: entry.get::<mlua::Function>("func")?,
                 });
             }
@@ -125,7 +129,7 @@ pub fn load_routes() -> Router {
             ($route_function:expr) => {
                 router.route(
                     path,
-                    $route_function(|request: Request<Body>| route(route_values, request)),
+                    $route_function(|request: Request<Body>| route(lua, route_values, request)),
                 )
             };
         }
@@ -163,7 +167,7 @@ pub fn load_routes() -> Router {
         }
     }
 
-    if let Ok(should_compress) = crate::startup::LUA
+    if let Ok(should_compress) = lua
         .globals()
         .get::<mlua::Table>("Astra")
         .and_then(|setting| setting.get::<bool>("compression"))

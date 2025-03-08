@@ -1,8 +1,8 @@
 use clap::{Parser, command, crate_authors, crate_name, crate_version};
-use std::{io::Write, sync::LazyLock};
+use std::io::Write;
 use tokio::sync::OnceCell;
 
-pub static LUA: LazyLock<mlua::Lua> = LazyLock::new(mlua::Lua::new);
+pub static LUA: OnceCell<mlua::Lua> = OnceCell::const_new();
 pub static SCRIPT_PATH: OnceCell<String> = OnceCell::const_new();
 
 #[derive(Parser)] // requires `derive` feature
@@ -26,6 +26,8 @@ enum AstraCLI {
         file_path: String,
         #[arg(long, short = 'c', action = clap::ArgAction::SetTrue)]
         core: bool,
+        #[arg(long, short = 'c')]
+        lua_version: String,
         #[clap(trailing_var_arg = true, allow_hyphen_values = true)]
         extra_args: Option<Vec<String>>,
     },
@@ -40,19 +42,27 @@ enum AstraCLI {
 }
 
 pub async fn init() {
-    let lua = &LUA;
-
-    cli(lua).await;
+    cli().await;
 }
 
-async fn cli(lua: &mlua::Lua) {
+async fn cli() {
     // commands
     match AstraCLI::parse() {
         AstraCLI::Run {
             file_path,
             core,
+            lua_version,
             extra_args,
         } => {
+            let lua = LUA
+                .get_or_init(|| async {
+                    match lua_version.as_str() {
+                        "luau" => lua_vm_luau::mlua::Lua::new(),
+                        _ => lua_vm_luajit::mlua::Lua::new(),
+                    }
+                })
+                .await;
+
             #[allow(clippy::expect_used)]
             SCRIPT_PATH
                 .set(file_path.clone())
@@ -263,18 +273,13 @@ pub async fn self_update_cli() -> Result<(), Box<dyn ::std::error::Error>> {
         if is_new_version_available {
             println!("Updating from {} to {latest_tag}...", crate_version!());
 
-            #[cfg(feature = "luajit")]
-            let language = "luajit";
-            #[cfg(feature = "luau")]
-            let language = "luau";
-
             let architecture = if cfg!(windows) {
                 "windows-amd64.exe"
             } else {
                 "linux-amd64"
             };
 
-            let file_name = format!("{language}-{architecture}");
+            let file_name = format!("astra-{architecture}");
             let url = format!(
                 "https://github.com/ArkForgeLabs/Astra/releases/latest/download/{file_name}"
             );

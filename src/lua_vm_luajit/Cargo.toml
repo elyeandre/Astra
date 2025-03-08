@@ -1,0 +1,20 @@
+[package]
+name = "lua_vm_luajit"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+license.workspace = true
+exclude.workspace = true
+
+[dependencies]
+mlua = { version = "0.10.2", features = [
+    "luajit",
+    "serialize",
+    "vendored",
+    "async",
+    "send",
+    "error-send",
+    "macros",
+    "anyhow",
+] }

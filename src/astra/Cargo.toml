@@ -7,13 +7,7 @@ edition.workspace = true
 license.workspace = true
 exclude.workspace = true
 
-[features]
-default = ["luajit"]
-luajit = ["mlua/luajit"]
-luau = ["mlua/luau-jit"]
-
 [dependencies]
-mlua = { workspace = true }
 axum = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
@@ -31,6 +25,23 @@ tower-http = { version = "0.6.2", features = [
 ] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-utils = { path = "../utils" }
-common = { path = "../common" }
 version-compare = "0.2.0"
+chrono = { version = "0.4.39", features = ["serde"] }
+sqlx = { version = "0.8.2", features = [
+    "runtime-tokio",
+    "tls-rustls",
+    "postgres",
+    "sqlite",
+    "json",
+    "chrono",
+    "uuid",
+] }
+toml = "0.8.19"
+uuid = { version = "1.11.0", features = ["serde", "v4"] }
+sha2 = "0.10.8"
+sha3 = "0.10.8"
+base64 = "0.22.1"
+
+# Lua VMs
+lua_vm_luajit = { path = "../lua_vm_luajit" }
+# lua_vm_luau = { path = "../lua_vm_luau" }

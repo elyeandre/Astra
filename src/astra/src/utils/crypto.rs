@@ -1,8 +1,8 @@
 // Cryptography util. Currently supporting only SHA2 and SHA3 (256 and 512 variants)
 
 use base64::{
-    prelude::{BASE64_STANDARD, BASE64_URL_SAFE},
     Engine,
+    prelude::{BASE64_STANDARD, BASE64_URL_SAFE},
 };
 
 pub struct LuaCrypto {}
