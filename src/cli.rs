@@ -216,13 +216,28 @@ pub async fn self_update_cli() -> Result<(), Box<dyn ::std::error::Error>> {
         if is_new_version_available {
             println!("Updating from {} to {latest_tag}...", crate_version!());
 
+            #[cfg(feature = "luajit")]
+            let runtime = "luajit";
+            #[cfg(feature = "luajit52")]
+            let runtime = "luajit52";
+            #[cfg(feature = "luau")]
+            let runtime = "luau";
+            #[cfg(feature = "lua51")]
+            let runtime = "lua51";
+            #[cfg(feature = "lua52")]
+            let runtime = "lua52";
+            #[cfg(feature = "lua53")]
+            let runtime = "lua53";
+            #[cfg(feature = "lua54")]
+            let runtime = "lua54";
+
             let architecture = if cfg!(windows) {
                 "windows-amd64.exe"
             } else {
                 "linux-amd64"
             };
 
-            let file_name = format!("astra-{architecture}");
+            let file_name = format!("astra-{runtime}-{architecture}");
             let url = format!(
                 "https://github.com/ArkForgeLabs/Astra/releases/latest/download/{file_name}"
             );

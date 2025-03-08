@@ -72,14 +72,14 @@ function http_request(url) end
 
 ---
 ---Starts a new async task
----@param callback fun() | nil The callback to run the content of the async task
+---@param callback fun() The callback to run the content of the async task
 ---@return TaskHandler
 ---@diagnostic disable-next-line: missing-return, lowercase-global
 function spawn_task(callback) end
 
 ---
 ---Starts a new async task with a delay in milliseconds
----@param callback fun() | nil The callback to run the content of the async task
+---@param callback fun() The callback to run the content of the async task
 ---@param timeout number The delay in milliseconds
 ---@return TaskHandler
 ---@diagnostic disable-next-line: missing-return, lowercase-global
@@ -87,7 +87,7 @@ function spawn_timeout(callback, timeout) end
 
 ---
 ---Starts a new async task that runs infinitely in a loop but with a delay in milliseconds
----@param callback fun() | nil The callback to run the content of the async task
+---@param callback fun() The callback to run the content of the async task
 ---@param timeout number The delay in milliseconds
 ---@return TaskHandler
 ---@diagnostic disable-next-line: missing-return, lowercase-global
@@ -95,39 +95,40 @@ function spawn_interval(callback, timeout) end
 
 -- MARK: Crypto
 
----
----Hashes a given string according to the provided hash type.
----@param hash_type string Current available types: sha2_256, sha2_512, sha3_256, sha3_512
----@param input string The input to be hashed
----@return string
----@diagnostic disable-next-line: missing-return, lowercase-global
-function hash(hash_type, input) end
+_G.Crypto = {
+	---
+	---Hashes a given string according to the provided hash type.
+	---@param hash_type "sha2_256"|"sha3_256"|"sha2_512"|"sha3_512"
+	---@param input string The input to be hashed
+	---@return string
+	---@diagnostic disable-next-line: missing-return, lowercase-global
+	hash = function(hash_type, input) end,
 
----
----Encodes the given input as Base64
----@param input string The input to be encoded
----@return string
----@diagnostic disable-next-line: missing-return, lowercase-global
-function base64_encode(input) end
+	---
+	---Encodes the given input as Base64
+	---@param input string The input to be encoded
+	---@return string
+	---@diagnostic disable-next-line: missing-return, lowercase-global
+	base64_encode = function(input) end,
 
----
----Encodes the given input as Base64 but URL safe
----@param input string The input to be encoded
----@return string
----@diagnostic disable-next-line: missing-return, lowercase-global
-function base64_encode_urlsafe(input) end
+	---
+	---Encodes the given input as Base64 but URL safe
+	---@param input string The input to be encoded
+	---@return string
+	---@diagnostic disable-next-line: missing-return, lowercase-global
+	base64_encode_urlsafe = function(input) end,
 
----
----Decodes the given input as Base64
----@param input string The input to be decoded
----@return string
----@diagnostic disable-next-line: missing-return, lowercase-global
-function base64_decode(input) end
+	---
+	---Decodes the given input as Base64
+	---@param input string The input to be decoded
+	---@return string
+	---@diagnostic disable-next-line: missing-return, lowercase-global
+	base64_decode = function(input) end,
 
----
----Decodes the given input as Base64 but URL safe
----@param input string The input to be decoded
----@return string
----@diagnostic disable-next-line: missing-return, lowercase-global
-function base64_decode_urlsafe(input) end
-
+	---
+	---Decodes the given input as Base64 but URL safe
+	---@param input string The input to be decoded
+	---@return string
+	---@diagnostic disable-next-line: missing-return, lowercase-global
+	base64_decode_urlsafe = function(input) end,
+}
