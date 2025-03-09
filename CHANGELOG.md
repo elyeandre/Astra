@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.17.2] - 2025-03-09
+
+### Bug Fixes
+
+- #37 ([7ef97b9](https://github.com/ArkForgeLabs/Astra/commit/7ef97b973643c67632d5741a91a43490aaaecd51))
+
+### Documentation
+
+- Added documentation for the new import system ([b4d1d89](https://github.com/ArkForgeLabs/Astra/commit/b4d1d89c5ce61165a234d17279e9dfd9332c14c3))
+
 ## [0.17.1] - 2025-03-09
 
 ### Bug Fixes
