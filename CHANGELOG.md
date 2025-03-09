@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.17.1] - 2025-03-09
+
+### Bug Fixes
+
+- #38 better error messages ([717f4d7](https://github.com/ArkForgeLabs/Astra/commit/717f4d7f1c30dddd5ba0f0eea72369f27dd0dcd9))
+
+### Miscellaneous Tasks
+
+- Cleaned up the cli further ([67c37fa](https://github.com/ArkForgeLabs/Astra/commit/67c37fac4c74d97edbc2c796e2a7cc61e32716e1))
+- Cleaned up the cli a bit ([5b2ec31](https://github.com/ArkForgeLabs/Astra/commit/5b2ec3114b554622af0907f22a1406ad09acdfb1))
+
 ## [0.17.0] - 2025-03-08
 
 ### Bug Fixes

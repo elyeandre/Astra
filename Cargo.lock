@@ -120,7 +120,7 @@ checksum = "dcfed56ad506cb2c684a14971b8861fdc3baaaae314b9e5f9bb532cbe3ba7a4f"
 
 [[package]]
 name = "astra"
-version = "0.17.0"
+version = "0.17.1"
 dependencies = [
  "axum",
  "base64",
