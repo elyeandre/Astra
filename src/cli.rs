@@ -1,12 +1,12 @@
 use clap::{Parser, command, crate_authors, crate_name, crate_version};
-use std::sync::LazyLock;
+use std::{str::FromStr, sync::LazyLock};
 use tokio::sync::OnceCell;
 
 /// Global Lua instance.
 pub static LUA: LazyLock<mlua::Lua> = LazyLock::new(mlua::Lua::new);
 
 /// Global script path.
-pub static SCRIPT_PATH: OnceCell<String> = OnceCell::const_new();
+pub static SCRIPT_PATH: OnceCell<std::path::PathBuf> = OnceCell::const_new();
 
 /// Command-line interface for Astra.
 #[derive(Parser)]
@@ -71,8 +71,11 @@ async fn run_command(file_path: String, core: bool, extra_args: Option<Vec<Strin
 
     // Set the script path.
     #[allow(clippy::expect_used)]
+    let path =
+        std::path::PathBuf::from_str(&file_path).expect("Could not turn path into a path buffer");
+    #[allow(clippy::expect_used)]
     SCRIPT_PATH
-        .set(file_path.clone())
+        .set(path)
         .expect("Could not set the script path to OnceCell");
 
     // Register Lua components.

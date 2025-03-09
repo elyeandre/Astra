@@ -6,7 +6,7 @@ mod fileio;
 pub mod global_functions;
 pub mod http;
 mod http_client_request;
-// mod require;
+mod require;
 mod tasks;
 
 pub trait AstraComponent {
@@ -22,6 +22,7 @@ pub async fn register_components(lua: &mlua::Lua) -> mlua::Result<()> {
     tasks::LuaInterval::register_to_lua(lua).await?;
     crypto::LuaCrypto::register_to_lua(lua).await?;
     fileio::FileIO::register_to_lua(lua).await?;
+    require::LuaRequire::register_to_lua(lua).await?;
 
     Ok(())
 }

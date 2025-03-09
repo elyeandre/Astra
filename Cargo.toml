@@ -1,6 +1,6 @@
 [package]
 name = "astra"
-version = "0.17.1"
+version = "0.17.2"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 description = "🔥 Blazingly Fast 🔥 web server runtime for Lua"
 edition = "2024"
