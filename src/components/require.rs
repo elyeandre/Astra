@@ -8,6 +8,10 @@ impl AstraComponent for LuaRequire {
         lua.globals().set(
             "require",
             lua.create_async_function(|lua, path: String| async move {
+                if path.contains("astra_bundle") {
+                    return Ok(mlua::Value::Nil);
+                }
+
                 let mut cache = lua
                     .globals()
                     .get::<HashMap<String, RegistryKey>>("ASTRA_INTERNAL__IMPORT_CACHE")
