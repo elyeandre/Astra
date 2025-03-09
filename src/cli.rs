@@ -109,7 +109,7 @@ async fn run_command(file_path: String, core: bool, extra_args: Option<Vec<Strin
     // Load and execute the Lua script.
     #[allow(clippy::expect_used)]
     let user_file = std::fs::read_to_string(&file_path).expect("Couldn't read file");
-    if let Err(e) = lua.load(user_file).exec_async().await {
+    if let Err(e) = lua.load(user_file).set_name(file_path).exec_async().await {
         eprintln!("{}", e);
     }
 
