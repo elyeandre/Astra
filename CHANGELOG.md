@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.17.3] - 2025-03-10
+
+### Bug Fixes
+
+- Functions being overridden upon registration ([01141eb](https://github.com/ArkForgeLabs/Astra/commit/01141eb1cfa43cb5d4871b77d398775c14970b05))
+
 ## [0.17.2] - 2025-03-09
 
 ### Bug Fixes
