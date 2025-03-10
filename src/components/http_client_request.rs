@@ -26,7 +26,7 @@ impl crate::components::AstraComponent for HTTPClientRequest {
                 form: HashMap::new(),
             })
         })?;
-        lua.globals().set("http_request", function)
+        lua.globals().set("astra_internal__http_request", function)
     }
 }
 impl HTTPClientRequest {

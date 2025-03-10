@@ -41,7 +41,7 @@ enum AstraCLI {
         /// Path to the export file.
         file_path: Option<String>,
         /// Only core functionalities.
-        #[arg(long, short = 'c', action = clap::ArgAction::SetTrue)]
+        #[arg(long, short = 'c', action = clap::ArgAction::SetTrue, default_value = "true")]
         core: bool,
     },
     #[command(about = "Updates to the latest version", alias = "update")]

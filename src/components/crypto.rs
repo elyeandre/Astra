@@ -79,22 +79,22 @@ impl crate::components::AstraComponent for LuaCrypto {
         lua.globals().set("hash", hash_function)?;
 
         lua.globals().set(
-            "base64_encode",
+            "astra_internal__base64_encode",
             lua.create_function(|_, input: String| Ok(Self::base64_encode(input)))?,
         )?;
 
         lua.globals().set(
-            "base64_encode_urlsafe",
+            "astra_internal__base64_encode_urlsafe",
             lua.create_function(|_, input: String| Ok(Self::base64_encode_urlsafe(input)))?,
         )?;
 
         lua.globals().set(
-            "base64_decode",
+            "astra_internal__base64_decode",
             lua.create_function(|_, input: String| Self::base64_decode(input))?,
         )?;
 
         lua.globals().set(
-            "base64_decode_urlsafe",
+            "astra_internal__base64_decode_urlsafe",
             lua.create_function(|_, input: String| Self::base64_decode_urlsafe(input))?,
         )?;
 

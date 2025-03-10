@@ -30,7 +30,7 @@ pub fn dotenv_function(lua: &mlua::Lua) {
 
         Ok(())
     }) {
-        if let Err(e) = lua.globals().set("dotenv_load", function) {
+        if let Err(e) = lua.globals().set("astra_internal__dotenv_load", function) {
             println!("Could not insert the function for dotenv_load: {e}");
         }
     }

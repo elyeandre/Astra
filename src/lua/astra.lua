@@ -8,7 +8,7 @@ _G.import = require("./libs/import.lua")
 
 ---@type fun(file_path: string)
 ---@diagnostic disable-next-line: undefined-global
-_G.dotenv_load = dotenv_load
+_G.dotenv_load = astra_internal__dotenv_load
 
 _G.ENV = {}
 dotenv_load(".env")
@@ -24,8 +24,8 @@ dotenv_load(".env.local")
 _G.Astra = {
 	version = "0.0.0",
 	hostname = "127.0.0.1",
-	compression = true,
-	port = 20001,
+	compression = false,
+	port = 8080,
 }
 
 ---@diagnostic disable-next-line: duplicate-doc-alias
@@ -107,12 +107,7 @@ end
 ---
 --- Represents a multipart.
 ---@class Multipart
-_G.Multipart = {}
-
----
----Saves the multipart into disk
----@param file_path string | nil
-function Multipart:save_file(file_path) end
+---@field save_file fun(multipart: Multipart, file_path: string): string | nil Saves the multipart into disk
 
 ---
 --- Represents an HTTP request.
@@ -156,6 +151,7 @@ function Multipart:save_file(file_path) end
 ---@field set_readonly fun(file_io_permissions: FileIOPermissions, value: boolean)
 
 --- @START_REMOVING_RUNTIME
+
 _G.AstraIO = {
 	---Returns the metadata of a file or directory
 	---@param path string

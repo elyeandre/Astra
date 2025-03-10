@@ -52,7 +52,10 @@ end
 ---@return HTTPClientRequest
 ---@nodiscard
 ---@diagnostic disable-next-line: missing-return, lowercase-global
-function http_request(url) end
+function http_request(url)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__http_request(url)
+end
 
 ---
 --- Represents an async task
@@ -64,7 +67,10 @@ function http_request(url) end
 ---@param callback fun() The callback to run the content of the async task
 ---@return TaskHandler
 ---@diagnostic disable-next-line: missing-return, lowercase-global
-function spawn_task(callback) end
+function spawn_task(callback)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__spawn_task(callback)
+end
 
 ---
 ---Starts a new async task with a delay in milliseconds
@@ -72,7 +78,10 @@ function spawn_task(callback) end
 ---@param timeout number The delay in milliseconds
 ---@return TaskHandler
 ---@diagnostic disable-next-line: missing-return, lowercase-global
-function spawn_timeout(callback, timeout) end
+function spawn_timeout(callback, timeout)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__spawn_timeout(callback, timeout)
+end
 
 ---
 ---Starts a new async task that runs infinitely in a loop but with a delay in milliseconds
@@ -80,7 +89,10 @@ function spawn_timeout(callback, timeout) end
 ---@param timeout number The delay in milliseconds
 ---@return TaskHandler
 ---@diagnostic disable-next-line: missing-return, lowercase-global
-function spawn_interval(callback, timeout) end
+function spawn_interval(callback, timeout)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__spawn_interval(callback, timeout)
+end
 
 -- MARK: Crypto
 
@@ -91,33 +103,48 @@ _G.Crypto = {
 	---@param input string The input to be hashed
 	---@return string
 	---@diagnostic disable-next-line: missing-return, lowercase-global
-	hash = function(hash_type, input) end,
+	hash = function(hash_type, input)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__hash(hash_type, input)
+	end,
 
 	---
 	---Encodes the given input as Base64
 	---@param input string The input to be encoded
 	---@return string
 	---@diagnostic disable-next-line: missing-return, lowercase-global
-	base64_encode = function(input) end,
+	base64_encode = function(input)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__base64_encode(input)
+	end,
 
 	---
 	---Encodes the given input as Base64 but URL safe
 	---@param input string The input to be encoded
 	---@return string
 	---@diagnostic disable-next-line: missing-return, lowercase-global
-	base64_encode_urlsafe = function(input) end,
+	base64_encode_urlsafe = function(input)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__base64_encode_urlsafe(input)
+	end,
 
 	---
 	---Decodes the given input as Base64
 	---@param input string The input to be decoded
 	---@return string
 	---@diagnostic disable-next-line: missing-return, lowercase-global
-	base64_decode = function(input) end,
+	base64_decode = function(input)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__base64_decode(input)
+	end,
 
 	---
 	---Decodes the given input as Base64 but URL safe
 	---@param input string The input to be decoded
 	---@return string
 	---@diagnostic disable-next-line: missing-return, lowercase-global
-	base64_decode_urlsafe = function(input) end,
+	base64_decode_urlsafe = function(input)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__base64_decode_urlsafe(input)
+	end,
 }

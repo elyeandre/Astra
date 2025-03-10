@@ -32,7 +32,7 @@ impl crate::components::AstraComponent for LuaTask {
             }))
         })?;
 
-        lua.globals().set("spawn_task", function)
+        lua.globals().set("astra_internal__spawn_task", function)
     }
 }
 
@@ -52,7 +52,7 @@ impl crate::components::AstraComponent for LuaTimeout {
             },
         )?;
 
-        lua.globals().set("spawn_timeout", function)
+        lua.globals().set("astra_internal__spawn_timeout", function)
     }
 }
 
@@ -74,6 +74,7 @@ impl crate::components::AstraComponent for LuaInterval {
             },
         )?;
 
-        lua.globals().set("spawn_interval", function)
+        lua.globals()
+            .set("astra_internal__spawn_interval", function)
     }
 }
