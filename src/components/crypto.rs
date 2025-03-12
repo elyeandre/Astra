@@ -76,7 +76,7 @@ impl crate::components::AstraComponent for LuaCrypto {
         let hash_function = lua.create_function(|_, (hash_type, input): (String, String)| {
             Ok(Self::hash(hash_type, input))
         })?;
-        lua.globals().set("hash", hash_function)?;
+        lua.globals().set("astra_internal__hash", hash_function)?;
 
         lua.globals().set(
             "astra_internal__base64_encode",
