@@ -4,9 +4,9 @@
 ---
 --- SQLx driver
 ---@class Database
----@field execute fun(database: Database, sql: string, parameters: table)
----@field query_one fun(database: Database, sql: string, parameters: table): table | nil
----@field query_all fun(database: Database, sql: string, parameters: table): table | nil
+---@field execute fun(database: Database, sql: string, parameters: table | nil)
+---@field query_one fun(database: Database, sql: string, parameters: table | nil): table | nil
+---@field query_all fun(database: Database, sql: string, parameters: table | nil): table | nil
 
 ---
 ---Opens a new SQL connection using the provided URL and returns a table representing the connection.

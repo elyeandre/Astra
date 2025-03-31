@@ -36,7 +36,7 @@ impl crate::components::AstraComponent for Database {
                     "sqlite" => {
                         match sqlx::sqlite::SqlitePoolOptions::new()
                             .max_connections(max_connections)
-                            .connect(url.as_str())
+                            .connect(format!("sqlite:{}", url).as_str())
                             .await
                         {
                             Ok(pool) => Ok(Database {
@@ -145,35 +145,42 @@ impl UserData for Database {
                 fn $function_name(
                     lua: mlua::Lua,
                     sql: &str,
-                    parameters: mlua::Table,
+                    parameters: Option<mlua::Table>,
                 ) -> $return_type {
-                    // turn parameters into actual values
                     let mut query = sqlx::query(sql);
-                    for param in parameters
-                        .sequence_values::<mlua::Value>()
-                        .filter_map(|value| match value {
-                            Ok(value) => Some(value),
-                            Err(_) => None,
-                        })
-                        .collect::<Vec<_>>()
-                    {
-                        match param {
-                            mlua::Value::String(value) => {
-                                query = query.bind(value.to_string_lossy())
-                            }
-                            mlua::Value::Number(value) => query = query.bind(value),
-                            mlua::Value::Integer(value) => query = query.bind(value),
-                            mlua::Value::Boolean(value) => query = query.bind(value),
-                            mlua::Value::Table(_) => {
-                                if let Ok(json) = lua.from_value::<serde_json::Value>(param.clone())
-                                {
-                                    query = query.bind(json)
+
+                    match parameters {
+                        Some(param_values) => {
+                            // turn parameters into actual values
+                            for param in param_values
+                                .sequence_values::<mlua::Value>()
+                                .filter_map(|value| match value {
+                                    Ok(value) => Some(value),
+                                    Err(_) => None,
+                                })
+                                .collect::<Vec<_>>()
+                            {
+                                match param {
+                                    mlua::Value::String(value) => {
+                                        query = query.bind(value.to_string_lossy())
+                                    }
+                                    mlua::Value::Number(value) => query = query.bind(value),
+                                    mlua::Value::Integer(value) => query = query.bind(value),
+                                    mlua::Value::Boolean(value) => query = query.bind(value),
+                                    mlua::Value::Table(_) => {
+                                        if let Ok(json) =
+                                            lua.from_value::<serde_json::Value>(param.clone())
+                                        {
+                                            query = query.bind(json)
+                                        }
+                                    }
+
+                                    _ => {}
                                 }
                             }
-
-                            _ => {}
                         }
-                    }
+                        None => {}
+                    };
 
                     query
                 }
@@ -190,7 +197,7 @@ impl UserData for Database {
 
         methods.add_async_method(
             "execute",
-            |lua, this, (sql, parameters): (String, mlua::Table)| async move {
+            |lua, this, (sql, parameters): (String, Option<mlua::Table>)| async move {
                 match &this.db {
                     DatabaseType::Sqlite(pool) => {
                         let query = query_builder_sqlite(lua.clone(), &sql, parameters);
@@ -218,7 +225,7 @@ impl UserData for Database {
 
         methods.add_async_method(
             "query_one",
-            |lua, this, (sql, parameters): (String, mlua::Table)| async move {
+            |lua, this, (sql, parameters): (String, Option<mlua::Table>)| async move {
                 match &this.db {
                     DatabaseType::Sqlite(pool) => {
                         let query = query_builder_sqlite(lua.clone(), &sql, parameters);
@@ -246,7 +253,7 @@ impl UserData for Database {
 
         methods.add_async_method(
             "query_all",
-            |lua, this, (sql, parameters): (String, mlua::Table)| async move {
+            |lua, this, (sql, parameters): (String, Option<mlua::Table>)| async move {
                 match &this.db {
                     DatabaseType::Sqlite(pool) => {
                         let query = query_builder_sqlite(lua.clone(), &sql, parameters);

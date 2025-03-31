@@ -4,34 +4,34 @@ __luapack_modules__ = {
     (function()
         --!nocheck
         
-        local utils = { _version = "0.1.0" }
+        local utils = {}
         
         ---Pretty prints any table or value
         ---@param value any
         ---@diagnostic disable-next-line: duplicate-set-field
         function _G.pretty_print(value)
-            ---@diagnostic disable-next-line: undefined-global
-            astra_internal__pretty_print(value)
+        	---@diagnostic disable-next-line: undefined-global
+        	astra_internal__pretty_print(value)
         end
         
         _G.json = {
-            ---Encodes the value into a valid JSON string
-            ---@param value any
-            ---@return string
-            ---@diagnostic disable-next-line: duplicate-set-field
-            encode = function (value)
-                ---@diagnostic disable-next-line: undefined-global
-                return astra_internal__json_encode(value)
-            end,
+        	---Encodes the value into a valid JSON string
+        	---@param value any
+        	---@return string
+        	---@diagnostic disable-next-line: duplicate-set-field
+        	encode = function(value)
+        		---@diagnostic disable-next-line: undefined-global
+        		return astra_internal__json_encode(value)
+        	end,
         
-            ---Decodes the JSON string into a valid lua value
-            ---@param value string
-            ---@return any
-            ---@diagnostic disable-next-line: duplicate-set-field
-            decode = function (value)
-                ---@diagnostic disable-next-line: undefined-global
-                return astra_internal__json_decode(value)
-            end
+        	---Decodes the JSON string into a valid lua value
+        	---@param value string
+        	---@return any
+        	---@diagnostic disable-next-line: duplicate-set-field
+        	decode = function(value)
+        		---@diagnostic disable-next-line: undefined-global
+        		return astra_internal__json_decode(value)
+        	end,
         }
         
         ---
@@ -42,11 +42,11 @@ __luapack_modules__ = {
         ---@nodiscard
         ---@diagnostic disable-next-line: duplicate-set-field
         function string.split(input_str, separator_str)
-            local result_table = {}
-            for word in input_str:gmatch("([^" .. separator_str .. "]+)") do
-                table.insert(result_table, word)
-            end
-            return result_table
+        	local result_table = {}
+        	for word in input_str:gmatch("([^" .. separator_str .. "]+)") do
+        		table.insert(result_table, word)
+        	end
+        	return result_table
         end
         
         return utils
@@ -184,9 +184,6 @@ __luapack_modules__ = {
     
     end),
     (function()
-        local import_lua_dir = AstraIO.get_script_path():match("(.*[/\\])") or ""
-        local normal_require = require
-        
         ---@diagnostic disable-next-line: duplicate-doc-alias
         ---@alias importFun fun(moduleName: string): any
         
@@ -194,64 +191,21 @@ __luapack_modules__ = {
         ---@diagnostic disable-next-line: assign-type-mismatch
         local import = require
         
-        ---Converts a path relative to the current directory to realpath relative to root.
-        --
-        ---@param path string to be resolved
-        ---@param __dirname string of calling script
-        ---@return string
-        local function resolve_relative(path, __dirname)
-        	-- Split the path into parts
-        	local function split_path(p)
-        		local result = {}
-        		for part in p:gmatch("[^/\\]+") do
-        			table.insert(result, part)
-        		end
-        		return result
-        	end
-        
-        	local segments = split_path(__dirname)
-        	local parts = split_path(path)
-        
-        	for i, part in ipairs(parts) do
-        		if part == ".." then
-        			table.remove(segments)
-        		elseif part == "." or part == "" then
-        		-- Ignore current directory and empty segments
-        		else
-        			table.insert(segments, part)
-        		end
-        	end
-        
-        	return table.concat(segments, "/")
-        end
-        
-        ---The lua-import module provides a function,
-        ---the function takes single single string argument which is a glob pattern.
-        ---The return value is the module refered by the glob pattern.
-        ---@param moduleName string
-        ---@return any
-        ---@diagnostic disable-next-line: redefined-local, duplicate-set-field
-        function _G.require(moduleName)
-        ---@diagnostic disable-next-line: undefined-global
-        	local ok, result = pcall(astra_internal__require, moduleName)
-        	if not ok then
-        		return normal_require(moduleName)
-        	end
-        	return result
-        end
-        
-        ---The lua-import module provides a function,
-        ---the function takes single single string argument which is a glob pattern.
-        ---The return value is the module refered by the glob pattern.
+        ---The import function is similar to the lua's require functions.
+        ---With the exception of the async import capability required for the
+        ---Astra's utilities.
         ---@param moduleName string
         ---@return any
         ---@diagnostic disable-next-line: redefined-local
         function import(moduleName)
-        	local resolved_path = resolve_relative(moduleName, import_lua_dir)
-        	---@diagnostic disable-next-line: param-type-mismatch
-        	local ok, result = pcall(require, resolved_path)
+        	---@diagnostic disable-next-line: param-type-mismatch, undefined-global
+        	local ok, result = pcall(astra_internal__require, moduleName)
         	if not ok then
-        		error("Failed to load module at path: " .. resolved_path .. "\nError: " .. result)
+        		ok, result = require(moduleName)
+        		if not ok then
+        			error("Failed to load module.\nError: " .. result)
+        		end
+        		return result
         	end
         	return result
         end

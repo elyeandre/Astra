@@ -1,33 +1,33 @@
 --!nocheck
 
-local utils = { _version = "0.1.0" }
+local utils = {}
 
 ---Pretty prints any table or value
 ---@param value any
 ---@diagnostic disable-next-line: duplicate-set-field
 function _G.pretty_print(value)
-    ---@diagnostic disable-next-line: undefined-global
-    astra_internal__pretty_print(value)
+	---@diagnostic disable-next-line: undefined-global
+	astra_internal__pretty_print(value)
 end
 
 _G.json = {
-    ---Encodes the value into a valid JSON string
-    ---@param value any
-    ---@return string
-    ---@diagnostic disable-next-line: duplicate-set-field
-    encode = function (value)
-        ---@diagnostic disable-next-line: undefined-global
-        return astra_internal__json_encode(value)
-    end,
+	---Encodes the value into a valid JSON string
+	---@param value any
+	---@return string
+	---@diagnostic disable-next-line: duplicate-set-field
+	encode = function(value)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__json_encode(value)
+	end,
 
-    ---Decodes the JSON string into a valid lua value
-    ---@param value string
-    ---@return any
-    ---@diagnostic disable-next-line: duplicate-set-field
-    decode = function (value)
-        ---@diagnostic disable-next-line: undefined-global
-        return astra_internal__json_decode(value)
-    end
+	---Decodes the JSON string into a valid lua value
+	---@param value string
+	---@return any
+	---@diagnostic disable-next-line: duplicate-set-field
+	decode = function(value)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__json_decode(value)
+	end,
 }
 
 ---
@@ -38,11 +38,11 @@ _G.json = {
 ---@nodiscard
 ---@diagnostic disable-next-line: duplicate-set-field
 function string.split(input_str, separator_str)
-    local result_table = {}
-    for word in input_str:gmatch("([^" .. separator_str .. "]+)") do
-        table.insert(result_table, word)
-    end
-    return result_table
+	local result_table = {}
+	for word in input_str:gmatch("([^" .. separator_str .. "]+)") do
+		table.insert(result_table, word)
+	end
+	return result_table
 end
 
 return utils
