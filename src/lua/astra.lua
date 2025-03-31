@@ -1,5 +1,9 @@
 ---@diagnostic disable: duplicate-set-field
 
+-- This is to prevent a small undefined behavior in Lua
+---@diagnostic disable-next-line: redundant-parameter
+setmetatable(_G, {__index = function(T,k,v) error("Called non-existing variable") end})
+
 _G.utils = require("./libs/utils.lua")
 _G.validate_table = require("./libs/table_schema.lua")
 _G.import = require("./libs/import.lua")
