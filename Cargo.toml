@@ -1,19 +1,11 @@
 [package]
-name = "astra"
-version = "0.18.0"
+name = "lua-astra"
+version = "0.18.1"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 description = "🔥 Blazingly Fast 🔥 web server runtime for Lua"
 documentation = "https://astra.arkforge.net/docs/latest"
 repository = "https://github.com/ArkForgeLabs/Astra"
-keywords = [
-    "lua",
-    "luau",
-    "luajit",
-    "server",
-    "webserver",
-    "nobuild",
-    "runtime",
-]
+keywords = ["lua", "luau", "server", "webserver", "runtime"]
 categories = [
     "web-programming",
     "web-programming::http-server",
@@ -23,6 +15,10 @@ categories = [
 edition = "2024"
 license = "Apache-2.0"
 exclude = ["examples"]
+
+[[bin]]
+name = "astra"
+path = "src/main.rs"
 
 [features]
 default = ["luajit"]

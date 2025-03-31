@@ -119,33 +119,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dcfed56ad506cb2c684a14971b8861fdc3baaaae314b9e5f9bb532cbe3ba7a4f"
 
 [[package]]
-name = "astra"
-version = "0.18.0"
-dependencies = [
- "axum",
- "base64",
- "bytes",
- "chrono",
- "clap",
- "dotenvy",
- "mlua",
- "reqwest",
- "serde",
- "serde_json",
- "sha2",
- "sha3",
- "sqlx",
- "tokio",
- "toml",
- "tower",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "uuid",
- "version-compare",
-]
-
-[[package]]
 name = "async-compression"
 version = "0.4.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1297,6 +1270,33 @@ name = "log"
 version = "0.4.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
+
+[[package]]
+name = "lua-astra"
+version = "0.18.1"
+dependencies = [
+ "axum",
+ "base64",
+ "bytes",
+ "chrono",
+ "clap",
+ "dotenvy",
+ "mlua",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sha3",
+ "sqlx",
+ "tokio",
+ "toml",
+ "tower",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+ "version-compare",
+]
 
 [[package]]
 name = "lua-src"
