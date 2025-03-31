@@ -230,7 +230,7 @@ __luapack_modules__ = {
         ---The return value is the module refered by the glob pattern.
         ---@param moduleName string
         ---@return any
-        ---@diagnostic disable-next-line: redefined-local
+        ---@diagnostic disable-next-line: redefined-local, duplicate-set-field
         function _G.require(moduleName)
         ---@diagnostic disable-next-line: undefined-global
         	local ok, result = pcall(astra_internal__require, moduleName)
@@ -285,8 +285,6 @@ _G.import = __luapack_require__(3)
 ---@type fun(file_path: string)
 ---@diagnostic disable-next-line: undefined-global
 _G.dotenv_load = astra_internal__dotenv_load
-
-_G.ENV = {}
 dotenv_load(".env")
 dotenv_load(".env.production")
 dotenv_load(".env.prod")
@@ -294,6 +292,14 @@ dotenv_load(".env.development")
 dotenv_load(".env.dev")
 dotenv_load(".env.test")
 dotenv_load(".env.local")
+
+---@diagnostic disable-next-line: undefined-global
+os.getenv = astra_internal__getenv
+---Sets the environment variable.
+---
+---NOT SAFE WHEN USED IN MULTITHREADING ENVIRONMENT
+---@diagnostic disable-next-line: undefined-global
+os.setenv = astra_internal__setenv
 
 -- MARK: Astra
 
@@ -383,24 +389,24 @@ end
 ---
 --- Represents a multipart.
 ---@class Multipart
----@field save_file fun(multipart: Multipart, file_path: string): string | nil Saves the multipart into disk
+---@field save_file fun(multipart: Multipart, file_path: string | nil): string | nil Saves the multipart into disk
 
 ---
 --- Represents an HTTP request.
 ---@class Request
----@field method fun(): string Returns the HTTP method (e.g., "GET", "POST").
----@field uri fun(): string Returns the URI of the request.
----@field queries fun(): table Returns the query list.
----@field headers fun(): table Returns a table containing the headers of the request.
----@field body fun(): Body|nil Returns the body of the request, which can be a table or a string.
----@field multipart fun(): Multipart|nil Returns a multipart if available.
+---@field method fun(request: Request): string Returns the HTTP method (e.g., "GET", "POST").
+---@field uri fun(request: Request): string Returns the URI of the request.
+---@field queries fun(request: Request): table Returns the query list.
+---@field headers fun(request: Request): table Returns a table containing the headers of the request.
+---@field body fun(request: Request): Body|nil Returns the body of the request, which can be a table or a string.
+---@field multipart fun(request: Request): Multipart|nil Returns a multipart if available.
 
 ---
 --- Represents an HTTP response.
 ---@class Response
 ---@field set_status_code fun(response: Response, new_status_code: number) Sets the HTTP status code of the response
 ---@field set_header fun(response: Response, key: string, value: string) Sets a header
----@field get_headers fun(): table|nil Returns the entire headers list that so far has been set for the response
+---@field get_headers fun(response: Response): table|nil Returns the entire headers list that so far has been set for the response
 ---@field remove_header fun(response: Response, key: string) Removes a header from the headers list
 
 -- MARK: FileIO

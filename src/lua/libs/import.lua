@@ -44,7 +44,7 @@ end
 ---The return value is the module refered by the glob pattern.
 ---@param moduleName string
 ---@return any
----@diagnostic disable-next-line: redefined-local
+---@diagnostic disable-next-line: redefined-local, duplicate-set-field
 function _G.require(moduleName)
 ---@diagnostic disable-next-line: undefined-global
 	local ok, result = pcall(astra_internal__require, moduleName)

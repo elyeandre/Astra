@@ -6,32 +6,19 @@ pub fn essential_global_functions(lua: &mlua::Lua) {
     // json
     json_encode(lua);
     json_decode(lua);
+    // env
+    getenv(lua);
+    setenv(lua);
 }
 
 pub fn dotenv_function(lua: &mlua::Lua) {
-    if let Ok(function) = lua.create_function(|lua, file_name: String| {
-        let env_table = lua.globals().get::<mlua::Table>("ENV")?;
-
-        // if the file exists
-        match dotenvy::from_filename_iter(file_name) {
-            Ok(file) => {
-                // filter the available and parsed items
-                for (key, value) in file.filter_map(|item| match item {
-                    Ok(item) => Some(item),
-                    Err(_) => None,
-                }) {
-                    env_table.set(key, value)?;
-                }
-            }
-            Err(_) => {
-                // eprintln!("Error loading a dotenv file: {e}");
-            }
-        }
-
+    if let Ok(function) = lua.create_function(|_, file_name: String| {
+        let _ = dotenvy::from_filename_override(file_name);
+        // eprintln!("Error loading a dotenv file: {e}");
         Ok(())
     }) {
         if let Err(e) = lua.globals().set("astra_internal__dotenv_load", function) {
-            println!("Could not insert the function for dotenv_load: {e}");
+            println!("Could not register the function for dotenv_load: {e}");
         }
     }
 }
@@ -43,7 +30,7 @@ pub fn pretty_print(lua: &mlua::Lua) {
         Ok(())
     }) {
         if let Err(e) = lua.globals().set("astra_internal__pretty_print", function) {
-            println!("Could not insert the function for pretty printing: {e}");
+            println!("Could not register the function for pretty printing: {e}");
         }
     }
 }
@@ -80,7 +67,7 @@ pub fn json_encode(lua: &mlua::Lua) {
         }
     }) {
         if let Err(e) = lua.globals().set("astra_internal__json_encode", function) {
-            println!("Could not insert the function for JSON encoding: {e}");
+            println!("Could not register the function for JSON encoding: {e}");
         }
     }
 }
@@ -95,7 +82,32 @@ pub fn json_decode(lua: &mlua::Lua) {
         }
     }) {
         if let Err(e) = lua.globals().set("astra_internal__json_decode", function) {
-            println!("Could not insert the function for JSON decoding: {e}");
+            println!("Could not register the function for JSON decoding: {e}");
+        }
+    }
+}
+
+pub fn getenv(lua: &mlua::Lua) {
+    if let Ok(function) = lua.create_function(|lua, key: String| match std::env::var(key) {
+        Ok(result) => Ok(lua.to_value(&result)),
+        Err(e) => Err(mlua::Error::runtime(format!(
+            "Could not fetch the environment variable: {e:?}"
+        ))),
+    }) {
+        if let Err(e) = lua.globals().set("astra_internal__getenv", function) {
+            println!("Could not register the function for getenv: {e}");
+        }
+    }
+}
+
+pub fn setenv(lua: &mlua::Lua) {
+    if let Ok(function) = lua.create_function(|_, (key, value): (String, String)| {
+        unsafe { std::env::set_var(key, value) };
+
+        Ok(())
+    }) {
+        if let Err(e) = lua.globals().set("astra_internal__setenv", function) {
+            println!("Could not register the function for setenv: {e}");
         }
     }
 }
