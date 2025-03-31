@@ -18,7 +18,7 @@ lua53 = ["mlua/lua53"]
 lua54 = ["mlua/lua54"]
 
 [dependencies]
-mlua = { version = "0.10.2", features = [
+mlua = { version = "0.10.3", features = [
     "serialize",
     "vendored",
     "async",
@@ -29,8 +29,8 @@ mlua = { version = "0.10.2", features = [
 ] }
 
 # http
-axum = { version = "0.8.0", features = ["macros", "multipart"] }
-reqwest = { version = "0.12.11", features = [
+axum = { version = "0.8.3", features = ["macros", "multipart"] }
+reqwest = { version = "0.12.15", features = [
     "json",
     "rustls-tls",
     "charset",
@@ -48,26 +48,26 @@ tower-http = { version = "0.6.2", features = [
 ] }
 
 # data formats
-serde = { version = "1.0.216", features = ["derive"] }
-serde_json = { version = "1.0.133" }
-uuid = { version = "1.11.0", features = ["serde", "v4"] }
-toml = "0.8.19"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = { version = "1.0.140" }
+uuid = { version = "1.16.0", features = ["serde", "v4"] }
+toml = "0.8.20"
 sha2 = "0.10.8"
 sha3 = "0.10.8"
 base64 = "0.22.1"
-bytes = { version = "1.9.0", features = ["serde"] }
-chrono = { version = "0.4.39", features = ["serde"] }
+bytes = { version = "1.10.1", features = ["serde"] }
+chrono = { version = "0.4.40", features = ["serde"] }
 
 # runtime
-tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
-clap = { version = "4.5.27", features = ["cargo", "derive"] }
+tokio = { version = "1.44.1", features = ["macros", "rt-multi-thread"] }
+clap = { version = "4.5.34", features = ["cargo", "derive"] }
 dotenvy = "0.15.7"
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 version-compare = "0.2.0"
 
 # database
-sqlx = { version = "0.8.2", features = [
+sqlx = { version = "0.8.3", features = [
     "runtime-tokio",
     "tls-rustls",
     "postgres",
