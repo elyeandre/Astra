@@ -240,7 +240,12 @@ async fn registration(lua: &mlua::Lua, include_utils: bool) -> String {
         }
     }
 
-    if let Err(e) = lua.load(cleaned_lib.as_str()).exec_async().await {
+    if let Err(e) = lua
+        .load(cleaned_lib.as_str())
+        .set_name("astra_bundle.lua")
+        .exec_async()
+        .await
+    {
         eprintln!("Couldn't add prelude:\n{e}");
     }
 

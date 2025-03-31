@@ -6,7 +6,7 @@ pub struct LuaRequire {}
 impl AstraComponent for LuaRequire {
     async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
         lua.globals().set(
-            "require",
+            "astra_internal__require",
             lua.create_async_function(|lua, path: String| async move {
                 if path.contains("astra_bundle") {
                     return Ok(mlua::Value::Nil);

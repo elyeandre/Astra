@@ -1,4 +1,5 @@
 local import_lua_dir = AstraIO.get_script_path():match("(.*[/\\])") or ""
+local normal_require = require
 
 ---@diagnostic disable-next-line: duplicate-doc-alias
 ---@alias importFun fun(moduleName: string): any
@@ -36,6 +37,21 @@ local function resolve_relative(path, __dirname)
 	end
 
 	return table.concat(segments, "/")
+end
+
+---The lua-import module provides a function,
+---the function takes single single string argument which is a glob pattern.
+---The return value is the module refered by the glob pattern.
+---@param moduleName string
+---@return any
+---@diagnostic disable-next-line: redefined-local
+function _G.require(moduleName)
+---@diagnostic disable-next-line: undefined-global
+	local ok, result = pcall(astra_internal__require, moduleName)
+	if not ok then
+		return normal_require(moduleName)
+	end
+	return result
 end
 
 ---The lua-import module provides a function,
