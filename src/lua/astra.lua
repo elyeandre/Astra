@@ -34,8 +34,11 @@ os.setenv = astra_internal__setenv
 _G.Astra = {
 	version = "0.0.0",
 	hostname = "127.0.0.1",
+	--- Enable or disable compression
 	compression = false,
 	port = 8080,
+	--- The default body size limit
+	default_body_limit = 2048
 }
 
 ---@diagnostic disable-next-line: duplicate-doc-alias
