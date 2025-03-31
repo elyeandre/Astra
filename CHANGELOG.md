@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.18.1] - 2025-03-31
+
+### Bug Fixes
+
+- #27 ([1a4107a](https://github.com/ArkForgeLabs/Astra/commit/1a4107aa597204d274de6f72a8028bb288bb6a72))
+- #10 ([dff002c](https://github.com/ArkForgeLabs/Astra/commit/dff002c6423c1c08fcd5b604f316fe6971925d29))
+- #35 ([9841e48](https://github.com/ArkForgeLabs/Astra/commit/9841e4828e09fff509a9b3bc8973abf726779f87))
+- #44 ([3abff8c](https://github.com/ArkForgeLabs/Astra/commit/3abff8c7bc39d95db8b4d3a29898a0b6ca8c740f))
+- #43 ([593555d](https://github.com/ArkForgeLabs/Astra/commit/593555d0205a440189b08dad036a9ab8aaf058d4))
+- #42 ([f25366f](https://github.com/ArkForgeLabs/Astra/commit/f25366fe1d2386d66aae4b21d4aab47c3f801f90))
+
+### Miscellaneous Tasks
+
+- Updated astra cargo binary name and README ([e6b6829](https://github.com/ArkForgeLabs/Astra/commit/e6b68293763b0c2f863392478756fa1f7b9bab22))
+- Updated astra version and added categories and keywords ([68a65d1](https://github.com/ArkForgeLabs/Astra/commit/68a65d10b5e6ba26882f812bc7aa8732e0b3c0aa))
+- Updated dependency versions ([894db27](https://github.com/ArkForgeLabs/Astra/commit/894db277ad1fc2be0af4a870e102a2e541091aaf))
+
 ## [0.17.3] - 2025-03-10
 
 ### Bug Fixes
