@@ -38,7 +38,9 @@ _G.Astra = {
 	compression = false,
 	port = 8080,
 	--- The default body size limit
-	default_body_limit = 2048
+	default_body_limit = 2048,
+	--- Contains all of the route details
+	routes = {},
 }
 
 ---@diagnostic disable-next-line: duplicate-doc-alias
@@ -47,43 +49,43 @@ _G.Astra = {
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra:get(path, callback)
-	table.insert(self, { path = path, method = "get", func = callback })
+	table.insert(self.routes, { path = path, method = "get", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra:post(path, callback)
-	table.insert(self, { path = path, method = "post", func = callback })
+	table.insert(self.routes, { path = path, method = "post", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra:put(path, callback)
-	table.insert(self, { path = path, method = "put", func = callback })
+	table.insert(self.routes, { path = path, method = "put", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra:delete(path, callback)
-	table.insert(self, { path = path, method = "delete", func = callback })
+	table.insert(self.routes, { path = path, method = "delete", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra:options(path, callback)
-	table.insert(self, { path = path, method = "options", func = callback })
+	table.insert(self.routes, { path = path, method = "options", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra:patch(path, callback)
-	table.insert(self, { path = path, method = "patch", func = callback })
+	table.insert(self.routes, { path = path, method = "patch", func = callback })
 end
 
 ---@param path string The URL path for the request.
 ---@param callback callback A function that will be called when the request is made.
 function Astra:trace(path, callback)
-	table.insert(self, { path = path, method = "trace", func = callback })
+	table.insert(self.routes, { path = path, method = "trace", func = callback })
 end
 
 ---
@@ -91,7 +93,7 @@ end
 ---@param path string The URL path for the request.
 ---@param serve_path string The directory path relatively
 function Astra:static_dir(path, serve_path)
-	table.insert(self, { path = path, method = "static_dir", func = function() end, static_dir = serve_path })
+	table.insert(self.routes, { path = path, method = "static_dir", func = function() end, static_dir = serve_path })
 end
 
 ---
@@ -99,7 +101,7 @@ end
 ---@param path string The URL path for the request.
 ---@param serve_path string The directory path relatively
 function Astra:static_file(path, serve_path)
-	table.insert(self, { path = path, method = "static_file", func = function() end, static_file = serve_path })
+	table.insert(self.routes, { path = path, method = "static_file", func = function() end, static_file = serve_path })
 end
 
 ---

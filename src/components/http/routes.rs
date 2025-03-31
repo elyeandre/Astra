@@ -107,6 +107,7 @@ pub fn load_routes() -> Router {
     #[allow(clippy::unwrap_used)]
     lua.globals()
         .get::<mlua::Table>("Astra")
+        .and_then(|settings| settings.get::<mlua::Table>("routes"))
         .unwrap()
         .for_each(|_key: mlua::Value, entry: mlua::Value| {
             if let Some(entry) = entry.as_table() {
