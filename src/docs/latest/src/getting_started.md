@@ -18,6 +18,12 @@ After getting your binary on linux, you'll want to change permissions to make it
 chmod +x astra-luajit-linux-amd64
 ```
 
+Alternatively you can also install through [cargo](https://doc.rust-lang.org/cargo/) tool, if you have it installed:
+
+```bash
+cargo install lua-astra
+```
+
 Each release likely contains updates to the packaged bundle lua code that contains definitions you might need during development which you can omit and ignore during production release. You can obtain them through:
 
 ```bash
