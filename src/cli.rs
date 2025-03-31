@@ -1,4 +1,4 @@
-use clap::{Parser, command, crate_authors, crate_name, crate_version};
+use clap::{Parser, command, crate_authors, crate_version};
 use std::{str::FromStr, sync::LazyLock};
 use tokio::sync::OnceCell;
 
@@ -12,7 +12,7 @@ pub static SCRIPT_PATH: OnceCell<std::path::PathBuf> = OnceCell::const_new();
 #[derive(Parser)]
 #[command(
     name = "Astra",
-    bin_name = crate_name!(),
+    bin_name = "astra",
     author = crate_authors!(),
     version = crate_version!(),
     about = r#"
