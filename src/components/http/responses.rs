@@ -1,15 +1,23 @@
 use axum::http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
 
 #[derive(Debug, Clone)]
+pub enum CookieOperation {
+    Add { key: String, value: String },
+    Remove { key: String },
+}
+
+#[derive(Debug, Clone)]
 pub struct ResponseLua {
     pub status_code: StatusCode,
     pub headers: HeaderMap,
+    pub cookie_operations: Vec<CookieOperation>,
 }
 impl ResponseLua {
     pub fn new() -> Self {
         Self {
             status_code: StatusCode::OK,
             headers: HeaderMap::new(),
+            cookie_operations: Vec::new(),
         }
     }
 }
@@ -69,6 +77,19 @@ impl mlua::UserData for ResponseLua {
             }
 
             Ok(header_map)
+        });
+
+        methods.add_method_mut("set_cookie", |_, this, (key, value): (String, String)| {
+            this.cookie_operations
+                .push(CookieOperation::Add { key, value });
+
+            Ok(())
+        });
+
+        methods.add_method_mut("remove_cookie", |_, this, key: String| {
+            this.cookie_operations.push(CookieOperation::Remove { key });
+
+            Ok(())
         });
     }
 }

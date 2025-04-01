@@ -1,6 +1,10 @@
 use crate::{
     cli::LUA,
-    components::http::{requests, responses, routes},
+    components::http::{
+        requests::{self, RequestLua},
+        responses::{self, CookieOperation},
+        routes,
+    },
 };
 use axum::{
     Router,
@@ -10,6 +14,7 @@ use axum::{
     response::IntoResponse,
     routing::{delete, get, options, patch, post, put, trace},
 };
+use axum_extra::extract::{CookieJar, cookie::Cookie};
 use mlua::LuaSerdeExt;
 
 #[derive(Debug, Clone, Copy, mlua::FromLua, serde::Serialize, serde::Deserialize, PartialEq)]
@@ -38,63 +43,63 @@ pub async fn route(
     lua: &mlua::Lua,
     details: Route,
     request: Request<Body>,
-) -> axum::response::Response {
-    let request = {
-        match lua.create_userdata(requests::RequestLua::new(request).await) {
-            Ok(v) => Some(v),
-            Err(e) => {
-                eprintln!("Could not construct request: {e:#?}");
+) -> (CookieJar, axum::response::Response) {
+    let request = requests::RequestLua::new(request).await;
+    let cookie = request.cookie.clone();
 
-                None
-            }
-        }
-    };
-    let mut response: axum::http::Response<Body>;
+    async fn route_inner(
+        lua: &mlua::Lua,
+        details: Route,
+        cookie_jar: CookieJar,
+        request: RequestLua,
+    ) -> mlua::Result<(CookieJar, axum::response::Response)> {
+        let request = lua.create_userdata(request)?;
+        let response = lua.create_userdata(responses::ResponseLua::new())?;
+        let mut cookie_jar = cookie_jar.clone();
 
-    let handle_result = |result: mlua::Result<mlua::Value>| match result {
-        Ok(value) => match value {
+        // if a response userdata can be created
+        let result = details
+            .function
+            .call_async::<mlua::Value>((request, response.clone()))
+            .await?;
+
+        let mut resulting_response = match result {
             mlua::Value::String(plain) => plain.to_string_lossy().into_response(),
-            mlua::Value::Table(_) => match lua.from_value::<serde_json::Value>(value.clone()) {
-                Ok(result) => axum::Json(result).into_response(),
-                Err(e) => {
-                    eprintln!("Result Parsing Error: {e}");
-
-                    axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
-                }
-            },
-            _ => axum::http::StatusCode::OK.into_response(),
-        },
-        Err(e) => {
-            eprintln!("Route Calling Error: {e}");
-
-            axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response()
-        }
-    };
-
-    // if a response userdata can be created
-    match lua.create_userdata(responses::ResponseLua::new()) {
-        Ok(response_details) => {
-            response = handle_result(
-                details
-                    .function
-                    .call_async::<mlua::Value>((request, response_details.clone()))
-                    .await,
-            );
-
-            if let Ok(response_details) = response_details.borrow::<responses::ResponseLua>() {
-                *response.status_mut() = response_details.status_code;
-
-                for (key, value) in response_details.headers.iter() {
-                    response.headers_mut().insert(key, value.clone());
-                }
+            mlua::Value::Table(_) => {
+                axum::Json(lua.from_value::<serde_json::Value>(result.clone())?).into_response()
             }
+            _ => axum::http::StatusCode::OK.into_response(),
+        };
 
-            response
+        let response_details = response.borrow::<responses::ResponseLua>()?;
+        *resulting_response.status_mut() = response_details.status_code;
+
+        for (key, value) in response_details.headers.iter() {
+            resulting_response.headers_mut().insert(key, value.clone());
         }
+
+        for cookie_operation in response_details.cookie_operations.clone().into_iter() {
+            match cookie_operation {
+                CookieOperation::Add { key, value } => {
+                    cookie_jar = cookie_jar.add(Cookie::new(key, value));
+                }
+                CookieOperation::Remove { key } => {
+                    cookie_jar = cookie_jar.remove(Cookie::from(key));
+                }
+            };
+        }
+
+        Ok((cookie_jar, resulting_response))
+    }
+
+    match route_inner(lua, details, cookie.clone(), request).await {
+        Ok(response) => response,
         Err(e) => {
-            eprintln!("Could not craft a response details userdata: {e:#?}");
-            response = handle_result(details.function.call_async::<mlua::Value>(request).await);
-            response
+            eprintln!("Error executing the route: {e}");
+            (
+                cookie,
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+            )
         }
     }
 }

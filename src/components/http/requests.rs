@@ -1,9 +1,10 @@
 use crate::components::BodyLua;
 use axum::{
     body::Body,
-    extract::{FromRequest, Multipart, State},
+    extract::{FromRequest, FromRequestParts, Multipart, State},
     http::{Request, request::Parts},
 };
+use axum_extra::extract::CookieJar;
 use mlua::{LuaSerdeExt, UserData};
 use std::collections::HashMap;
 use tokio::io::AsyncWriteExt;
@@ -14,10 +15,11 @@ use tokio::io::AsyncWriteExt;
 pub struct RequestLua {
     pub parts: Parts,
     pub bytes: Option<bytes::Bytes>,
+    pub cookie: CookieJar,
 }
 impl RequestLua {
     pub async fn new(request: Request<Body>) -> Self {
-        let (parts, body) = request.into_parts();
+        let (mut parts, body) = request.into_parts();
         let bytes = match axum::body::to_bytes(body, usize::MAX).await {
             Ok(bytes) => Some(bytes),
 
@@ -28,7 +30,19 @@ impl RequestLua {
             }
         };
 
-        Self { parts, bytes }
+        let cookie = match CookieJar::from_request_parts(&mut parts, &()).await {
+            Ok(cookie) => cookie,
+            Err(e) => {
+                eprintln!("Could not get the cookie: {e}");
+                CookieJar::new()
+            }
+        };
+
+        Self {
+            parts,
+            bytes,
+            cookie,
+        }
     }
 }
 unsafe impl Send for RequestLua {}
@@ -69,6 +83,16 @@ impl UserData for RequestLua {
                 .iter()
                 .map(|(key, value)| (key.to_string(), value.to_str().unwrap_or("").to_string()))
                 .collect::<HashMap<String, String>>())
+        });
+        methods.add_async_method("get_cookie", |_, this, name: String| async move {
+            match this
+                .cookie
+                .get(name.as_str())
+                .and_then(|cookie| cookie.value_raw())
+            {
+                Some(value) => Ok(Some(value)),
+                None => Ok(None),
+            }
         });
         methods.add_async_method("body", |_, this, ()| async move {
             match this.bytes.clone() {
