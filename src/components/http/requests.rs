@@ -85,6 +85,7 @@ impl UserData for RequestLua {
                 .collect::<HashMap<String, String>>())
         });
         methods.add_async_method("get_cookie", |_, this, name: String| async move {
+            // ! Move this to a dedicated Cookie Userdata
             match this
                 .cookie
                 .get(name.as_str())
@@ -108,38 +109,35 @@ impl UserData for RequestLua {
 pub struct LuaMultipart {
     pub multipart: Multipart,
 }
-impl LuaMultipart {
-    async fn save_file(&mut self, file_path: Option<String>) -> mlua::Result<()> {
-        let mut file_path = if let Some(file_path) = file_path {
-            Some(tokio::fs::File::create(file_path).await?)
-        } else {
-            None
-        };
-
-        while let Ok(Some(field)) = self.multipart.next_field().await {
-            if file_path.is_none() {
-                if let Some(filename) = field.file_name() {
-                    file_path = Some(tokio::fs::File::create(filename).await?);
-                }
-            }
-
-            if let Some(ref mut file) = file_path {
-                if let Ok(bytes) = field.bytes().await {
-                    if let Err(err) = file.write(&bytes).await {
-                        return Err(mlua::Error::runtime(err));
-                    }
-                }
-            }
-        }
-
-        Ok(())
-    }
-}
 impl UserData for LuaMultipart {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
         methods.add_async_method_mut(
             "save_file",
-            |_, mut this, file_path: Option<String>| async move { this.save_file(file_path).await },
+            |_, mut this, file_path: Option<String>| async move {
+                let mut file_path = if let Some(file_path) = file_path {
+                    Some(tokio::fs::File::create(file_path).await?)
+                } else {
+                    None
+                };
+
+                while let Ok(Some(field)) = this.multipart.next_field().await {
+                    if file_path.is_none() {
+                        if let Some(filename) = field.file_name() {
+                            file_path = Some(tokio::fs::File::create(filename).await?);
+                        }
+                    }
+
+                    if let Some(ref mut file) = file_path {
+                        if let Ok(bytes) = field.bytes().await {
+                            if let Err(err) = file.write(&bytes).await {
+                                return Err(mlua::Error::runtime(err));
+                            }
+                        }
+                    }
+                }
+
+                Ok(())
+            },
         );
     }
 }

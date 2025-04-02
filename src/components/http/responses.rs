@@ -1,5 +1,6 @@
 use axum::http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
 
+// ! Support more cookie types like signed and private
 #[derive(Debug, Clone)]
 pub enum CookieOperation {
     Add { key: String, value: String },
@@ -80,6 +81,7 @@ impl mlua::UserData for ResponseLua {
         });
 
         methods.add_method_mut("set_cookie", |_, this, (key, value): (String, String)| {
+            // ! More operations needs to be added per cookie, such as lifetime, ...
             this.cookie_operations
                 .push(CookieOperation::Add { key, value });
 

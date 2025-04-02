@@ -9,7 +9,6 @@ use crate::{
 use axum::{
     Router,
     body::Body,
-    extract::DefaultBodyLimit,
     http::Request,
     response::IntoResponse,
     routing::{delete, get, options, patch, post, put, trace},
@@ -176,6 +175,10 @@ pub fn load_routes() -> Router {
     }
 
     if let Ok(settings) = lua.globals().get::<mlua::Table>("Astra") {
+        // if let Ok(default_body_limit) = settings.get::<usize>("default_body_limit") {
+        //     router = router.layer(DefaultBodyLimit::max(default_body_limit));
+        // };
+
         if let Ok(should_compress) = settings.get::<bool>("compression") {
             if should_compress {
                 router = router.layer(
@@ -184,10 +187,6 @@ pub fn load_routes() -> Router {
                         .layer(tower_http::compression::CompressionLayer::new()),
                 );
             }
-        };
-
-        if let Ok(default_body_limit) = settings.get::<usize>("default_body_limit") {
-            router = router.layer(DefaultBodyLimit::max(default_body_limit));
         };
     }
 
