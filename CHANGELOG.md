@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.18.2] - 2025-04-02
+
+### Bug Fixes
+
+- Image binaries multiparts was not able to be streamed due to default body limit malfunctioning ([48042d6](https://github.com/ArkForgeLabs/Astra/commit/48042d654fd3bf6c7d78eaf9dc7c5f543137d8b8))
+
+### Documentation
+
+- Updated docs to include crates.io install ([2e2a5de](https://github.com/ArkForgeLabs/Astra/commit/2e2a5deb5dfef25c387bd00344a1298927ab93d5))
+
+### Features
+
+- First attempts at adding cookie support ([0e74946](https://github.com/ArkForgeLabs/Astra/commit/0e749464e82a50389ef894bfde56c964cea59c51))
+
+### Miscellaneous Tasks
+
+- Fixed the binary name in the cli ([23666df](https://github.com/ArkForgeLabs/Astra/commit/23666df9a9141c566e30cbfcc32ed4a1faa3afd4))
+
 ## [0.18.1] - 2025-03-31
 
 ### Bug Fixes
