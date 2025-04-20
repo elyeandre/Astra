@@ -1,19 +1,20 @@
+use crate::components::cookie::LuaCookie;
 use axum::http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
 
 // ! Support more cookie types like signed and private
 #[derive(Debug, Clone)]
-pub enum CookieOperation {
-    Add { key: String, value: String },
+pub enum CookieOperation<'a> {
+    Add(LuaCookie<'a>),
     Remove { key: String },
 }
 
 #[derive(Debug, Clone)]
-pub struct ResponseLua {
+pub struct ResponseLua<'a> {
     pub status_code: StatusCode,
     pub headers: HeaderMap,
-    pub cookie_operations: Vec<CookieOperation>,
+    pub cookie_operations: Vec<CookieOperation<'a>>,
 }
-impl ResponseLua {
+impl ResponseLua<'_> {
     pub fn new() -> Self {
         Self {
             status_code: StatusCode::OK,
@@ -22,7 +23,7 @@ impl ResponseLua {
         }
     }
 }
-impl mlua::UserData for ResponseLua {
+impl mlua::UserData for ResponseLua<'_> {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
         methods.add_method_mut("set_status_code", |_, this, status_code: u16| {
             match StatusCode::from_u16(status_code) {
@@ -80,10 +81,8 @@ impl mlua::UserData for ResponseLua {
             Ok(header_map)
         });
 
-        methods.add_method_mut("set_cookie", |_, this, (key, value): (String, String)| {
-            // ! More operations needs to be added per cookie, such as lifetime, ...
-            this.cookie_operations
-                .push(CookieOperation::Add { key, value });
+        methods.add_method_mut("set_cookie", |_, this, cookie: LuaCookie| {
+            this.cookie_operations.push(CookieOperation::Add(cookie));
 
             Ok(())
         });

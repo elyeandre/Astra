@@ -79,8 +79,8 @@ pub async fn route(
 
         for cookie_operation in response_details.cookie_operations.clone().into_iter() {
             match cookie_operation {
-                CookieOperation::Add { key, value } => {
-                    cookie_jar = cookie_jar.add(Cookie::new(key, value));
+                CookieOperation::Add(cookie) => {
+                    cookie_jar = cookie_jar.add(cookie.cookie);
                 }
                 CookieOperation::Remove { key } => {
                     cookie_jar = cookie_jar.remove(Cookie::from(key));
