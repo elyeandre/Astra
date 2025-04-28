@@ -1,3 +1,4 @@
+use super::cookie::LuaCookie;
 use crate::components::BodyLua;
 use axum::{
     body::Body,
@@ -9,13 +10,11 @@ use mlua::{LuaSerdeExt, UserData};
 use std::collections::HashMap;
 use tokio::io::AsyncWriteExt;
 
-// TODO: configure body size
-
 #[derive(Debug)]
 pub struct RequestLua {
     pub parts: Parts,
     pub bytes: Option<bytes::Bytes>,
-    pub cookie: CookieJar,
+    pub cookie_jar: CookieJar,
 }
 impl RequestLua {
     pub async fn new(request: Request<Body>) -> Self {
@@ -30,7 +29,7 @@ impl RequestLua {
             }
         };
 
-        let cookie = match CookieJar::from_request_parts(&mut parts, &()).await {
+        let cookie_jar = match CookieJar::from_request_parts(&mut parts, &()).await {
             Ok(cookie) => cookie,
             Err(e) => {
                 eprintln!("Could not get the cookie: {e}");
@@ -41,7 +40,7 @@ impl RequestLua {
         Self {
             parts,
             bytes,
-            cookie,
+            cookie_jar,
         }
     }
 }
@@ -85,11 +84,10 @@ impl UserData for RequestLua {
                 .collect::<HashMap<String, String>>())
         });
         methods.add_async_method("get_cookie", |_, this, name: String| async move {
-            // ! Move this to a dedicated Cookie Userdata
             match this
-                .cookie
+                .cookie_jar
                 .get(name.as_str())
-                .and_then(|cookie| cookie.value_raw())
+                .map(|cookie| LuaCookie(cookie.clone()))
             {
                 Some(value) => Ok(Some(value)),
                 None => Ok(None),

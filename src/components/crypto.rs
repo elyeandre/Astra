@@ -12,7 +12,7 @@ impl LuaCrypto {
             ($hash_function:ty) => {
                 let mut sha = <$hash_function>::new();
                 sha.update(input);
-                return format!["{:x}", sha.finalize()]
+                return format!("{:x}", sha.finalize())
             };
         }
         if hash_type.starts_with("sha") {

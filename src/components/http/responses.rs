@@ -1,4 +1,4 @@
-use crate::components::cookie::LuaCookie;
+use crate::components::http::cookie::LuaCookie;
 use axum::http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
 
 // ! Support more cookie types like signed and private
@@ -14,8 +14,8 @@ pub struct ResponseLua<'a> {
     pub headers: HeaderMap,
     pub cookie_operations: Vec<CookieOperation<'a>>,
 }
-impl ResponseLua<'_> {
-    pub fn new() -> Self {
+impl Default for ResponseLua<'_> {
+    fn default() -> Self {
         Self {
             status_code: StatusCode::OK,
             headers: HeaderMap::new(),

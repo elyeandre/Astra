@@ -43,11 +43,7 @@ mlua = { version = "0.10.3", features = [
 
 # http
 axum = { version = "0.8.3", features = ["macros", "multipart"] }
-axum-extra = { version = "0.10.1", features = [
-    "cookie",
-    "cookie-signed",
-    "cookie-private",
-] }
+axum-extra = { version = "0.10.1", features = ["cookie"] }
 reqwest = { version = "0.12.15", features = [
     "json",
     "rustls-tls",
@@ -94,6 +90,7 @@ sqlx = { version = "0.8.3", features = [
     "chrono",
     "uuid",
 ] }
+time = "0.3.41"
 
 [profile.release]
 opt-level = 3

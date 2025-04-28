@@ -1,6 +1,5 @@
 use mlua::LuaSerdeExt;
 
-mod cookie;
 mod crypto;
 mod database;
 mod fileio;

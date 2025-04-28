@@ -1,6 +1,7 @@
 use crate::{
     cli::LUA,
     components::http::{
+        configs::RouteConfiguration,
         requests::{self, RequestLua},
         responses::{self, CookieOperation},
         routes,
@@ -9,6 +10,7 @@ use crate::{
 use axum::{
     Router,
     body::Body,
+    extract::DefaultBodyLimit,
     http::Request,
     response::IntoResponse,
     routing::{delete, get, options, patch, post, put, trace},
@@ -36,15 +38,13 @@ pub struct Route {
     pub static_file: Option<String>,
     pub method: Method,
     pub function: mlua::Function,
+    pub config: RouteConfiguration,
 }
 
-pub async fn route(
-    lua: &mlua::Lua,
-    details: Route,
-    request: Request<Body>,
-) -> (CookieJar, axum::response::Response) {
+pub async fn route(lua: &mlua::Lua, details: Route, request: Request<Body>) -> impl IntoResponse {
     let request = requests::RequestLua::new(request).await;
-    let cookie = request.cookie.clone();
+    // find a way to add keys here
+    let cookie_jar = request.cookie_jar.clone();
 
     async fn route_inner(
         lua: &mlua::Lua,
@@ -53,7 +53,7 @@ pub async fn route(
         request: RequestLua,
     ) -> mlua::Result<(CookieJar, axum::response::Response)> {
         let request = lua.create_userdata(request)?;
-        let response = lua.create_userdata(responses::ResponseLua::new())?;
+        let response = lua.create_userdata(responses::ResponseLua::default())?;
         let mut cookie_jar = cookie_jar.clone();
 
         // if a response userdata can be created
@@ -80,10 +80,10 @@ pub async fn route(
         for cookie_operation in response_details.cookie_operations.clone().into_iter() {
             match cookie_operation {
                 CookieOperation::Add(cookie) => {
-                    cookie_jar = cookie_jar.add(cookie.cookie);
+                    cookie_jar = cookie_jar.clone().add(cookie.0);
                 }
                 CookieOperation::Remove { key } => {
-                    cookie_jar = cookie_jar.remove(Cookie::from(key));
+                    cookie_jar = cookie_jar.clone().remove(Cookie::from(key));
                 }
             };
         }
@@ -91,14 +91,16 @@ pub async fn route(
         Ok((cookie_jar, resulting_response))
     }
 
-    match route_inner(lua, details, cookie.clone(), request).await {
-        Ok(response) => response,
+    match route_inner(lua, details, cookie_jar.clone(), request).await {
+        Ok(response) => (cookie_jar, response.1).into_response(),
         Err(e) => {
             eprintln!("Error executing the route: {e}");
+
             (
-                cookie,
+                cookie_jar,
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response(),
             )
+                .into_response()
         }
     }
 }
@@ -121,6 +123,7 @@ pub fn load_routes() -> Router {
                     static_file: lua.from_value(entry.get("static_file")?)?,
                     method: lua.from_value(entry.get("method")?)?,
                     function: entry.get::<mlua::Function>("func")?,
+                    config: lua.from_value(entry.get("config")?)?,
                 });
             }
 
@@ -132,13 +135,19 @@ pub fn load_routes() -> Router {
         let path = route_values.path.clone();
         let path = path.as_str();
 
+        let config = route_values.config.clone();
+        let body_limit = config.body_limit;
+
         macro_rules! match_routes {
-            ($route_function:expr) => {
-                router.route(
-                    path,
-                    $route_function(|request: Request<Body>| route(lua, route_values, request)),
-                )
-            };
+            ($route_function:expr) => {{
+                let mut route_function =
+                    $route_function(|request: Request<Body>| route(lua, route_values, request));
+                if let Some(body_limit) = body_limit {
+                    route_function = route_function.layer(DefaultBodyLimit::max(body_limit))
+                }
+
+                router.route(path, route_function)
+            }};
         }
 
         router = match route_values.method {
