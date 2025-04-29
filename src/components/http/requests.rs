@@ -84,19 +84,14 @@ impl UserData for RequestLua {
                 .collect::<HashMap<String, String>>())
         });
         methods.add_async_method("get_cookie", |_, this, name: String| async move {
-            match this
+            Ok(this
                 .cookie_jar
                 .get(name.as_str())
-                .map(|cookie| LuaCookie(cookie.clone()))
-            {
-                Some(value) => Ok(Some(value)),
-                None => Ok(None),
-            }
+                .map(|cookie| LuaCookie(cookie.clone())))
         });
         methods.add_async_method("body", |_, this, ()| async move {
             match this.bytes.clone() {
                 Some(bytes) => Ok(BodyLua::new(bytes)),
-
                 None => Ok(BodyLua::new(bytes::Bytes::new())),
             }
         });

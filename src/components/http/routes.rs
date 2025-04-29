@@ -80,6 +80,7 @@ pub async fn route(lua: &mlua::Lua, details: Route, request: Request<Body>) -> i
         for cookie_operation in response_details.cookie_operations.clone().into_iter() {
             match cookie_operation {
                 CookieOperation::Add(cookie) => {
+                    cookie_jar = cookie_jar.clone().remove(cookie.0.clone());
                     cookie_jar = cookie_jar.clone().add(cookie.0);
                 }
                 CookieOperation::Remove { key } => {

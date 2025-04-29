@@ -133,6 +133,7 @@ end
 ---@field headers fun(request: Request): table Returns a table containing the headers of the request.
 ---@field body fun(request: Request): Body|nil Returns the body of the request, which can be a table or a string.
 ---@field multipart fun(request: Request): Multipart|nil Returns a multipart if available.
+---@field get_cookie fun(request: Request, name: string): Cookie Returns a cookie
 
 ---
 --- Represents an HTTP response.
@@ -141,6 +142,8 @@ end
 ---@field set_header fun(response: Response, key: string, value: string) Sets a header
 ---@field get_headers fun(response: Response): table|nil Returns the entire headers list that so far has been set for the response
 ---@field remove_header fun(response: Response, key: string) Removes a header from the headers list
+---@field set_cookie fun(response: Response, cookie: Cookie) Sets a cookie
+---@field remove_cookie fun(response: Response, cookie: Cookie) Removes a cookie from the list
 
 -- MARK: FileIO
 
@@ -164,6 +167,25 @@ end
 ---@class FileIOPermissions
 ---@field is_readonly fun(file_io_permissions: FileIOPermissions): boolean
 ---@field set_readonly fun(file_io_permissions: FileIOPermissions, value: boolean)
+
+-- MARK: Cookie
+
+---@class Cookie
+---@field set_name fun(cookie: Cookie, name: string)
+---@field set_value fun(cookie: Cookie, value: string)
+---@field set_domain fun(cookie: Cookie, domain: string)
+---@field set_path fun(cookie: Cookie, path: string)
+---@field set_expiration fun(cookie: Cookie, expiration: number)
+---@field set_http_only fun(cookie: Cookie, http_only: boolean)
+---@field set_max_age fun(cookie: Cookie, max_age: number)
+---@field set_permanent fun(cookie: Cookie)
+---@field get_name fun(cookie: Cookie): string?
+---@field get_value fun(cookie: Cookie): string?
+---@field get_domain fun(cookie: Cookie): string?
+---@field get_path fun(cookie: Cookie): string?
+---@field get_expiration fun(cookie: Cookie): number?
+---@field get_http_only fun(cookie: Cookie): boolean?
+---@field get_max_age fun(cookie: Cookie): number?
 
 --- @START_REMOVING_RUNTIME
 

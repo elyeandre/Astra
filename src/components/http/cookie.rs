@@ -26,7 +26,7 @@ impl UserData for LuaCookie<'_> {
                 .set_expires(time::OffsetDateTime::now_utc() + time::Duration::seconds(expiration));
             Ok(())
         });
-        methods.add_method_mut("set_path", |_, this, http_only: bool| {
+        methods.add_method_mut("set_http_only", |_, this, http_only: bool| {
             this.0.set_http_only(http_only);
             Ok(())
         });
@@ -34,7 +34,7 @@ impl UserData for LuaCookie<'_> {
             this.0.set_max_age(time::Duration::seconds(max_age));
             Ok(())
         });
-        methods.add_method_mut("set_permenant", |_, this, _: ()| {
+        methods.add_method_mut("set_permanent", |_, this, _: ()| {
             this.0.make_permanent();
             Ok(())
         });
