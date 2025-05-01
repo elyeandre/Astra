@@ -14,92 +14,92 @@ jobs:
       matrix:
         include:
           # LuaJIT
-          - os: ubuntu-20.04
-            name: LuaJIT release ubuntu-20.04
+          - os: ubuntu-latest
+            name: LuaJIT release ubuntu-latest
             flags: --features default
             artifact_name: astra
             asset_name: astra-luajit-linux-amd64
 
-          - os: windows-2022
-            name: LuaJIT release windows-2022
+          - os: windows-latest
+            name: LuaJIT release windows-latest
             flags: --features default
             artifact_name: astra.exe
             asset_name: astra-luajit-windows-amd64.exe
 
           # LuaJIT 52
-          - os: ubuntu-20.04
-            name: LuaJIT52 release ubuntu-20.04
+          - os: ubuntu-latest
+            name: LuaJIT52 release ubuntu-latest
             flags: --no-default-features --features luajit52
             artifact_name: astra
             asset_name: astra-luajit52-linux-amd64
 
-          - os: windows-2022
-            name: LuaJIT52 release windows-2022
+          - os: windows-latest
+            name: LuaJIT52 release windows-latest
             flags: --no-default-features --features luajit52
             artifact_name: astra.exe
             asset_name: astra-luajit52-windows-amd64.exe
 
           ## Luau
-          - os: ubuntu-20.04
-            name: Luau release ubuntu-20.04
+          - os: ubuntu-latest
+            name: Luau release ubuntu-latest
             flags: --no-default-features --features luau
             artifact_name: astra
             asset_name: astra-luau-linux-amd64
 
-          - os: windows-2022
-            name: Luau release windows-2022
+          - os: windows-latest
+            name: Luau release windows-latest
             flags: --no-default-features --features luau
             artifact_name: astra.exe
             asset_name: astra-luau-windows-amd64.exe
 
           ## Lua5.1
-          - os: ubuntu-20.04
-            name: Lua 5.1 release ubuntu-20.04
+          - os: ubuntu-latest
+            name: Lua 5.1 release ubuntu-latest
             flags: --no-default-features --features lua51
             artifact_name: astra
             asset_name: astra-lua51-linux-amd64
 
-          - os: windows-2022
-            name: Lua 5.1 release windows-2022
+          - os: windows-latest
+            name: Lua 5.1 release windows-latest
             flags: --no-default-features --features lua51
             artifact_name: astra.exe
             asset_name: astra-lua51-windows-amd64.exe
           
           ## Lua5.2
-          - os: ubuntu-20.04
-            name: Lua 5.2 release ubuntu-20.04
+          - os: ubuntu-latest
+            name: Lua 5.2 release ubuntu-latest
             flags: --no-default-features --features lua52
             artifact_name: astra
             asset_name: astra-lua52-linux-amd64
 
-          - os: windows-2022
-            name: Lua 5.2 release windows-2022
+          - os: windows-latest
+            name: Lua 5.2 release windows-latest
             flags: --no-default-features --features lua52
             artifact_name: astra.exe
             asset_name: astra-lua52-windows-amd64.exe
           
           ## Lua5.3
-          - os: ubuntu-20.04
-            name: Lua 5.3 release ubuntu-20.04
+          - os: ubuntu-latest
+            name: Lua 5.3 release ubuntu-latest
             flags: --no-default-features --features lua53
             artifact_name: astra
             asset_name: astra-lua53-linux-amd64
 
-          - os: windows-2022
-            name: Lua 5.3 release windows-2022
+          - os: windows-latest
+            name: Lua 5.3 release windows-latest
             flags: --no-default-features --features lua53
             artifact_name: astra.exe
             asset_name: astra-lua53-windows-amd64.exe
           
           ## Lua5.4
-          - os: ubuntu-20.04
-            name: Lua 5.4 release ubuntu-20.04
+          - os: ubuntu-latest
+            name: Lua 5.4 release ubuntu-latest
             flags: --no-default-features --features lua54
             artifact_name: astra
             asset_name: astra-lua54-linux-amd64
 
-          - os: windows-2022
-            name: Lua 5.4 release windows-2022
+          - os: windows-latest
+            name: Lua 5.4 release windows-latest
             flags: --no-default-features --features lua54
             artifact_name: astra.exe
             asset_name: astra-lua54-windows-amd64.exe
