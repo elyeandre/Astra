@@ -41,7 +41,11 @@ pub struct Route {
     pub config: RouteConfiguration,
 }
 
-pub async fn route(lua: &mlua::Lua, details: Route, request: Request<Body>) -> impl IntoResponse {
+pub async fn route(
+    lua: &mlua::Lua,
+    details: Route,
+    request: Request<Body>,
+) -> Result<(CookieJar, axum::response::Response), axum::http::StatusCode> {
     let request = requests::RequestLua::new(request).await;
     // find a way to add keys here
     let cookie_jar = request.cookie_jar.clone();
@@ -93,15 +97,11 @@ pub async fn route(lua: &mlua::Lua, details: Route, request: Request<Body>) -> i
     }
 
     match route_inner(lua, details, cookie_jar.clone(), request).await {
-        Ok(response) => (cookie_jar, response.1).into_response(),
+        Ok(response) => Ok((response.0, response.1)),
         Err(e) => {
             eprintln!("Error executing the route: {e}");
 
-            (
-                cookie_jar,
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-            )
-                .into_response()
+            Err(axum::http::StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
 }

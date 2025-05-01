@@ -39,10 +39,14 @@ impl UserData for LuaCookie<'_> {
             Ok(())
         });
 
-        methods.add_method("get_name", |_, this, _: ()| Ok(this.0.name_raw()));
-        methods.add_method("get_value", |_, this, _: ()| Ok(this.0.value_raw()));
-        methods.add_method("get_domain", |_, this, _: ()| Ok(this.0.domain_raw()));
-        methods.add_method("get_path", |_, this, _: ()| Ok(this.0.path_raw()));
+        methods.add_method("get_name", |_, this, _: ()| Ok(this.0.name().to_string()));
+        methods.add_method("get_value", |_, this, _: ()| Ok(this.0.value().to_string()));
+        methods.add_method("get_domain", |_, this, _: ()| {
+            Ok(this.0.domain().map(|domain| Some(domain.to_string())))
+        });
+        methods.add_method("get_path", |_, this, _: ()| {
+            Ok(this.0.path().map(|path| Some(path.to_string())))
+        });
         methods.add_method("get_expiration", |_, this, _: ()| {
             Ok(this
                 .0
