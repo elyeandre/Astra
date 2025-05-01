@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.19.0] - 2025-05-01
+
+### Bug Fixes
+
+- Cookies not properly set ([952ddbd](https://github.com/ArkForgeLabs/Astra/commit/952ddbd731030c81f4031644e60b2740a6f45746))
+- Config not added to the routes by default ([9845dd7](https://github.com/ArkForgeLabs/Astra/commit/9845dd72acd4e1b809f3a2af57a03c8b6abb02d5))
+
+### Documentation
+
+- Added wki on cookies ([2d74a04](https://github.com/ArkForgeLabs/Astra/commit/2d74a04ef2dde45a7c3902e29a07e8915a09e14a))
+- Added intellisense type info for lua ([7529c13](https://github.com/ArkForgeLabs/Astra/commit/7529c132e949514340a0600a19ac79bc7e82401e))
+
+### Features
+
+- Cookies was added on the backend ([36ff2a0](https://github.com/ArkForgeLabs/Astra/commit/36ff2a08697361f54a76bbb001bf145c645a8ab9))
+- Cookies UserData added ([3a29249](https://github.com/ArkForgeLabs/Astra/commit/3a29249fc96fdda972a6feafe1924053408f3d45))
+
 ## [0.18.2] - 2025-04-02
 
 ### Bug Fixes
