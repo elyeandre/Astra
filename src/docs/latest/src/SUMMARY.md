@@ -9,6 +9,7 @@
 - [Routes](./basic_usage/routes.md)
 - [Requests](./basic_usage/requests.md)
 - [Responses](./basic_usage/responses.md)
+- [Cookies](./basic_usage/cookies.md)
 - [Fault Tolerance](./basic_usage/fault_tolerance.md)
 - [Deployment](./basic_usage/deployment.md)
 - [Astra IO](./basic_usage/astra_io.md)

@@ -134,6 +134,7 @@ end
 ---@field body fun(request: Request): Body|nil Returns the body of the request, which can be a table or a string.
 ---@field multipart fun(request: Request): Multipart|nil Returns a multipart if available.
 ---@field get_cookie fun(request: Request, name: string): Cookie Returns a cookie
+---@field new_cookie fun(request: Request, name: string, value: string): Cookie Returns a cookie
 
 ---
 --- Represents an HTTP response.

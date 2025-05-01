@@ -5,7 +5,7 @@ use axum::{
     extract::{FromRequest, FromRequestParts, Multipart, State},
     http::{Request, request::Parts},
 };
-use axum_extra::extract::CookieJar;
+use axum_extra::extract::{CookieJar, cookie::Cookie};
 use mlua::{LuaSerdeExt, UserData};
 use std::collections::HashMap;
 use tokio::io::AsyncWriteExt;
@@ -83,17 +83,19 @@ impl UserData for RequestLua {
                 .map(|(key, value)| (key.to_string(), value.to_str().unwrap_or("").to_string()))
                 .collect::<HashMap<String, String>>())
         });
-        methods.add_async_method("get_cookie", |_, this, name: String| async move {
+        methods.add_method("get_cookie", |_, this, name: String| {
             Ok(this
                 .cookie_jar
                 .get(name.as_str())
                 .map(|cookie| LuaCookie(cookie.clone())))
         });
-        methods.add_async_method("body", |_, this, ()| async move {
-            match this.bytes.clone() {
-                Some(bytes) => Ok(BodyLua::new(bytes)),
-                None => Ok(BodyLua::new(bytes::Bytes::new())),
-            }
+        methods.add_method("new_cookie", |_, _, (name, value): (String, String)| {
+            Ok(LuaCookie(Cookie::new(name, value)))
+        });
+        // ! Create new cookie
+        methods.add_method("body", |_, this, ()| match this.bytes.clone() {
+            Some(bytes) => Ok(BodyLua::new(bytes)),
+            None => Ok(BodyLua::new(bytes::Bytes::new())),
         });
     }
 }

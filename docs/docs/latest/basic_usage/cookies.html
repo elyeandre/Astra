@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Fault Tolerance - ArkForge Astra</title>
+        <title>Cookies - ArkForge Astra</title>
 
 
         <!-- Custom HTML head -->
@@ -130,7 +130,7 @@
                         <a href="https://github.com/ArkForgeLabs/Astra" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/basic_usage/fault_tolerance.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/basic_usage/cookies.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -226,20 +226,50 @@
 }
 
 </style>
-<h1 id="fault-tolerance"><a class="header" href="#fault-tolerance">Fault Tolerance</a></h1>
-<p>Astra ensures fault tolerance through several methods <a href="https://github.com/ArkForgeLabs/Astra/blob/main/src/main.rs#L1-L2">internally</a> and offers guidence on how you can ensure it on the Lua's endpoint as well.</p>
-<p>Fault-tolerance essentially describes the ability to tolerate crashing errors and continue execution whereas otherwise caused the server to shut down. In Astra's internal case, this is ensured by removing all of the crashing points and handle every error that could occur during runtime. This was achieved through denying unwraps and expects throughout the codebase for the runtime. However there are still crashes on startup for cases that needs to be looked into, such as Lua parsing and errors, bad path, and/or system issues such as port being unavailable or unauthorized for Astra.</p>
-<p>In Lua however, the errors are usually crash by default, which are still tolerated with Astra and does not shutdown the server. To handle the errors as values, where it allows you to ensure the server does not crash and the issues are handled, you can use features such as the <a href="https://www.lua.org/pil/8.4.html">pcall</a>. This is always recommended over any other method. For Astra's case, there are usually chained calls that each can faily on their own as well, hence wrapping them in lambda functions or individually pcall wrapping them always is a good idea.</p>
+<h1 id="cookies"><a class="header" href="#cookies">Cookies</a></h1>
+<p>Cookies allow you to store data on each HTTP request, if supported. Astra does not currently support signed and private cookies. You can create a new cookie by getting it from a request:</p>
+<pre><code class="language-lua">Astra:get("/", function(request)
+    local cookie = request:new_cookie("key", "value")
+
+    return "HEY"
+end)
+</code></pre>
+<p>You can also get a previously set cookie:</p>
+<pre><code class="language-lua">local cookie = request:get_cookie("key")
+</code></pre>
+<p>After modification or creation, they will have no effect unless you set them to the response</p>
+<pre><code class="language-lua">response:set_cookie("key", cookie)
+</code></pre>
+<p>And similary, remove them with</p>
+<pre><code class="language-lua">response:removoe_cookie("key")
+</code></pre>
+<p>Each cookie contains extra details and functions which are as follows:</p>
+<pre><code class="language-lua">set_name(cookie: Cookie, name: string)
+set_value(cookie: Cookie, value: string)
+set_domain(cookie: Cookie, domain: string)
+set_path(cookie: Cookie, path: string)
+set_expiration(cookie: Cookie, expiration: number)
+set_http_only(cookie: Cookie, http_only: boolean)
+set_max_age(cookie: Cookie, max_age: number)
+set_permanent(cookie: Cookie)
+get_name(cookie: Cookie): string?
+get_value(cookie: Cookie): string?
+get_domain(cookie: Cookie): string?
+get_path(cookie: Cookie): string?
+get_expiration(cookie: Cookie): number?
+get_http_only(cookie: Cookie): boolean?
+get_max_age(cookie: Cookie): number?
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../basic_usage/cookies.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../basic_usage/responses.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../basic_usage/deployment.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../basic_usage/fault_tolerance.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -249,11 +279,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../basic_usage/cookies.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../basic_usage/responses.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../basic_usage/deployment.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../basic_usage/fault_tolerance.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
