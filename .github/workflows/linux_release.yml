@@ -12,17 +12,16 @@ jobs:
     name: Release Linux
     runs-on: ubuntu-latest
     environment: production
-    container: unixgeek2/rust-min-libc
 
     env:
       CARGO_INCREMENTAL: 0
 
     steps:
-      - uses: actions/checkout@v3
-      - run: rustup update
+      - uses: actions/checkout@v4
+      - run: cargo install cross --git https://github.com/cross-rs/cross
 
       - name: LuaJIT
-        run: cargo build --release --features default
+        run: cross build --release --features default
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/release/astra
@@ -30,7 +29,7 @@ jobs:
           tag: ${{ github.ref }}
 
       - name: LuaJIT 52
-        run: cargo build --release --no-default-features --features luajit52
+        run: cross build --release --no-default-features --features luajit52
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/release/astra
@@ -38,7 +37,7 @@ jobs:
           tag: ${{ github.ref }}
       
       - name: Luau
-        run: cargo build --release --no-default-features --features luau
+        run: cross build --release --no-default-features --features luau
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/release/astra
@@ -46,7 +45,7 @@ jobs:
           tag: ${{ github.ref }}
 
       - name: Lua 5.1
-        run: cargo build --release --no-default-features --features lua51
+        run: cross build --release --no-default-features --features lua51
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/release/astra
@@ -54,7 +53,7 @@ jobs:
           tag: ${{ github.ref }}
       
       - name: Lua 5.2
-        run: cargo build --release --no-default-features --features lua52
+        run: cross build --release --no-default-features --features lua52
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/release/astra
@@ -62,7 +61,7 @@ jobs:
           tag: ${{ github.ref }}
       
       - name: Lua 5.3
-        run: cargo build --release --no-default-features --features lua53
+        run: cross build --release --no-default-features --features lua53
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/release/astra
@@ -70,7 +69,7 @@ jobs:
           tag: ${{ github.ref }}
       
       - name: Lua 5.4
-        run: cargo build --release --no-default-features --features lua54
+        run: cross build --release --no-default-features --features lua54
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/release/astra
