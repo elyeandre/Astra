@@ -1,0 +1,104 @@
+name: Release Linux
+
+on:
+  release:
+    types: [created]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    name: Release Linux
+    runs-on: ubuntu-latest
+    environment: production
+    container: telosalliance/ubuntu-18.04:2025-01-15
+
+    env:
+      CARGO_INCREMENTAL: 0
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup update
+
+      - name: LuaJIT
+        run: cargo build --release --features default
+      - uses: svenstaro/upload-release-action@v2
+        with:
+          file: ./target/release/astra
+          asset_name: astra-luajit-linux-amd64
+          tag: ${{ github.ref }}
+
+      - name: LuaJIT 52
+        run: cargo build --release --no-default-features --features luajit52
+      - uses: svenstaro/upload-release-action@v2
+        with:
+          file: ./target/release/astra
+          asset_name: astra-luajit52-linux-amd64
+          tag: ${{ github.ref }}
+      
+      - name: Luau
+        run: cargo build --release --no-default-features --features luau
+      - uses: svenstaro/upload-release-action@v2
+        with:
+          file: ./target/release/astra
+          asset_name: astra-luau-linux-amd64
+          tag: ${{ github.ref }}
+
+      - name: Lua 5.1
+        run: cargo build --release --no-default-features --features lua51
+      - uses: svenstaro/upload-release-action@v2
+        with:
+          file: ./target/release/astra
+          asset_name: astra-lua51-linux-amd64
+          tag: ${{ github.ref }}
+      
+      - name: Lua 5.2
+        run: cargo build --release --no-default-features --features lua52
+      - uses: svenstaro/upload-release-action@v2
+        with:
+          file: ./target/release/astra
+          asset_name: astra-lua52-linux-amd64
+          tag: ${{ github.ref }}
+      
+      - name: Lua 5.3
+        run: cargo build --release --no-default-features --features lua53
+      - uses: svenstaro/upload-release-action@v2
+        with:
+          file: ./target/release/astra
+          asset_name: astra-lua53-linux-amd64
+          tag: ${{ github.ref }}
+      
+      - name: Lua 5.4
+        run: cargo build --release --no-default-features --features lua54
+      - uses: svenstaro/upload-release-action@v2
+        with:
+          file: ./target/release/astra
+          asset_name: astra-lua54-linux-amd64
+          tag: ${{ github.ref }}
+
+      - uses: chrnorm/deployment-action@v2
+        name: Create GitHub deployment
+        id: deployment
+        with:
+          token: "${{ github.token }}"
+          environment-url: https://github.com/ArkForgeLabs/Astra
+          environment: production
+
+      - name: Update deployment status (success)
+        if: success()
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: "${{ github.token }}"
+          environment-url: ${{ steps.deployment.outputs.environment_url }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          state: "success"
+
+      - name: Update deployment status (failure)
+        if: failure()
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: "${{ github.token }}"
+          environment-url: ${{ steps.deployment.outputs.environment_url }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          state: "failure"
