@@ -12,7 +12,7 @@ jobs:
     name: Release Linux
     runs-on: ubuntu-latest
     environment: production
-    container: telosalliance/ubuntu-18.04:2025-01-15
+    container: unixgeek2/rust-min-libc
 
     env:
       CARGO_INCREMENTAL: 0
