@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.19.2] - 2025-05-22
+
+### Bug Fixes
+
+- #54 Now supports glibc 2.27 ([d1235d2](https://github.com/ArkForgeLabs/Astra/commit/d1235d268efced857b3b927b79c435c7c56d0562))
+
 ## [0.19.0] - 2025-05-01
 
 ### Bug Fixes
