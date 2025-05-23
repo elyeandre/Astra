@@ -81,24 +81,24 @@ impl UserData for Database {
                     let table = lua.create_table()?;
 
                     macro_rules! try_set_value {
-                        ($table:expr, $lua:expr, $row:expr, $i:expr, $key:expr, $ty:ty) => {
-                            if let Ok(v) = $row.try_get::<$ty, _>($i) {
-                                $table.set($key, v)?;
+                        ($i:expr, $key:expr, $ty:ty) => {
+                            if let Ok(v) = row.try_get::<$ty, _>($i) {
+                                table.set($key, v)?;
                                 continue;
-                            } else if let Ok(v) = $row.try_get::<Option<$ty>, _>($i) {
-                                $table.set($key, v)?;
+                            } else if let Ok(v) = row.try_get::<Option<$ty>, _>($i) {
+                                table.set($key, v)?;
                                 continue;
                             }
                         };
                     }
 
                     macro_rules! try_set_lua_value {
-                        ($table:expr, $lua:expr, $row:expr, $i:expr, $key:expr, $ty:ty) => {
-                            if let Ok(v) = $row.try_get::<$ty, _>($i) {
-                                $table.set($key, $lua.to_value(&v)?)?;
+                        ($i:expr, $key:expr, $ty:ty) => {
+                            if let Ok(v) = row.try_get::<$ty, _>($i) {
+                                table.set($key, lua.to_value(&v)?)?;
                                 continue;
-                            } else if let Ok(v) = $row.try_get::<Option<$ty>, _>($i) {
-                                $table.set($key, $lua.to_value(&v)?)?;
+                            } else if let Ok(v) = row.try_get::<Option<$ty>, _>($i) {
+                                table.set($key, lua.to_value(&v)?)?;
                                 continue;
                             }
                         };
@@ -107,19 +107,19 @@ impl UserData for Database {
                     for i in 0..row.len() {
                         let key = row.column(i).name();
 
-                        try_set_value!(table, lua, row, i, key, i64);
-                        try_set_value!(table, lua, row, i, key, i32);
-                        try_set_value!(table, lua, row, i, key, i16);
-                        try_set_value!(table, lua, row, i, key, i8);
-                        try_set_value!(table, lua, row, i, key, f32);
-                        try_set_value!(table, lua, row, i, key, f64);
-                        try_set_value!(table, lua, row, i, key, bool);
-                        try_set_value!(table, lua, row, i, key, String);
-                        try_set_value!(table, lua, row, i, key, Vec<u8>);
+                        try_set_value!(i, key, i64);
+                        try_set_value!(i, key, i32);
+                        try_set_value!(i, key, i16);
+                        try_set_value!(i, key, i8);
+                        try_set_value!(i, key, f32);
+                        try_set_value!(i, key, f64);
+                        try_set_value!(i, key, bool);
+                        try_set_value!(i, key, String);
+                        try_set_value!(i, key, Vec<u8>);
 
-                        try_set_lua_value!(table, lua, row, i, key, serde_json::Value);
-                        try_set_lua_value!(table, lua, row, i, key, chrono::DateTime<chrono::Utc>);
-                        try_set_lua_value!(table, lua, row, i, key, uuid::Uuid);
+                        try_set_lua_value!(i, key, serde_json::Value);
+                        try_set_lua_value!(i, key, chrono::DateTime<chrono::Utc>);
+                        try_set_lua_value!(i, key, uuid::Uuid);
 
                         // fallback if all fail
                         table.set(key, mlua::Value::Nil)?;
