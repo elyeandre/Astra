@@ -76,60 +76,56 @@ impl UserData for Database {
         macro_rules! parse_sql_fn {
             ($function_name:ident, $row_type:ty) => {
                 fn $function_name(lua: &mlua::Lua, row: &$row_type) -> mlua::Result<mlua::Table> {
-                    match lua.create_table() {
-                        Ok(table) => {
-                            macro_rules! push_value {
-                                ($data_type:ty,$i:expr) => {{
-                                    if let Ok(value) = row.try_get::<$data_type, usize>($i) {
-                                        table.push(value)?;
-                                        continue;
-                                    } else if let Ok(value) =
-                                        row.try_get::<Option<$data_type>, usize>($i)
-                                    {
-                                        table.push(value)?;
-                                        continue;
-                                    }
-                                }};
+                    use sqlx::Column;
+
+                    let table = lua.create_table()?;
+
+                    macro_rules! try_set_value {
+                        ($table:expr, $lua:expr, $row:expr, $i:expr, $key:expr, $ty:ty) => {
+                            if let Ok(v) = $row.try_get::<$ty, _>($i) {
+                                $table.set($key, v)?;
+                                continue;
+                            } else if let Ok(v) = $row.try_get::<Option<$ty>, _>($i) {
+                                $table.set($key, v)?;
+                                continue;
                             }
-                            macro_rules! push_value_lua_parsed {
-                                ($data_type:ty,$i:expr) => {{
-                                    if let Ok(value) = row.try_get::<$data_type, usize>($i) {
-                                        table.push(lua.to_value(&value)?)?;
-                                        continue;
-                                    } else if let Ok(value) =
-                                        row.try_get::<Option<$data_type>, usize>($i)
-                                    {
-                                        table.push(lua.to_value(&value)?)?;
-                                        continue;
-                                    }
-                                }};
-                            }
-
-                            let row_length = row.len();
-
-                            for i in 0..row_length {
-                                push_value!(i64, i);
-                                push_value!(i32, i);
-                                push_value!(i16, i);
-                                push_value!(i8, i);
-                                push_value!(f32, i);
-                                push_value!(f64, i);
-                                push_value!(bool, i);
-                                push_value!(String, i);
-                                push_value!(Vec<u8>, i);
-                                push_value_lua_parsed!(serde_json::Value, i);
-                                push_value_lua_parsed!(chrono::DateTime<chrono::Utc>, i);
-                                push_value_lua_parsed!(uuid::Uuid, i);
-                            }
-
-                            Ok(table)
-                        }
-
-                        Err(e) => {
-                            eprintln!("SQLx table creation error: {e:#?}");
-                            Err(mlua::Error::runtime("Could not create a table in Lua"))
-                        }
+                        };
                     }
+
+                    macro_rules! try_set_lua_value {
+                        ($table:expr, $lua:expr, $row:expr, $i:expr, $key:expr, $ty:ty) => {
+                            if let Ok(v) = $row.try_get::<$ty, _>($i) {
+                                $table.set($key, $lua.to_value(&v)?)?;
+                                continue;
+                            } else if let Ok(v) = $row.try_get::<Option<$ty>, _>($i) {
+                                $table.set($key, $lua.to_value(&v)?)?;
+                                continue;
+                            }
+                        };
+                    }
+
+                    for i in 0..row.len() {
+                        let key = row.column(i).name();
+
+                        try_set_value!(table, lua, row, i, key, i64);
+                        try_set_value!(table, lua, row, i, key, i32);
+                        try_set_value!(table, lua, row, i, key, i16);
+                        try_set_value!(table, lua, row, i, key, i8);
+                        try_set_value!(table, lua, row, i, key, f32);
+                        try_set_value!(table, lua, row, i, key, f64);
+                        try_set_value!(table, lua, row, i, key, bool);
+                        try_set_value!(table, lua, row, i, key, String);
+                        try_set_value!(table, lua, row, i, key, Vec<u8>);
+
+                        try_set_lua_value!(table, lua, row, i, key, serde_json::Value);
+                        try_set_lua_value!(table, lua, row, i, key, chrono::DateTime<chrono::Utc>);
+                        try_set_lua_value!(table, lua, row, i, key, uuid::Uuid);
+
+                        // fallback if all fail
+                        table.set(key, mlua::Value::Nil)?;
+                    }
+
+                    Ok(table)
                 }
             };
         }
