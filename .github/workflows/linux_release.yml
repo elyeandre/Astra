@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: LuaJIT
-        run: cross build --release --target x86_64-unknown-linux-musl --features default
+        run: cargo build --release --target x86_64-unknown-linux-musl --features default
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/x86_64-unknown-linux-musl/release/astra
@@ -28,7 +28,7 @@ jobs:
           tag: ${{ github.ref }}
 
       - name: LuaJIT 52
-        run: cross build --release --target x86_64-unknown-linux-musl --no-default-features --features luajit52
+        run: cargo build --release --target x86_64-unknown-linux-musl --no-default-features --features luajit52
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/x86_64-unknown-linux-musl/release/astra
@@ -36,7 +36,7 @@ jobs:
           tag: ${{ github.ref }}
       
       - name: Luau
-        run: cross build --release --target x86_64-unknown-linux-musl --no-default-features --features luau
+        run: cargo build --release --target x86_64-unknown-linux-musl --no-default-features --features luau
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/x86_64-unknown-linux-musl/release/astra
@@ -44,7 +44,7 @@ jobs:
           tag: ${{ github.ref }}
 
       - name: Lua 5.1
-        run: cross build --release --target x86_64-unknown-linux-musl --no-default-features --features lua51
+        run: cargo build --release --target x86_64-unknown-linux-musl --no-default-features --features lua51
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/x86_64-unknown-linux-musl/release/astra
@@ -52,7 +52,7 @@ jobs:
           tag: ${{ github.ref }}
       
       - name: Lua 5.2
-        run: cross build --release --target x86_64-unknown-linux-musl --no-default-features --features lua52
+        run: cargo build --release --target x86_64-unknown-linux-musl --no-default-features --features lua52
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/x86_64-unknown-linux-musl/release/astra
@@ -60,7 +60,7 @@ jobs:
           tag: ${{ github.ref }}
       
       - name: Lua 5.3
-        run: cross build --release --target x86_64-unknown-linux-musl --no-default-features --features lua53
+        run: cargo build --release --target x86_64-unknown-linux-musl --no-default-features --features lua53
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/x86_64-unknown-linux-musl/release/astra
@@ -68,7 +68,7 @@ jobs:
           tag: ${{ github.ref }}
       
       - name: Lua 5.4
-        run: cross build --release --target x86_64-unknown-linux-musl --no-default-features --features lua54
+        run: cargo build --release --target x86_64-unknown-linux-musl --no-default-features --features lua54
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/x86_64-unknown-linux-musl/release/astra
