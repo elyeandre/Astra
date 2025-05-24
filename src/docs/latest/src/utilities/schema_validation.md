@@ -14,8 +14,8 @@ local schema = {
 -- Your actual data
 local example = { id = "123", name = 456 }
 -- Check the validation
-local isValid, err = validate_table(example, schema)
-assert(not isValid, "Test failed: expected validation to fail")
+local is_valid, err = validate_table(example, schema)
+assert(not is_valid, "Validation failed: expected validation to fail")
 ```
 
 Almost all of the native lua types are accounted for. Deeply nesting is obviously supported as well:
@@ -35,9 +35,15 @@ local schema = {
         }
     }
 }
-local example = { user = { profile = { id = 123, name = "John" } } }
-local isValid, err = validate_table(example, schema)
-assert(isValid, "Test failed: " .. err)
+local example = {
+    user = {
+        profile = {
+            name = "John",
+        },
+    },
+}
+local is_valid, err = validate_table(example, schema)
+assert(is_valid, "Validation failed: " .. tostring(err))
 ```
 
 As well as arrays:
@@ -60,13 +66,18 @@ local schema = {
 local tbl = {
     numbers = { 1, 2, 3 },
     strings = { "a", "b", "c" },
-    entries = { { id = 123, text = "hey!" }, { id = "456", text = "hello!" } }
+    entries = {
+        {
+            id = 123,
+            text = "hey!"
+        },
+        {
+            id = 456,
+            text = "hello!"
+        }
+    }
 }
 
-local isValid, err = validate_table(tbl, schema)
-if isValid then
-    print("Validation succeeded")
-else
-    print("Validation failed: " .. err)
-end
+local is_valid, err = validate_table(tbl, schema)
+assert(is_valid, "Validation failed: " .. tostring(err))
 ```

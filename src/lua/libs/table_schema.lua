@@ -27,7 +27,7 @@ local function validate_table(input_table, schema)
     local function validate_nested_table(value, nested_schema, path)
         local is_valid, err = validate_table(value, nested_schema)
         if not is_valid then
-            return false, path .. ": " .. err
+            return false, "\"" .. path .. "\"" .. err
         end
         return true
     end
@@ -63,28 +63,29 @@ local function validate_table(input_table, schema)
     for key, constraints in pairs(schema) do
         local value = input_table[key]
         local expected_type = constraints.type
-        local required = constraints.required or false
         local min = constraints.min
         local max = constraints.max
         local nested_schema = constraints.schema -- Schema for nested tables
         local default_value = constraints.default
         local path = key
+        local required = true
+        if constraints.required == false then required = false end
 
         -- Check if the key exists in the table and is required
         if required and value == nil then
-            return false, "Missing required key: " .. path
+            return false, "\n" .. "Missing required key: " .. "\"" .. path .. "\""
         end
 
         -- If the key exists, check its type
         if value ~= nil and not check_type(value, expected_type) then
-            return false, "Incorrect type for key: " .. path .. ". Expected " .. expected_type .. ", got " .. type(value)
+            return false, "\n" .. "Incorrect type for key: " .. path .. ". Expected " .. expected_type .. ", got " .. type(value)
         end
 
         -- If the value is a nested table, validate it recursively
         if nested_schema and type(value) == "table" and expected_type == "table" then
             local is_valid, err = validate_nested_table(value, nested_schema, path)
             if not is_valid then
-                return false, "Error in nested table for key: " .. path .. ". " .. err
+                return false, "\n" .. "Error in nested table for key: " .. err
             end
         end
 
@@ -92,7 +93,7 @@ local function validate_table(input_table, schema)
         if expected_type == "array" and type(value) == "table" and nested_schema then
             local is_valid, err = validate_array_of_tables(value, nested_schema, path)
             if not is_valid then
-                return false, "Error in array of tables for key: " .. path .. ". " .. err
+                return false, "\n" .. "Error in array of tables for key: " .. err
             end
         end
 
@@ -100,13 +101,13 @@ local function validate_table(input_table, schema)
         if expected_type == "array" and type(value) == "table" and not nested_schema then
             local is_valid, err = validate_array_of_primitives(value, constraints.array_item_type, path)
             if not is_valid then
-                return false, "Error in array of primitives for key: " .. path .. ". " .. err
+                return false, "\n" .. "Error in array of primitives for key: " .. err
             end
         end
 
         -- Check range constraints (if applicable)
         if value ~= nil and not check_range(value, min, max) then
-            return false, "Value for key " .. path .. " is out of range."
+            return false, "\n" .. "Value for key " .. path .. " is out of range."
         end
 
         -- Apply default values if the key is missing and a default is provided
@@ -118,7 +119,7 @@ local function validate_table(input_table, schema)
     -- Check if the table has any unexpected keys
     for key in pairs(input_table) do
         if not schema[key] then
-            return false, "Unexpected key found: " .. key
+            return false, "\n" .. "Unexpected key found: " .. key
         end
     end
 
