@@ -25,7 +25,7 @@ jobs:
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/release/astra.exe
-          asset_name: astra-luajit-windows-amd64
+          asset_name: astra-luajit-windows-amd64.exe
           tag: ${{ github.ref }}
 
       - name: LuaJIT 52
@@ -33,7 +33,7 @@ jobs:
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/release/astra.exe
-          asset_name: astra-luajit52-windows-amd64
+          asset_name: astra-luajit52-windows-amd64.exe
           tag: ${{ github.ref }}
       
       - name: Luau
@@ -41,7 +41,7 @@ jobs:
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/release/astra.exe
-          asset_name: astra-luau-windows-amd64
+          asset_name: astra-luau-windows-amd64.exe
           tag: ${{ github.ref }}
 
       - name: Lua 5.1
@@ -49,7 +49,7 @@ jobs:
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/release/astra.exe
-          asset_name: astra-lua51-windows-amd64
+          asset_name: astra-lua51-windows-amd64.exe
           tag: ${{ github.ref }}
       
       - name: Lua 5.2
@@ -57,7 +57,7 @@ jobs:
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/release/astra.exe
-          asset_name: astra-lua52-windows-amd64
+          asset_name: astra-lua52-windows-amd64.exe
           tag: ${{ github.ref }}
       
       - name: Lua 5.3
@@ -65,7 +65,7 @@ jobs:
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/release/astra.exe
-          asset_name: astra-lua53-windows-amd64
+          asset_name: astra-lua53-windows-amd64.exe
           tag: ${{ github.ref }}
       
       - name: Lua 5.4
@@ -73,7 +73,7 @@ jobs:
       - uses: svenstaro/upload-release-action@v2
         with:
           file: ./target/release/astra.exe
-          asset_name: astra-lua54-windows-amd64
+          asset_name: astra-lua54-windows-amd64.exe
           tag: ${{ github.ref }}
 
       - uses: chrnorm/deployment-action@v2

@@ -1,6 +1,22 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
+
+## [0.19.3](https://github.com/ArkForgeLabs/Astra/compare/v0.19.2..v0.19.3) - 2025-05-24
+
+### Features
+
+- added database connection closing function - ([771d650](https://github.com/ArkForgeLabs/Astra/commit/771d650ccde93ce1ffd7e01cd1feb120db6acfeb))
+
+### Miscellaneous Chores
+
+- Improve Row Extraction to Key-Value Format for Lua (#55) - ([45c486f](https://github.com/ArkForgeLabs/Astra/commit/45c486f6e2dded1c34174d66b40c6807cf2dd584))
+- cleaned up the `tryset_value` macro - ([995a991](https://github.com/ArkForgeLabs/Astra/commit/995a99195e99439f17d8b8a12d6255dfade4919f))
+- [**breaking**] `validate_table` is now strict by default, and have better errors - ([f73dabf](https://github.com/ArkForgeLabs/Astra/commit/f73dabfe0aed482850a5e7fdae73c6a906e15ed7))
+
+### Refactoring
+
+- refactor: support KV table to extract row. e.g. row.name, row.id - ([dac9947](https://github.com/ArkForgeLabs/Astra/commit/dac99474735cd1b2bb097e0c125f55c7beadbdf8))
 
 ## [0.19.2] - 2025-05-22
 
