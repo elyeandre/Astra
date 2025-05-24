@@ -106,90 +106,125 @@ pub async fn route(
     }
 }
 
-pub fn load_routes() -> Router {
+pub fn load_routes(server: mlua::Table) -> Router {
     let lua = &LUA;
-
     let mut router = Router::new();
     let mut routes = Vec::new();
-    #[allow(clippy::unwrap_used)]
-    lua.globals()
-        .get::<mlua::Table>("Astra")
-        .and_then(|settings| settings.get::<mlua::Table>("routes"))
-        .unwrap()
-        .for_each(|_key: mlua::Value, entry: mlua::Value| {
-            if let Some(entry) = entry.as_table() {
-                routes.push(routes::Route {
-                    path: lua.from_value(entry.get("path")?)?,
-                    static_dir: lua.from_value(entry.get("static_dir")?)?,
-                    static_file: lua.from_value(entry.get("static_file")?)?,
-                    method: lua.from_value(entry.get("method")?)?,
-                    function: entry.get::<mlua::Function>("func")?,
-                    config: lua.from_value(entry.get("config")?)?,
-                });
-            }
 
-            Ok(())
-        })
-        .unwrap();
+    let mut parse_route = |entry: &mlua::Table| -> mlua::Result<()> {
+        //
+        // Routes {
+        //     base_middleware = chain { ctx, logger },
+        //     { GET, "/test",    chain { rateLimit, auth } (handleTest) },
+        //     { GET, "/headers", rateLimit(handleHeaders) },
+        //     { GET, "/",        justHi },
+        // }
 
-    for route_values in routes.clone() {
-        let path = route_values.path.clone();
-        let path = path.as_str();
+        // let method: Method = lua.from_value(entry.get(1)?)?;
+        // let details: mlua::Value = entry.get(3)?;
+        // routes.push(routes::Route {
+        //     method,
+        //     path: lua.from_value(entry.get(2)?)?,
+        //     static_dir: if method == Method::StaticDir {
+        //         Some(lua.from_value::<String>(details.clone())?)
+        //     } else {
+        //         None
+        //     },
+        //     static_file: if method == Method::StaticFile {
+        //         Some(lua.from_value::<String>(details.clone())?)
+        //     } else {
+        //         None
+        //     },
+        //     function: if let Some(function) = details.as_function() {
+        //         function.clone()
+        //     } else {
+        //         lua.create_function(|_, _: ()| Ok(()))?
+        //     },
+        //     config: entry.get::<RouteConfiguration>(4).unwrap_or_default(),
+        // });
 
-        let config = route_values.config.clone();
-        let body_limit = config.body_limit;
+        routes.push(routes::Route {
+            path: lua.from_value(entry.get("path")?)?,
+            static_dir: lua.from_value(entry.get("static_dir")?)?,
+            static_file: lua.from_value(entry.get("static_file")?)?,
+            method: lua.from_value(entry.get("method")?)?,
+            function: entry.get::<mlua::Function>("func")?,
+            config: lua.from_value(entry.get("config")?)?,
+        });
 
-        macro_rules! match_routes {
-            ($route_function:expr) => {{
-                let mut route_function =
-                    $route_function(|request: Request<Body>| route(lua, route_values, request));
-                if let Some(body_limit) = body_limit {
-                    route_function = route_function.layer(DefaultBodyLimit::max(body_limit))
+        Ok(())
+    };
+
+    if let Ok(server) = server.get::<mlua::Table>("routes") {
+        #[allow(clippy::expect_used)]
+        server
+            .for_each(|_key: mlua::Value, entry: mlua::Value| {
+                if let Some(entry) = entry.as_table() {
+                    let _ = parse_route(entry);
                 }
 
-                router.route(path, route_function)
-            }};
+                Ok(())
+            })
+            .expect("Could not parse the routes");
+
+        for route_values in routes.clone() {
+            let path = route_values.path.clone();
+            let path = path.as_str();
+
+            let config = route_values.config.clone();
+            let body_limit = config.body_limit;
+
+            macro_rules! match_routes {
+                ($route_function:expr) => {{
+                    let mut route_function =
+                        $route_function(|request: Request<Body>| route(lua, route_values, request));
+                    if let Some(body_limit) = body_limit {
+                        route_function = route_function.layer(DefaultBodyLimit::max(body_limit))
+                    }
+
+                    router.route(path, route_function)
+                }};
+            }
+
+            router = match route_values.method {
+                Method::Get => match_routes!(get),
+                Method::Post => match_routes!(post),
+                Method::Put => match_routes!(put),
+                Method::Delete => match_routes!(delete),
+                Method::Options => match_routes!(options),
+                Method::Patch => match_routes!(patch),
+                Method::Trace => match_routes!(trace),
+                Method::StaticDir => {
+                    if let Some(serve_path) = route_values.static_dir {
+                        if path == "/" {
+                            router.fallback_service(tower_http::services::ServeDir::new(serve_path))
+                        } else {
+                            router
+                                .nest_service(path, tower_http::services::ServeDir::new(serve_path))
+                        }
+                    } else {
+                        router
+                    }
+                }
+                Method::StaticFile => {
+                    if let Some(serve_path) = route_values.static_file {
+                        if path == "/" {
+                            router
+                                .fallback_service(tower_http::services::ServeFile::new(serve_path))
+                        } else {
+                            router.nest_service(
+                                path,
+                                tower_http::services::ServeFile::new(serve_path),
+                            )
+                        }
+                    } else {
+                        router
+                    }
+                }
+            }
         }
 
-        router = match route_values.method {
-            Method::Get => match_routes!(get),
-            Method::Post => match_routes!(post),
-            Method::Put => match_routes!(put),
-            Method::Delete => match_routes!(delete),
-            Method::Options => match_routes!(options),
-            Method::Patch => match_routes!(patch),
-            Method::Trace => match_routes!(trace),
-            Method::StaticDir => {
-                if let Some(serve_path) = route_values.static_dir {
-                    if path == "/" {
-                        router.fallback_service(tower_http::services::ServeDir::new(serve_path))
-                    } else {
-                        router.nest_service(path, tower_http::services::ServeDir::new(serve_path))
-                    }
-                } else {
-                    router
-                }
-            }
-            Method::StaticFile => {
-                if let Some(serve_path) = route_values.static_file {
-                    if path == "/" {
-                        router.fallback_service(tower_http::services::ServeFile::new(serve_path))
-                    } else {
-                        router.nest_service(path, tower_http::services::ServeFile::new(serve_path))
-                    }
-                } else {
-                    router
-                }
-            }
-        }
-    }
-
-    if let Ok(settings) = lua.globals().get::<mlua::Table>("Astra") {
-        // if let Ok(default_body_limit) = settings.get::<usize>("default_body_limit") {
-        //     router = router.layer(DefaultBodyLimit::max(default_body_limit));
-        // };
-
-        if let Ok(should_compress) = settings.get::<bool>("compression") {
+        if let Ok(should_compress) = server.get::<bool>("compression") {
             if should_compress {
                 router = router.layer(
                     tower::ServiceBuilder::new()

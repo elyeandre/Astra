@@ -8,35 +8,33 @@ pub async fn register_run_function(lua: &mlua::Lua) -> mlua::Result<()> {
     // Register function for running the server
     lua.globals().set(
         "astra_internal__start_server",
-        lua.create_async_function(|lua, ()| async move {
-            // default address
-            let mut listener_address = "127.0.0.1:8080".to_string();
-
-            if let Ok(settings) = lua.globals().get::<mlua::Table>("Astra") {
-                let mut hostname = "127.0.0.1".to_string();
-                if let Ok(new_hostname) = settings.get::<String>("hostname") {
-                    hostname = new_hostname;
-                }
-
-                let mut port = 8080;
-                if let Ok(new_port) = settings.get::<u16>("port") {
-                    port = new_port;
-                }
-
-                listener_address = format!("{hostname}:{port}");
+        lua.create_async_function(|_, server: mlua::Table| async move {
+            let mut hostname = "127.0.0.1".to_string();
+            if let Ok(new_hostname) = server.get("hostname") {
+                hostname = new_hostname;
             }
 
-            #[allow(clippy::unwrap_used)]
+            let mut port = 8080;
+            if let Ok(new_port) = server.get("port") {
+                port = new_port;
+            }
+
+            let listener_address: String = format!("{hostname}:{port}");
+
+            #[allow(clippy::expect_used)]
             let listener = tokio::net::TcpListener::bind(listener_address.clone())
                 .await
-                .unwrap();
+                .expect("Could not create a TCP listener");
 
             println!("🚀 Listening at: http://{listener_address}");
 
-            #[allow(clippy::unwrap_used)]
-            axum::serve(listener, crate::components::http::routes::load_routes())
-                .await
-                .unwrap();
+            #[allow(clippy::expect_used)]
+            axum::serve(
+                listener,
+                crate::components::http::routes::load_routes(server),
+            )
+            .await
+            .expect("Could not start the HTTP server");
 
             Ok(())
         })?,
