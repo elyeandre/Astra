@@ -9,7 +9,7 @@ pub enum DatabaseType {
 
 #[derive(Debug, Clone)]
 pub struct Database {
-    pub db: DatabaseType,
+    pub db: Option<DatabaseType>,
 }
 impl crate::components::AstraComponent for Database {
     async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
@@ -40,7 +40,7 @@ impl crate::components::AstraComponent for Database {
                             .await
                         {
                             Ok(pool) => Ok(Database {
-                                db: DatabaseType::Sqlite(pool),
+                                db: Some(DatabaseType::Sqlite(pool)),
                             }),
                             Err(e) => Err(mlua::Error::runtime(format!(
                                 "Error connecting to Sqlite: {e:#?}"
@@ -53,7 +53,7 @@ impl crate::components::AstraComponent for Database {
                         .await
                     {
                         Ok(pool) => Ok(Database {
-                            db: DatabaseType::Postgres(pool),
+                            db: Some(DatabaseType::Postgres(pool)),
                         }),
                         Err(e) => Err(mlua::Error::runtime(format!(
                             "Error connecting to Postgres: {e:#?}"
@@ -195,26 +195,29 @@ impl UserData for Database {
             "execute",
             |lua, this, (sql, parameters): (String, Option<mlua::Table>)| async move {
                 match &this.db {
-                    DatabaseType::Sqlite(pool) => {
-                        let query = query_builder_sqlite(lua.clone(), &sql, parameters);
+                    Some(db) => match &db {
+                        DatabaseType::Sqlite(pool) => {
+                            let query = query_builder_sqlite(lua.clone(), &sql, parameters);
 
-                        match query.execute(pool).await {
-                            Ok(_) => Ok(()),
-                            Err(e) => Err(mlua::Error::runtime(format!(
-                                "Error executing the query: {e:#?}"
-                            ))),
+                            match query.execute(pool).await {
+                                Ok(_) => Ok(()),
+                                Err(e) => Err(mlua::Error::runtime(format!(
+                                    "Error executing the query: {e:#?}"
+                                ))),
+                            }
                         }
-                    }
-                    DatabaseType::Postgres(pool) => {
-                        let query = query_builder_postgres(lua.clone(), &sql, parameters);
+                        DatabaseType::Postgres(pool) => {
+                            let query = query_builder_postgres(lua.clone(), &sql, parameters);
 
-                        match query.execute(pool).await {
-                            Ok(_) => Ok(()),
-                            Err(e) => Err(mlua::Error::runtime(format!(
-                                "Error executing the query: {e:#?}"
-                            ))),
+                            match query.execute(pool).await {
+                                Ok(_) => Ok(()),
+                                Err(e) => Err(mlua::Error::runtime(format!(
+                                    "Error executing the query: {e:#?}"
+                                ))),
+                            }
                         }
-                    }
+                    },
+                    None => Err(mlua::Error::runtime("The connection is closed")),
                 }
             },
         );
@@ -223,26 +226,29 @@ impl UserData for Database {
             "query_one",
             |lua, this, (sql, parameters): (String, Option<mlua::Table>)| async move {
                 match &this.db {
-                    DatabaseType::Sqlite(pool) => {
-                        let query = query_builder_sqlite(lua.clone(), &sql, parameters);
+                    Some(db) => match &db {
+                        DatabaseType::Sqlite(pool) => {
+                            let query = query_builder_sqlite(lua.clone(), &sql, parameters);
 
-                        match query.fetch_one(pool).await {
-                            Ok(row) => Ok(parse_sql_to_lua_sqlite(&lua, &row)?),
-                            Err(e) => Err(mlua::Error::runtime(format!(
-                                "Error executing the query: {e:#?}"
-                            ))),
+                            match query.fetch_one(pool).await {
+                                Ok(row) => Ok(parse_sql_to_lua_sqlite(&lua, &row)?),
+                                Err(e) => Err(mlua::Error::runtime(format!(
+                                    "Error executing the query: {e:#?}"
+                                ))),
+                            }
                         }
-                    }
-                    DatabaseType::Postgres(pool) => {
-                        let query = query_builder_postgres(lua.clone(), &sql, parameters);
+                        DatabaseType::Postgres(pool) => {
+                            let query = query_builder_postgres(lua.clone(), &sql, parameters);
 
-                        match query.fetch_one(pool).await {
-                            Ok(row) => Ok(parse_sql_to_lua_postgres(&lua, &row)?),
-                            Err(e) => Err(mlua::Error::runtime(format!(
-                                "Error executing the query: {e:#?}"
-                            ))),
+                            match query.fetch_one(pool).await {
+                                Ok(row) => Ok(parse_sql_to_lua_postgres(&lua, &row)?),
+                                Err(e) => Err(mlua::Error::runtime(format!(
+                                    "Error executing the query: {e:#?}"
+                                ))),
+                            }
                         }
-                    }
+                    },
+                    None => Err(mlua::Error::runtime("The connection is closed")),
                 }
             },
         );
@@ -251,46 +257,61 @@ impl UserData for Database {
             "query_all",
             |lua, this, (sql, parameters): (String, Option<mlua::Table>)| async move {
                 match &this.db {
-                    DatabaseType::Sqlite(pool) => {
-                        let query = query_builder_sqlite(lua.clone(), &sql, parameters);
+                    Some(db) => match &db {
+                        DatabaseType::Sqlite(pool) => {
+                            let query = query_builder_sqlite(lua.clone(), &sql, parameters);
 
-                        match query.fetch_all(pool).await {
-                            Ok(rows) => {
-                                let mut vec = Vec::new();
+                            match query.fetch_all(pool).await {
+                                Ok(rows) => {
+                                    let mut vec = Vec::new();
 
-                                for row in rows {
-                                    let sql_row_lua = parse_sql_to_lua_sqlite(&lua, &row)?;
-                                    vec.push(sql_row_lua);
+                                    for row in rows {
+                                        let sql_row_lua = parse_sql_to_lua_sqlite(&lua, &row)?;
+                                        vec.push(sql_row_lua);
+                                    }
+
+                                    Ok(vec)
                                 }
-
-                                Ok(vec)
+                                Err(e) => Err(mlua::Error::runtime(format!(
+                                    "Error executing the query: {e:#?}"
+                                ))),
                             }
-                            Err(e) => Err(mlua::Error::runtime(format!(
-                                "Error executing the query: {e:#?}"
-                            ))),
                         }
-                    }
-                    DatabaseType::Postgres(pool) => {
-                        let query = query_builder_postgres(lua.clone(), &sql, parameters);
+                        DatabaseType::Postgres(pool) => {
+                            let query = query_builder_postgres(lua.clone(), &sql, parameters);
 
-                        match query.fetch_all(pool).await {
-                            Ok(rows) => {
-                                let mut vec = Vec::new();
+                            match query.fetch_all(pool).await {
+                                Ok(rows) => {
+                                    let mut vec = Vec::new();
 
-                                for row in rows {
-                                    let sql_row_lua = parse_sql_to_lua_postgres(&lua, &row)?;
-                                    vec.push(sql_row_lua);
+                                    for row in rows {
+                                        let sql_row_lua = parse_sql_to_lua_postgres(&lua, &row)?;
+                                        vec.push(sql_row_lua);
+                                    }
+
+                                    Ok(vec)
                                 }
-
-                                Ok(vec)
+                                Err(e) => Err(mlua::Error::runtime(format!(
+                                    "Error executing the query: {e:#?}"
+                                ))),
                             }
-                            Err(e) => Err(mlua::Error::runtime(format!(
-                                "Error executing the query: {e:#?}"
-                            ))),
                         }
-                    }
+                    },
+                    None => Err(mlua::Error::runtime("The connection is closed")),
                 }
             },
         );
+
+        methods.add_async_method_mut("close", |_, mut this, _: ()| async move {
+            if let Some(db) = &this.db {
+                match db {
+                    DatabaseType::Sqlite(pool) => pool.close().await,
+                    DatabaseType::Postgres(pool) => pool.close().await,
+                };
+            }
+            this.db = None;
+
+            Ok(())
+        });
     }
 }

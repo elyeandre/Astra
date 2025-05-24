@@ -14,7 +14,7 @@ local schema = {
 -- Your actual data
 local example = { id = "123", name = 456 }
 -- Check the validation
-local isValid, err = validateTable(example, schema)
+local isValid, err = validate_table(example, schema)
 assert(not isValid, "Test failed: expected validation to fail")
 ```
 
@@ -36,7 +36,7 @@ local schema = {
     }
 }
 local example = { user = { profile = { id = 123, name = "John" } } }
-local isValid, err = validateTable(example, schema)
+local isValid, err = validate_table(example, schema)
 assert(isValid, "Test failed: " .. err)
 ```
 
