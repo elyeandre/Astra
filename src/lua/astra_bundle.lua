@@ -226,7 +226,7 @@ __luapack_require__ = function(idx)
     return module
 end
 
----@diagnostic disable: duplicate-set-field
+---@diagnostic disable: duplicate-doc-field
 
 -- This is to prevent a small undefined behavior in Lua
 ---@diagnostic disable-next-line: redundant-parameter
@@ -266,103 +266,109 @@ os.getenv = astra_internal__getenv
 os.setenv = astra_internal__setenv
 
 -- MARK: Astra
-
 _G.Astra = {
-	version = "0.0.0",
-	hostname = "127.0.0.1",
-	--- Enable or disable compression
-	compression = false,
-	port = 8080,
-	--- Contains all of the route details
-	routes = {},
+	http = {},
 }
+
+---@class HTTPServer
+---@field version string
+---@field hostname string
+---@field compression boolean
+---@field port number
+---@field routes Route[]
+---@field __index HTTPServer
+--- methods
+---@field new fun(server: HTTPServer): HTTPServer
+---@field get fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
+---@field post fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
+---@field put fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
+---@field delete fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
+---@field options fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
+---@field patch fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
+---@field trace fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
+---@field static_dir fun(server: HTTPServer, serve_path: string, callback: callback, config: RouteConfiguration?)
+---@field static_file fun(server: HTTPServer, serve_path: string, callback: callback, config: RouteConfiguration?)
+---@field run fun(server: HTTPServer)
 
 ---@diagnostic disable-next-line: duplicate-doc-alias
 ---@alias callback fun(request: Request, response: Response): any
 
 ---@class RouteConfiguration
----@diagnostic disable-next-line: duplicate-doc-field
 ---@field body_limit? number
 
----@param path string The URL path for the request.
----@param callback callback A function that will be called when the request is made.
----@param config? RouteConfiguration
-function Astra:get(path, callback, config)
-	table.insert(self.routes, { path = path, method = "get", func = callback, config = config or {} })
+---@class Route
+---@field path string
+---@field method string
+---@field func function
+---@field static_dir string?
+---@field static_file string?
+---@field config RouteConfiguration?
+
+---@type HTTPServer
+---@diagnostic disable-next-line: missing-fields
+local Server = {}
+
+function Server:new()
+	local server = {
+		version = "0.0.0",
+		hostname = "127.0.0.1",
+		--- Enable or disable compression
+		compression = false,
+		port = 8080,
+		--- Contains all of the route details
+		routes = {},
+	}
+
+	setmetatable(server, self)
+	self.__index = self
+	server:register_methods()
+	return server
 end
 
----@param path string The URL path for the request.
----@param callback callback A function that will be called when the request is made.
----@param config? RouteConfiguration
-function Astra:post(path, callback, config)
-	table.insert(self.routes, { path = path, method = "post", func = callback, config = config or {} })
-end
+---@diagnostic disable-next-line: inject-field
+function Server:register_methods()
+	local http_methods = { "get", "post", "put", "delete", "options", "patch", "trace" }
 
----@param path string The URL path for the request.
----@param callback callback A function that will be called when the request is made.
----@param config? RouteConfiguration
-function Astra:put(path, callback, config)
-	table.insert(self.routes, { path = path, method = "put", func = callback, config = config or {} })
-end
+	for _, method in ipairs(http_methods) do
+		self[method] = function(_, path, callback, config)
+			table.insert(self.routes, {
+				path = path,
+				method = method,
+				func = callback,
+				config = config or {},
+			})
+		end
+	end
 
----@param path string The URL path for the request.
----@param callback callback A function that will be called when the request is made.
----@param config? RouteConfiguration
-function Astra:delete(path, callback, config)
-	table.insert(self.routes, { path = path, method = "delete", func = callback, config = config or {} })
-end
+	self.static_dir = function(_, path, serve_path, config)
+		table.insert(self.routes, {
+			path = path,
+			method = "static_dir",
+			func = function() end,
+			static_dir = serve_path,
+			config = config or {},
+		})
+	end
 
----@param path string The URL path for the request.
----@param callback callback A function that will be called when the request is made.
----@param config? RouteConfiguration
-function Astra:options(path, callback, config)
-	table.insert(self.routes, { path = path, method = "options", func = callback, config = config or {} })
-end
-
----@param path string The URL path for the request.
----@param callback callback A function that will be called when the request is made.
----@param config? RouteConfiguration
-function Astra:patch(path, callback, config)
-	table.insert(self.routes, { path = path, method = "patch", func = callback, config = config or {} })
-end
-
----@param path string The URL path for the request.
----@param callback callback A function that will be called when the request is made.
----@param config? RouteConfiguration
-function Astra:trace(path, callback, config)
-	table.insert(self.routes, { path = path, method = "trace", func = callback, config = config or {} })
-end
-
----
----Registers a static folder to serve
----@param path string The URL path for the request.
----@param serve_path string The directory path relatively
----@param config? RouteConfiguration
-function Astra:static_dir(path, serve_path, config)
-	table.insert(
-		self.routes,
-		{ path = path, method = "static_dir", func = function() end, static_dir = serve_path, config = config or {} }
-	)
-end
-
----
----Registers a static file to serve
----@param path string The URL path for the request.
----@param serve_path string The directory path relatively
----@param config? RouteConfiguration
-function Astra:static_file(path, serve_path, config)
-	table.insert(
-		self.routes,
-		{ path = path, method = "static_file", func = function() end, static_file = serve_path, config = config or {} }
-	)
+	self.static_file = function(_, path, serve_path, config)
+		table.insert(self.routes, {
+			path = path,
+			method = "static_file",
+			func = function() end,
+			static_file = serve_path,
+			config = config or {},
+		})
+	end
 end
 
 ---
 ---Runs the Astra server
-function Astra:run()
+function Server:run()
 	---@diagnostic disable-next-line: undefined-global
-	astra_internal__start_server()
+	astra_internal__start_server(self)
 end
+
+_G.Astra.http.server = Server
 
 -- MARK: Internal
 
