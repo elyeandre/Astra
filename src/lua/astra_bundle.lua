@@ -226,7 +226,8 @@ __luapack_require__ = function(idx)
     return module
 end
 
----@diagnostic disable: duplicate-doc-field
+---@diagnostic disable: duplicate-set-field, duplicate-doc-field
+--!nocheck
 
 ---============================ TYPES ============================---
 
@@ -239,7 +240,6 @@ end
 ---@field port number
 ---@field routes Route[]
 ---@field __index HTTPServer
---- methods
 ---@field new fun(server: HTTPServer): HTTPServer
 ---@field get fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
 ---@field post fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
@@ -250,7 +250,7 @@ end
 ---@field trace fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
 ---@field static_dir fun(server: HTTPServer, serve_path: string, callback: callback, config: RouteConfiguration?)
 ---@field static_file fun(server: HTTPServer, serve_path: string, callback: callback, config: RouteConfiguration?)
----@field run fun(server: HTTPServer)
+---@field run fun(server: HTTPServer) Runs the server
 
 ---@diagnostic disable-next-line: duplicate-doc-alias
 ---@alias callback fun(request: Request, response: Response): any
@@ -266,7 +266,35 @@ end
 ---@field static_file string?
 ---@field config RouteConfiguration?
 
+-- MARK: HTTPClient
+
+---
+--- Represents an HTTP client response.
+---@class HTTPClientResponse
+---@field status_code fun(): table Gets the response HTTP Status code
+---@field body fun(): Body Gets the response HTTP Body which further can be parsed
+---@field headers fun(): table|nil Returns the entire headers list from the HTTP response
+---@field remote_address fun(): string|nil Gets the remote address of the HTTP response server
+
+---@diagnostic disable-next-line: duplicate-doc-alias
+---@alias http_client_callback fun(response: HTTPClientResponse)
+
+---
+--- Represents an HTTP client request.
+---@class HTTPClientRequest
+---@field set_method fun(http_request: HTTPClientRequest, method: string): HTTPClientRequest Sets the HTTP method
+---@field set_header fun(http_request: HTTPClientRequest, key: string, value: string): HTTPClientRequest Sets a header
+---@field set_headers fun(http_request: HTTPClientRequest, headers: table): HTTPClientRequest Sets all of the headers
+---@field set_form fun(http_request: HTTPClientRequest, key: string, value: string): HTTPClientRequest Sets a form
+---@field set_forms fun(http_request: HTTPClientRequest, headers: table): HTTPClientRequest Sets all of the forms
+---@field set_body fun(http_request: HTTPClientRequest, body: string): HTTPClientRequest Sets the HTTP body
+---@field set_json fun(http_request: HTTPClientRequest, json: table): HTTPClientRequest Sets the HTTP json
+---@field set_file fun(http_request: HTTPClientRequest, file_path: string): HTTPClientRequest Sets the for-upload file path
+---@field execute fun(): HTTPClientResponse Executes the request and returns the response
+---@field execute_task fun(http_request: HTTPClientRequest, callback: http_client_callback) Executes the request as an async task
+
 -- MARK: Common HTTP
+
 ---
 --- Represents an HTTP body.
 ---@class Body
@@ -301,6 +329,19 @@ end
 ---@field remove_cookie fun(response: Response, cookie: Cookie) Removes a cookie from the list
 
 -- MARK: FileIO
+
+---@class AstraIO
+---@field get_metadata fun(path: string): FileMetadata Returns the metadata of a file or directory
+---@field read_dir fun(path: string): DirEntry[] Returns the content of the directory
+---@field get_current_dir fun(): string Returns the path of the current directory
+---@field get_script_path fun(): string Returns the path of the current running script
+---@field change_dir fun(path: string) Changes the current directory
+---@field exists fun(path: string): boolean Checks if a path exists
+---@field create_dir fun(path: string) Creates a directory
+---@field create_dir_all fun(path: string) Creates all directories in the path if they do not exist
+---@field remove fun(path: string) Removes a file
+---@field remove_dir fun(path: string) Removes a directory and all its contents
+---@field remove_dir_all fun(path: string) Removes all directories in the path
 
 ---@class FileType
 ---@field is_file fun(file_type: FileType): boolean
@@ -342,12 +383,23 @@ end
 ---@field get_http_only fun(cookie: Cookie): boolean?
 ---@field get_max_age fun(cookie: Cookie): number?
 
+-- MARK: Database
+
+---
+--- SQLx driver
+---@class Database
+---@field execute fun(database: Database, sql: string, parameters: table | nil)
+---@field query_one fun(database: Database, sql: string, parameters: table | nil): table | nil
+---@field query_all fun(database: Database, sql: string, parameters: table | nil): table | nil
+---@field close fun(database: Database)
+
 ---============================ DEFINITIONS ============================---
 
 -- The main global
 _G.Astra = {
 	http = {},
 	utils = {},
+	crypto = {},
 }
 
 -- Imports
@@ -433,72 +485,129 @@ function Server:register_methods()
 			config = config or {},
 		})
 	end
+
+	self.run = function(_)
+		---@diagnostic disable-next-line: undefined-global
+		astra_internal__start_server(self)
+	end
 end
 
 ---
----Runs the Astra server
-function Server:run()
+---Opens a new SQL connection using the provided URL and returns a table representing the connection.
+---@param database_type "sqlite"|"postgres" The type of database to connect to.
+---@param url string The URL of the SQL database to connect to.
+---@param max_connections number? Max number of connections to the database pool
+---@return Database Database that represents the SQL connection.
+---@nodiscard
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function _G.Astra.database_connect(database_type, url, max_connections)
 	---@diagnostic disable-next-line: undefined-global
-	astra_internal__start_server(self)
+	return astra_inner__database_connect(database_type, url, max_connections)
 end
 
-_G.Astra.io = {
-	---Returns the metadata of a file or directory
-	---@param path string
-	---@return FileMetadata
-	get_metadata = function(path)
-		return {}
-	end,
+---
+---Opens a new async HTTP Request. The request is running as a task in parallel
+---@param url string
+---@return HTTPClientRequest
+---@nodiscard
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function _G.Astra.http.request(url)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__http_request(url)
+end
 
-	---Returns the content of the directory
-	---@param path string Path to the file
-	---@return DirEntry[]
-	read_dir = function(path)
-		return {}
-	end,
+---
+--- Represents an async task
+---@class TaskHandler
+---@field abort fun() Aborts the running task
 
-	---Returns the path of the current directory
+---
+---Starts a new async task
+---@param callback fun() The callback to run the content of the async task
+---@return TaskHandler
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function spawn_task(callback)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__spawn_task(callback)
+end
+
+---
+---Starts a new async task with a delay in milliseconds
+---@param callback fun() The callback to run the content of the async task
+---@param timeout number The delay in milliseconds
+---@return TaskHandler
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function spawn_timeout(callback, timeout)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__spawn_timeout(callback, timeout)
+end
+
+---
+---Starts a new async task that runs infinitely in a loop but with a delay in milliseconds
+---@param callback fun() The callback to run the content of the async task
+---@param timeout number The delay in milliseconds
+---@return TaskHandler
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function spawn_interval(callback, timeout)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__spawn_interval(callback, timeout)
+end
+
+-- MARK: Crypto
+
+_G.Astra.crypto = {
+	---
+	---Hashes a given string according to the provided hash type.
+	---@param hash_type "sha2_256"|"sha3_256"|"sha2_512"|"sha3_512"
+	---@param input string The input to be hashed
 	---@return string
-	get_current_dir = function()
-		return ""
+	---@diagnostic disable-next-line: missing-return, lowercase-global
+	hash = function(hash_type, input)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__hash(hash_type, input)
 	end,
 
-	---Returns the path of the current running script
-	---@return string
-	get_script_path = function()
-		return ""
-	end,
+	base64 = {
+		---
+		---Encodes the given input as Base64
+		---@param input string The input to be encoded
+		---@return string
+		---@diagnostic disable-next-line: missing-return, lowercase-global
+		encode = function(input)
+			---@diagnostic disable-next-line: undefined-global
+			return astra_internal__base64_encode(input)
+		end,
 
-	---Changes the current directory
-	---@param path string Path to the directory
-	change_dir = function(path) end,
+		---
+		---Encodes the given input as Base64 but URL safe
+		---@param input string The input to be encoded
+		---@return string
+		---@diagnostic disable-next-line: missing-return, lowercase-global
+		encode_urlsafe = function(input)
+			---@diagnostic disable-next-line: undefined-global
+			return astra_internal__base64_encode_urlsafe(input)
+		end,
 
-	---Checks if a path exists
-	---@param path string Path to the file or directory
-	---@return boolean
-	exists = function(path)
-		return false
-	end,
+		---
+		---Decodes the given input as Base64
+		---@param input string The input to be decoded
+		---@return string
+		---@diagnostic disable-next-line: missing-return, lowercase-global
+		decode = function(input)
+			---@diagnostic disable-next-line: undefined-global
+			return astra_internal__base64_decode(input)
+		end,
 
-	---Creates a directory
-	---@param path string Path to the directory
-	create_dir = function(path) end,
-
-	---Creates a directory recursively
-	---@param path string Path to the directory
-	create_dir_all = function(path) end,
-
-	---Removes a file
-	---@param path string Path to the file
-	remove = function(path) end,
-
-	---Removes a directory
-	---@param path string Path to the directory
-	remove_dir = function(path) end,
-
-	---Removes a directory recursively
-	---@param path string Path to the directory
-	remove_dir_all = function(path) end,
+		---
+		---Decodes the given input as Base64 but URL safe
+		---@param input string The input to be decoded
+		---@return string
+		---@diagnostic disable-next-line: missing-return, lowercase-global
+		decode_urlsafe = function(input)
+			---@diagnostic disable-next-line: undefined-global
+			return astra_internal__base64_decode_urlsafe(input)
+		end,
+	},
 }
 
 -- This is to prevent a small undefined behavior in Lua

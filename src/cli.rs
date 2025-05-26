@@ -29,9 +29,6 @@ enum AstraCLI {
     Run {
         /// Path to the Lua script file.
         file_path: String,
-        /// Only core functionalities.
-        #[arg(long, short = 'c', action = clap::ArgAction::SetTrue, default_value = "true")]
-        core: bool,
         /// Extra arguments to pass to the script.
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         extra_args: Option<Vec<String>>,
@@ -40,9 +37,6 @@ enum AstraCLI {
     ExportBundle {
         /// Path to the export file.
         file_path: Option<String>,
-        /// Only core functionalities.
-        #[arg(long, short = 'c', action = clap::ArgAction::SetTrue, default_value = "true")]
-        core: bool,
     },
     #[command(about = "Updates to the latest version", alias = "update")]
     Upgrade,
@@ -53,10 +47,9 @@ pub async fn init() {
     match AstraCLI::parse() {
         AstraCLI::Run {
             file_path,
-            core,
             extra_args,
-        } => run_command(file_path, core, extra_args).await,
-        AstraCLI::ExportBundle { file_path, core } => export_bundle_command(file_path, core).await,
+        } => run_command(file_path, extra_args).await,
+        AstraCLI::ExportBundle { file_path } => export_bundle_command(file_path).await,
         AstraCLI::Upgrade => {
             if let Err(e) = upgrade_command().await {
                 eprintln!("Could not update to the latest version: {e}");
@@ -66,7 +59,7 @@ pub async fn init() {
 }
 
 /// Runs a Lua script.
-async fn run_command(file_path: String, core: bool, extra_args: Option<Vec<String>>) {
+async fn run_command(file_path: String, extra_args: Option<Vec<String>>) {
     let lua = &LUA;
 
     // Set the script path.
@@ -79,7 +72,7 @@ async fn run_command(file_path: String, core: bool, extra_args: Option<Vec<Strin
         .expect("Could not set the script path to OnceCell");
 
     // Register Lua components.
-    let _ = registration(lua, core).await;
+    let _ = registration(lua).await;
 
     // Handle extra arguments.
     if let Some(extra_args) = extra_args {
@@ -127,8 +120,8 @@ async fn run_command(file_path: String, core: bool, extra_args: Option<Vec<Strin
 }
 
 /// Exports the Lua bundle.
-async fn export_bundle_command(file_path: Option<String>, core: bool) {
-    let (lib, _) = prepare_prelude(core);
+async fn export_bundle_command(file_path: Option<String>) {
+    let (lib, _) = prepare_prelude();
     let file_path = file_path.unwrap_or_else(|| "astra_bundle.lua".to_string());
 
     // Write the bundled library to the file.
@@ -229,8 +222,8 @@ pub async fn upgrade_command() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Registers Lua components.
-async fn registration(lua: &mlua::Lua, include_utils: bool) -> String {
-    let (lib, cleaned_lib) = prepare_prelude(include_utils);
+async fn registration(lua: &mlua::Lua) -> String {
+    let (lib, cleaned_lib) = prepare_prelude();
 
     crate::components::global_functions::essential_global_functions(lua);
 
@@ -243,17 +236,15 @@ async fn registration(lua: &mlua::Lua, include_utils: bool) -> String {
         eprintln!("Couldn't add prelude:\n{e}");
     }
 
-    if include_utils {
-        if let Err(e) = crate::components::register_components(lua).await {
-            eprintln!("Error setting the util functions:\n{e}");
-        }
+    if let Err(e) = crate::components::register_components(lua).await {
+        eprintln!("Error setting the util functions:\n{e}");
     }
 
     lib
 }
 
 /// Prepares the Lua prelude.
-fn prepare_prelude(include_utils: bool) -> (String, String) {
+fn prepare_prelude() -> (String, String) {
     /// Filters lines between start and end markers.
     fn filter(input: String, start: &str, end: &str) -> String {
         let mut new_lines = Vec::new();
@@ -274,15 +265,7 @@ fn prepare_prelude(include_utils: bool) -> (String, String) {
         new_lines.join("\n")
     }
 
-    let lib = {
-        let lib = include_str!("./lua/astra_bundle.lua").to_string();
-        if include_utils {
-            let utils_lib = include_str!("./lua/astra_utils.lua");
-            format!("{utils_lib}\n{lib}")
-        } else {
-            lib
-        }
-    };
+    let lib = include_str!("./lua/astra_bundle.lua").to_string();
 
     let lib = filter(lib, "--- @START_REMOVING_PACK", "--- @END_REMOVING_PACK");
     let cleaned_lib = filter(

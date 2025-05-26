@@ -1,4 +1,5 @@
----@diagnostic disable: duplicate-doc-field
+---@diagnostic disable: duplicate-set-field, duplicate-doc-field
+--!nocheck
 
 ---============================ TYPES ============================---
 
@@ -11,7 +12,6 @@
 ---@field port number
 ---@field routes Route[]
 ---@field __index HTTPServer
---- methods
 ---@field new fun(server: HTTPServer): HTTPServer
 ---@field get fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
 ---@field post fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
@@ -38,7 +38,35 @@
 ---@field static_file string?
 ---@field config RouteConfiguration?
 
+-- MARK: HTTPClient
+
+---
+--- Represents an HTTP client response.
+---@class HTTPClientResponse
+---@field status_code fun(): table Gets the response HTTP Status code
+---@field body fun(): Body Gets the response HTTP Body which further can be parsed
+---@field headers fun(): table|nil Returns the entire headers list from the HTTP response
+---@field remote_address fun(): string|nil Gets the remote address of the HTTP response server
+
+---@diagnostic disable-next-line: duplicate-doc-alias
+---@alias http_client_callback fun(response: HTTPClientResponse)
+
+---
+--- Represents an HTTP client request.
+---@class HTTPClientRequest
+---@field set_method fun(http_request: HTTPClientRequest, method: string): HTTPClientRequest Sets the HTTP method
+---@field set_header fun(http_request: HTTPClientRequest, key: string, value: string): HTTPClientRequest Sets a header
+---@field set_headers fun(http_request: HTTPClientRequest, headers: table): HTTPClientRequest Sets all of the headers
+---@field set_form fun(http_request: HTTPClientRequest, key: string, value: string): HTTPClientRequest Sets a form
+---@field set_forms fun(http_request: HTTPClientRequest, headers: table): HTTPClientRequest Sets all of the forms
+---@field set_body fun(http_request: HTTPClientRequest, body: string): HTTPClientRequest Sets the HTTP body
+---@field set_json fun(http_request: HTTPClientRequest, json: table): HTTPClientRequest Sets the HTTP json
+---@field set_file fun(http_request: HTTPClientRequest, file_path: string): HTTPClientRequest Sets the for-upload file path
+---@field execute fun(): HTTPClientResponse Executes the request and returns the response
+---@field execute_task fun(http_request: HTTPClientRequest, callback: http_client_callback) Executes the request as an async task
+
 -- MARK: Common HTTP
+
 ---
 --- Represents an HTTP body.
 ---@class Body
@@ -127,16 +155,26 @@
 ---@field get_http_only fun(cookie: Cookie): boolean?
 ---@field get_max_age fun(cookie: Cookie): number?
 
+-- MARK: Database
+
+---
+--- SQLx driver
+---@class Database
+---@field execute fun(database: Database, sql: string, parameters: table | nil)
+---@field query_one fun(database: Database, sql: string, parameters: table | nil): table | nil
+---@field query_all fun(database: Database, sql: string, parameters: table | nil): table | nil
+---@field close fun(database: Database)
+
 ---============================ DEFINITIONS ============================---
 
 -- The main global
 _G.Astra = {
 	http = {},
 	utils = {},
+	crypto = {},
 }
 
 -- Imports
-_G.Astra.utils = require("./libs/utils.lua")
 _G.Astra.validate_table = require("./libs/table_schema.lua")
 _G.import = require("./libs/import.lua")
 
@@ -216,13 +254,173 @@ function Server:register_methods()
 		})
 	end
 
-	self.run = function (_)
+	self.run = function(_)
 		---@diagnostic disable-next-line: undefined-global
 		astra_internal__start_server(self)
 	end
 end
 
-_G.Astra.io = {}
+---
+---Opens a new SQL connection using the provided URL and returns a table representing the connection.
+---@param database_type "sqlite"|"postgres" The type of database to connect to.
+---@param url string The URL of the SQL database to connect to.
+---@param max_connections number? Max number of connections to the database pool
+---@return Database Database that represents the SQL connection.
+---@nodiscard
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function _G.Astra.database_connect(database_type, url, max_connections)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_inner__database_connect(database_type, url, max_connections)
+end
+
+---
+---Opens a new async HTTP Request. The request is running as a task in parallel
+---@param url string
+---@return HTTPClientRequest
+---@nodiscard
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function _G.Astra.http.request(url)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__http_request(url)
+end
+
+---
+--- Represents an async task
+---@class TaskHandler
+---@field abort fun() Aborts the running task
+
+---
+---Starts a new async task
+---@param callback fun() The callback to run the content of the async task
+---@return TaskHandler
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function spawn_task(callback)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__spawn_task(callback)
+end
+
+---
+---Starts a new async task with a delay in milliseconds
+---@param callback fun() The callback to run the content of the async task
+---@param timeout number The delay in milliseconds
+---@return TaskHandler
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function spawn_timeout(callback, timeout)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__spawn_timeout(callback, timeout)
+end
+
+---
+---Starts a new async task that runs infinitely in a loop but with a delay in milliseconds
+---@param callback fun() The callback to run the content of the async task
+---@param timeout number The delay in milliseconds
+---@return TaskHandler
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function spawn_interval(callback, timeout)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__spawn_interval(callback, timeout)
+end
+
+-- MARK: Crypto
+
+_G.Astra.crypto = {
+	---
+	---Hashes a given string according to the provided hash type.
+	---@param hash_type "sha2_256"|"sha3_256"|"sha2_512"|"sha3_512"
+	---@param input string The input to be hashed
+	---@return string
+	---@diagnostic disable-next-line: missing-return, lowercase-global
+	hash = function(hash_type, input)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__hash(hash_type, input)
+	end,
+
+	base64 = {
+		---
+		---Encodes the given input as Base64
+		---@param input string The input to be encoded
+		---@return string
+		---@diagnostic disable-next-line: missing-return, lowercase-global
+		encode = function(input)
+			---@diagnostic disable-next-line: undefined-global
+			return astra_internal__base64_encode(input)
+		end,
+
+		---
+		---Encodes the given input as Base64 but URL safe
+		---@param input string The input to be encoded
+		---@return string
+		---@diagnostic disable-next-line: missing-return, lowercase-global
+		encode_urlsafe = function(input)
+			---@diagnostic disable-next-line: undefined-global
+			return astra_internal__base64_encode_urlsafe(input)
+		end,
+
+		---
+		---Decodes the given input as Base64
+		---@param input string The input to be decoded
+		---@return string
+		---@diagnostic disable-next-line: missing-return, lowercase-global
+		decode = function(input)
+			---@diagnostic disable-next-line: undefined-global
+			return astra_internal__base64_decode(input)
+		end,
+
+		---
+		---Decodes the given input as Base64 but URL safe
+		---@param input string The input to be decoded
+		---@return string
+		---@diagnostic disable-next-line: missing-return, lowercase-global
+		decode_urlsafe = function(input)
+			---@diagnostic disable-next-line: undefined-global
+			return astra_internal__base64_decode_urlsafe(input)
+		end,
+	},
+}
+
+---Pretty prints any table or value
+---@param value any
+---@diagnostic disable-next-line: duplicate-set-field
+function _G.pprint(value)
+	---@diagnostic disable-next-line: undefined-global
+	astra_internal__pretty_print(value)
+end
+
+_G.Astra.json = {
+	---Encodes the value into a valid JSON string
+	---@param value any
+	---@return string
+	---@diagnostic disable-next-line: duplicate-set-field
+	encode = function(value)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__json_encode(value)
+	end,
+
+	---Decodes the JSON string into a valid lua value
+	---@param value string
+	---@return any
+	---@diagnostic disable-next-line: duplicate-set-field
+	decode = function(value)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__json_decode(value)
+	end,
+}
+
+---
+---Splits a sentence into an array given the separator
+---@param input_str string The input string
+---@param separator_str string The input string
+---@return table array
+---@nodiscard
+---@diagnostic disable-next-line: duplicate-set-field
+function string.split(input_str, separator_str)
+	local result_table = {}
+	for word in input_str:gmatch("([^" .. separator_str .. "]+)") do
+		table.insert(result_table, word)
+	end
+	return result_table
+end
+
 
 -- This is to prevent a small undefined behavior in Lua
 ---@diagnostic disable-next-line: redundant-parameter
