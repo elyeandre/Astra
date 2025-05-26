@@ -99,7 +99,9 @@ impl crate::components::AstraComponent for FileIO {
             lua.create_function(|_, ()| Ok(SCRIPT_PATH.get().cloned()))?,
         )?;
 
-        lua.globals().set("AstraIO", astra_io)?;
+        lua.globals()
+            .get::<mlua::Table>("Astra")?
+            .set("io", astra_io)?;
 
         Ok(())
     }

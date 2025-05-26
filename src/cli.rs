@@ -234,12 +234,6 @@ async fn registration(lua: &mlua::Lua, include_utils: bool) -> String {
 
     crate::components::global_functions::essential_global_functions(lua);
 
-    if include_utils {
-        if let Err(e) = crate::components::register_components(lua).await {
-            eprintln!("Error setting the util functions:\n{e}");
-        }
-    }
-
     if let Err(e) = lua
         .load(cleaned_lib.as_str())
         .set_name("astra_bundle.lua")
@@ -247,6 +241,12 @@ async fn registration(lua: &mlua::Lua, include_utils: bool) -> String {
         .await
     {
         eprintln!("Couldn't add prelude:\n{e}");
+    }
+
+    if include_utils {
+        if let Err(e) = crate::components::register_components(lua).await {
+            eprintln!("Error setting the util functions:\n{e}");
+        }
     }
 
     lib

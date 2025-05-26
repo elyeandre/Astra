@@ -9,12 +9,12 @@ __luapack_modules__ = {
         ---Pretty prints any table or value
         ---@param value any
         ---@diagnostic disable-next-line: duplicate-set-field
-        function _G.pretty_print(value)
+        function _G.pprint(value)
         	---@diagnostic disable-next-line: undefined-global
         	astra_internal__pretty_print(value)
         end
         
-        _G.json = {
+        utils.json = {
         	---Encodes the value into a valid JSON string
         	---@param value any
         	---@return string
@@ -228,47 +228,9 @@ end
 
 ---@diagnostic disable: duplicate-doc-field
 
--- This is to prevent a small undefined behavior in Lua
----@diagnostic disable-next-line: redundant-parameter
-setmetatable(_G, {
-	---@diagnostic disable-next-line: redundant-parameter, unused-local
-	__index = function(T, k, v)
-		error("Called non-existing variable")
-	end,
-})
+---============================ TYPES ============================---
 
-_G.utils = __luapack_require__(1)
-
-_G.validate_table = __luapack_require__(2)
-
-_G.import = __luapack_require__(3)
-
-
--- MARK: Load envs
-
----@type fun(file_path: string)
----@diagnostic disable-next-line: undefined-global
-_G.dotenv_load = astra_internal__dotenv_load
-dotenv_load(".env")
-dotenv_load(".env.production")
-dotenv_load(".env.prod")
-dotenv_load(".env.development")
-dotenv_load(".env.dev")
-dotenv_load(".env.test")
-dotenv_load(".env.local")
-
----@diagnostic disable-next-line: undefined-global
-os.getenv = astra_internal__getenv
----Sets the environment variable.
----
----NOT SAFE WHEN USED IN MULTITHREADING ENVIRONMENT
----@diagnostic disable-next-line: undefined-global
-os.setenv = astra_internal__setenv
-
--- MARK: Astra
-_G.Astra = {
-	http = {},
-}
+-- MARK: HTTPServer
 
 ---@class HTTPServer
 ---@field version string
@@ -304,74 +266,7 @@ _G.Astra = {
 ---@field static_file string?
 ---@field config RouteConfiguration?
 
----@type HTTPServer
----@diagnostic disable-next-line: missing-fields
-local Server = {}
-
-function Server:new()
-	local server = {
-		version = "0.0.0",
-		hostname = "127.0.0.1",
-		--- Enable or disable compression
-		compression = false,
-		port = 8080,
-		--- Contains all of the route details
-		routes = {},
-	}
-
-	setmetatable(server, self)
-	self.__index = self
-	server:register_methods()
-	return server
-end
-
----@diagnostic disable-next-line: inject-field
-function Server:register_methods()
-	local http_methods = { "get", "post", "put", "delete", "options", "patch", "trace" }
-
-	for _, method in ipairs(http_methods) do
-		self[method] = function(_, path, callback, config)
-			table.insert(self.routes, {
-				path = path,
-				method = method,
-				func = callback,
-				config = config or {},
-			})
-		end
-	end
-
-	self.static_dir = function(_, path, serve_path, config)
-		table.insert(self.routes, {
-			path = path,
-			method = "static_dir",
-			func = function() end,
-			static_dir = serve_path,
-			config = config or {},
-		})
-	end
-
-	self.static_file = function(_, path, serve_path, config)
-		table.insert(self.routes, {
-			path = path,
-			method = "static_file",
-			func = function() end,
-			static_file = serve_path,
-			config = config or {},
-		})
-	end
-end
-
----
----Runs the Astra server
-function Server:run()
-	---@diagnostic disable-next-line: undefined-global
-	astra_internal__start_server(self)
-end
-
-_G.Astra.http.server = Server
-
--- MARK: Internal
-
+-- MARK: Common HTTP
 ---
 --- Represents an HTTP body.
 ---@class Body
@@ -447,9 +342,107 @@ _G.Astra.http.server = Server
 ---@field get_http_only fun(cookie: Cookie): boolean?
 ---@field get_max_age fun(cookie: Cookie): number?
 
---- @START_REMOVING_RUNTIME
+---============================ DEFINITIONS ============================---
 
-_G.AstraIO = {
+-- The main global
+_G.Astra = {
+	http = {},
+	utils = {},
+}
+
+-- Imports
+_G.Astra.utils = __luapack_require__(1)
+
+_G.Astra.validate_table = __luapack_require__(2)
+
+_G.import = __luapack_require__(3)
+
+
+---@type fun(file_path: string)
+---@diagnostic disable-next-line: undefined-global
+_G.Astra.dotenv_load = astra_internal__dotenv_load
+_G.Astra.dotenv_load(".env")
+_G.Astra.dotenv_load(".env.production")
+_G.Astra.dotenv_load(".env.prod")
+_G.Astra.dotenv_load(".env.development")
+_G.Astra.dotenv_load(".env.dev")
+_G.Astra.dotenv_load(".env.test")
+_G.Astra.dotenv_load(".env.local")
+
+---@diagnostic disable-next-line: undefined-global
+os.getenv = astra_internal__getenv
+---Sets the environment variable.
+---
+---NOT SAFE WHEN USED IN MULTITHREADING ENVIRONMENT
+---@diagnostic disable-next-line: undefined-global
+os.setenv = astra_internal__setenv
+
+---@type HTTPServer
+---@diagnostic disable-next-line: missing-fields
+local Server = {}
+_G.Astra.http.server = Server
+
+function Server:new()
+	local server = {
+		version = "0.0.0",
+		hostname = "127.0.0.1",
+		--- Enable or disable compression
+		compression = false,
+		port = 8080,
+		--- Contains all of the route details
+		routes = {},
+	}
+
+	setmetatable(server, self)
+	self.__index = self
+	server:register_methods()
+	return server
+end
+
+---@diagnostic disable-next-line: inject-field
+function Server:register_methods()
+	local http_methods = { "get", "post", "put", "delete", "options", "patch", "trace" }
+
+	for _, method in ipairs(http_methods) do
+		self[method] = function(_, path, callback, config)
+			table.insert(self.routes, {
+				path = path,
+				method = method,
+				func = callback,
+				config = config or {},
+			})
+		end
+	end
+
+	self.static_dir = function(_, path, serve_path, config)
+		table.insert(self.routes, {
+			path = path,
+			method = "static_dir",
+			func = function() end,
+			static_dir = serve_path,
+			config = config or {},
+		})
+	end
+
+	self.static_file = function(_, path, serve_path, config)
+		table.insert(self.routes, {
+			path = path,
+			method = "static_file",
+			func = function() end,
+			static_file = serve_path,
+			config = config or {},
+		})
+	end
+end
+
+---
+---Runs the Astra server
+function Server:run()
+	---@diagnostic disable-next-line: undefined-global
+	astra_internal__start_server(self)
+end
+
+_G.Astra.io = {
 	---Returns the metadata of a file or directory
 	---@param path string
 	---@return FileMetadata
@@ -507,4 +500,12 @@ _G.AstraIO = {
 	---@param path string Path to the directory
 	remove_dir_all = function(path) end,
 }
---- @END_REMOVING_RUNTIME
+
+-- This is to prevent a small undefined behavior in Lua
+---@diagnostic disable-next-line: redundant-parameter
+setmetatable(_G, {
+	---@diagnostic disable-next-line: redundant-parameter, unused-local
+	__index = function(T, k, v)
+		error("Called non-existing variable")
+	end,
+})

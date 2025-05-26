@@ -5,12 +5,12 @@ local utils = {}
 ---Pretty prints any table or value
 ---@param value any
 ---@diagnostic disable-next-line: duplicate-set-field
-function _G.pretty_print(value)
+function _G.pprint(value)
 	---@diagnostic disable-next-line: undefined-global
 	astra_internal__pretty_print(value)
 end
 
-_G.json = {
+utils.json = {
 	---Encodes the value into a valid JSON string
 	---@param value any
 	---@return string
