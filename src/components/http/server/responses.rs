@@ -1,4 +1,4 @@
-use crate::components::http::cookie::LuaCookie;
+use crate::components::http::server::cookie::LuaCookie;
 use axum::http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
 
 // ! Support more cookie types like signed and private

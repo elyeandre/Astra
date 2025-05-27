@@ -1,4 +1,4 @@
-use mlua::LuaSerdeExt;
+use mlua::{LuaSerdeExt, UserData};
 
 pub fn essential_global_functions(lua: &mlua::Lua) {
     dotenv_function(lua);
@@ -9,6 +9,10 @@ pub fn essential_global_functions(lua: &mlua::Lua) {
     // env
     getenv(lua);
     setenv(lua);
+    // async tasks
+    spawn_task(lua);
+    spawn_interval(lua);
+    spawn_timeout(lua);
 }
 
 pub fn dotenv_function(lua: &mlua::Lua) {
@@ -108,6 +112,83 @@ pub fn setenv(lua: &mlua::Lua) {
     }) {
         if let Err(e) = lua.globals().set("astra_internal__setenv", function) {
             println!("Could not register the function for setenv: {e}");
+        }
+    }
+}
+
+pub struct TaskHandler<T: Send + 'static>(tokio::task::JoinHandle<T>);
+
+impl<T: Send + 'static> UserData for TaskHandler<T> {
+    fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method("abort", |_, this, ()| {
+            this.0.abort();
+            Ok(())
+        });
+    }
+}
+
+fn create_async_function<F, T>(function: F) -> TaskHandler<T>
+where
+    F: Future<Output = T> + Send + 'static,
+    T: Send + 'static,
+{
+    let handle = tokio::spawn(function);
+    TaskHandler(handle)
+}
+
+fn spawn_task(lua: &mlua::Lua) {
+    if let Ok(function) = lua.create_async_function(|_, callback: mlua::Function| async move {
+        Ok(create_async_function(async move {
+            if let Err(e) = callback.call_async::<()>(()).await {
+                println!("Error running a task: {e}");
+            }
+        }))
+    }) {
+        if let Err(e) = lua.globals().set("astra_internal__spawn_task", function) {
+            println!("Could not register the function for spawn_task: {e}");
+        }
+    }
+}
+
+fn spawn_timeout(lua: &mlua::Lua) {
+    if let Ok(function) = lua.create_async_function(
+        |_, (callback, sleep_length): (mlua::Function, u64)| async move {
+            Ok(create_async_function(async move {
+                // sleep
+                tokio::time::sleep(std::time::Duration::from_millis(sleep_length)).await;
+
+                if let Err(e) = callback.call_async::<()>(()).await {
+                    println!("Error running a task: {e}");
+                }
+            }))
+        },
+    ) {
+        if let Err(e) = lua.globals().set("astra_internal__spawn_timeout", function) {
+            println!("Could not register the function for spawn_timeout: {e}");
+        }
+    }
+}
+
+fn spawn_interval(lua: &mlua::Lua) {
+    if let Ok(function) = lua.create_async_function(
+        |_, (callback, sleep_length): (mlua::Function, u64)| async move {
+            Ok(create_async_function(async move {
+                loop {
+                    if let Err(e) = callback.call_async::<()>(()).await {
+                        println!("Error running a task: {e}");
+                    }
+
+                    // sleep
+                    tokio::time::sleep(std::time::Duration::from_millis(sleep_length)).await;
+                }
+            }))
+        },
+    ) {
+        if let Err(e) = lua
+            .globals()
+            .set("astra_internal__spawn_interval", function)
+        {
+            println!("Could not register the function for spawn_interval: {e}");
         }
     }
 }

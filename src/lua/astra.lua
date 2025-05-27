@@ -1,5 +1,5 @@
----@diagnostic disable: duplicate-set-field, duplicate-doc-field
 --!nocheck
+---@diagnostic disable: duplicate-set-field, duplicate-doc-field
 
 ---============================ TYPES ============================---
 
