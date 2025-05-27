@@ -4,7 +4,7 @@ mod requests;
 mod responses;
 mod routes;
 
-pub async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
+pub fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
     // Register function for running the server
     lua.globals().set(
         "astra_internal__start_server",

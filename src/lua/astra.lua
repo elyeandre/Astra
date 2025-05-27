@@ -102,19 +102,6 @@
 
 -- MARK: FileIO
 
----@class AstraIO
----@field get_metadata fun(path: string): FileMetadata Returns the metadata of a file or directory
----@field read_dir fun(path: string): DirEntry[] Returns the content of the directory
----@field get_current_dir fun(): string Returns the path of the current directory
----@field get_script_path fun(): string Returns the path of the current running script
----@field change_dir fun(path: string) Changes the current directory
----@field exists fun(path: string): boolean Checks if a path exists
----@field create_dir fun(path: string) Creates a directory
----@field create_dir_all fun(path: string) Creates all directories in the path if they do not exist
----@field remove fun(path: string) Removes a file
----@field remove_dir fun(path: string) Removes a directory and all its contents
----@field remove_dir_all fun(path: string) Removes all directories in the path
-
 ---@class FileType
 ---@field is_file fun(file_type: FileType): boolean
 ---@field is_dir fun(file_type: FileType): boolean
@@ -170,6 +157,7 @@
 -- The main global
 _G.Astra = {
 	http = {},
+	io = {},
 	utils = {},
 	crypto = {},
 }
@@ -196,6 +184,8 @@ os.getenv = astra_internal__getenv
 ---NOT SAFE WHEN USED IN MULTITHREADING ENVIRONMENT
 ---@diagnostic disable-next-line: undefined-global
 os.setenv = astra_internal__setenv
+
+-- MARK: HTTPServer
 
 ---@type HTTPServer
 ---@diagnostic disable-next-line: missing-fields
@@ -260,6 +250,99 @@ function Server:register_methods()
 	end
 end
 
+-- MARK: FileIO
+
+_G.Astra.io = {
+	---Returns the metadata of a file or directory
+	---@param path string
+	---@return FileMetadata
+	get_metadata = function(path)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__get_metadata(path)
+	end,
+
+	---Returns the content of the directory
+	---@param path string Path to the file
+	---@return DirEntry[]
+	read_dir = function(path)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__read_dir(path)
+	end,
+
+	---Returns the path of the current directory
+	---@return string
+	get_current_dir = function()
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__get_current_dir()
+	end,
+
+	---Returns the path separator based on the operating system
+	---@return string
+	get_separator = function()
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__get_separator()
+	end,
+
+	---Returns the path of the current running script
+	---@return string
+	get_script_path = function()
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__get_script_path()
+	end,
+
+	---Changes the current directory
+	---@param path string Path to the directory
+	change_dir = function(path)
+		---@diagnostic disable-next-line: undefined-global
+		astra_internal__change_dir(path)
+	end,
+
+	---Checks if a path exists
+	---@param path string Path to the file or directory
+	---@return boolean
+	exists = function(path)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__exists(path)
+	end,
+
+	---Creates a directory
+	---@param path string Path to the directory
+	create_dir = function(path)
+		---@diagnostic disable-next-line: undefined-global
+		astra_internal__create_dir(path)
+	end,
+
+	---Creates a directory recursively
+	---@param path string Path to the directory
+	create_dir_all = function(path)
+		---@diagnostic disable-next-line: undefined-global
+		astra_internal__create_dir_all(path)
+	end,
+
+	---Removes a file
+	---@param path string Path to the file
+	remove = function(path)
+		---@diagnostic disable-next-line: undefined-global
+		astra_internal__remove(path)
+	end,
+
+	---Removes a directory
+	---@param path string Path to the directory
+	remove_dir = function(path)
+		---@diagnostic disable-next-line: undefined-global
+		astra_internal__remove_dir(path)
+	end,
+
+	---Removes a directory recursively
+	---@param path string Path to the directory
+	remove_dir_all = function(path)
+		---@diagnostic disable-next-line: undefined-global
+		astra_internal__remove_dir_all(path)
+	end,
+}
+
+-- MARK: Database
+
 ---
 ---Opens a new SQL connection using the provided URL and returns a table representing the connection.
 ---@param database_type "sqlite"|"postgres" The type of database to connect to.
@@ -273,6 +356,8 @@ function _G.Astra.database_connect(database_type, url, max_connections)
 	return astra_inner__database_connect(database_type, url, max_connections)
 end
 
+-- MARK: HTTPClient
+
 ---
 ---Opens a new async HTTP Request. The request is running as a task in parallel
 ---@param url string
@@ -283,6 +368,8 @@ function _G.Astra.http.request(url)
 	---@diagnostic disable-next-line: undefined-global
 	return astra_internal__http_request(url)
 end
+
+-- MARK: Async Task
 
 ---
 --- Represents an async task
@@ -378,13 +465,7 @@ _G.Astra.crypto = {
 	},
 }
 
----Pretty prints any table or value
----@param value any
----@diagnostic disable-next-line: duplicate-set-field
-function _G.pprint(value)
-	---@diagnostic disable-next-line: undefined-global
-	astra_internal__pretty_print(value)
-end
+-- MARK: JSON
 
 _G.Astra.json = {
 	---Encodes the value into a valid JSON string
@@ -406,6 +487,16 @@ _G.Astra.json = {
 	end,
 }
 
+-- MARK: Utils
+
+---Pretty prints any table or value
+---@param value any
+---@diagnostic disable-next-line: duplicate-set-field
+function _G.pprint(value)
+	---@diagnostic disable-next-line: undefined-global
+	astra_internal__pretty_print(value)
+end
+
 ---
 ---Splits a sentence into an array given the separator
 ---@param input_str string The input string
@@ -420,7 +511,6 @@ function string.split(input_str, separator_str)
 	end
 	return result_table
 end
-
 
 -- This is to prevent a small undefined behavior in Lua
 ---@diagnostic disable-next-line: redundant-parameter

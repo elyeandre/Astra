@@ -14,7 +14,7 @@ pub struct HTTPClientRequest {
     pub form: HashMap<String, String>,
 }
 impl crate::components::AstraComponent for HTTPClientRequest {
-    async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
+    fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
         let function = lua.create_function(|_, url: String| {
             Ok(Self {
                 url,

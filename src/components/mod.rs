@@ -7,16 +7,16 @@ pub mod global_functions;
 pub mod http;
 
 pub trait AstraComponent {
-    fn register_to_lua(lua: &mlua::Lua) -> impl std::future::Future<Output = mlua::Result<()>>;
+    fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()>;
 }
 
 pub async fn register_components(lua: &mlua::Lua) -> mlua::Result<()> {
     global_functions::register_to_lua(lua);
-    http::server::register_to_lua(lua).await?;
-    http::client::HTTPClientRequest::register_to_lua(lua).await?;
-    database::Database::register_to_lua(lua).await?;
-    crypto::LuaCrypto::register_to_lua(lua).await?;
-    fileio::FileIO::register_to_lua(lua).await?;
+    http::server::register_to_lua(lua)?;
+    http::client::HTTPClientRequest::register_to_lua(lua)?;
+    database::Database::register_to_lua(lua)?;
+    crypto::register_to_lua(lua)?;
+    fileio::register_to_lua(lua)?;
 
     Ok(())
 }
