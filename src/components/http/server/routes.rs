@@ -1,5 +1,5 @@
 use crate::{
-    cli::LUA,
+    LUA,
     components::http::server::{
         configs::RouteConfiguration,
         requests::{self, RequestLua},

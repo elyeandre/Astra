@@ -1,4 +1,4 @@
-use crate::cli::SCRIPT_PATH;
+use crate::SCRIPT_PATH;
 use mlua::UserData;
 
 pub fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
