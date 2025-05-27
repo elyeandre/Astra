@@ -225,7 +225,9 @@ pub async fn upgrade_command() -> Result<(), Box<dyn std::error::Error>> {
 async fn registration(lua: &mlua::Lua) -> String {
     let (lib, cleaned_lib) = prepare_prelude();
 
-    crate::components::global_functions::essential_global_functions(lua);
+    if let Err(e) = crate::components::register_components(lua).await {
+        eprintln!("Error setting up the components:\n{e}");
+    }
 
     if let Err(e) = lua
         .load(cleaned_lib.as_str())
@@ -234,10 +236,6 @@ async fn registration(lua: &mlua::Lua) -> String {
         .await
     {
         eprintln!("Couldn't add prelude:\n{e}");
-    }
-
-    if let Err(e) = crate::components::register_components(lua).await {
-        eprintln!("Error setting the util functions:\n{e}");
     }
 
     lib

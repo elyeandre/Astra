@@ -2,57 +2,6 @@
 
 __luapack_modules__ = {
     (function()
-        --!nocheck
-        
-        local utils = {}
-        
-        ---Pretty prints any table or value
-        ---@param value any
-        ---@diagnostic disable-next-line: duplicate-set-field
-        function _G.pprint(value)
-        	---@diagnostic disable-next-line: undefined-global
-        	astra_internal__pretty_print(value)
-        end
-        
-        utils.json = {
-        	---Encodes the value into a valid JSON string
-        	---@param value any
-        	---@return string
-        	---@diagnostic disable-next-line: duplicate-set-field
-        	encode = function(value)
-        		---@diagnostic disable-next-line: undefined-global
-        		return astra_internal__json_encode(value)
-        	end,
-        
-        	---Decodes the JSON string into a valid lua value
-        	---@param value string
-        	---@return any
-        	---@diagnostic disable-next-line: duplicate-set-field
-        	decode = function(value)
-        		---@diagnostic disable-next-line: undefined-global
-        		return astra_internal__json_decode(value)
-        	end,
-        }
-        
-        ---
-        ---Splits a sentence into an array given the separator
-        ---@param input_str string The input string
-        ---@param separator_str string The input string
-        ---@return table array
-        ---@nodiscard
-        ---@diagnostic disable-next-line: duplicate-set-field
-        function string.split(input_str, separator_str)
-        	local result_table = {}
-        	for word in input_str:gmatch("([^" .. separator_str .. "]+)") do
-        		table.insert(result_table, word)
-        	end
-        	return result_table
-        end
-        
-        return utils
-    
-    end),
-    (function()
         ---
         ---Schema validation function with support for nested tables and arrays of tables
         ---@param input_table table
@@ -200,7 +149,7 @@ __luapack_modules__ = {
         ---@diagnostic disable-next-line: redefined-local
         function import(moduleName)
         	---@diagnostic disable-next-line: param-type-mismatch, undefined-global
-        	local ok, result = pcall(astra_internal__require, moduleName)
+        	local ok, result = pcall(astra_internal__import, moduleName)
         	if not ok then
         		ok, result = require(moduleName)
         		if not ok then
@@ -226,8 +175,8 @@ __luapack_require__ = function(idx)
     return module
 end
 
----@diagnostic disable: duplicate-set-field, duplicate-doc-field
 --!nocheck
+---@diagnostic disable: duplicate-set-field, duplicate-doc-field
 
 ---============================ TYPES ============================---
 
@@ -403,11 +352,9 @@ _G.Astra = {
 }
 
 -- Imports
-_G.Astra.utils = __luapack_require__(1)
+_G.Astra.validate_table = __luapack_require__(1)
 
-_G.Astra.validate_table = __luapack_require__(2)
-
-_G.import = __luapack_require__(3)
+_G.import = __luapack_require__(2)
 
 
 ---@type fun(file_path: string)
@@ -609,6 +556,50 @@ _G.Astra.crypto = {
 		end,
 	},
 }
+
+---Pretty prints any table or value
+---@param value any
+---@diagnostic disable-next-line: duplicate-set-field
+function _G.pprint(value)
+	---@diagnostic disable-next-line: undefined-global
+	astra_internal__pretty_print(value)
+end
+
+_G.Astra.json = {
+	---Encodes the value into a valid JSON string
+	---@param value any
+	---@return string
+	---@diagnostic disable-next-line: duplicate-set-field
+	encode = function(value)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__json_encode(value)
+	end,
+
+	---Decodes the JSON string into a valid lua value
+	---@param value string
+	---@return any
+	---@diagnostic disable-next-line: duplicate-set-field
+	decode = function(value)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__json_decode(value)
+	end,
+}
+
+---
+---Splits a sentence into an array given the separator
+---@param input_str string The input string
+---@param separator_str string The input string
+---@return table array
+---@nodiscard
+---@diagnostic disable-next-line: duplicate-set-field
+function string.split(input_str, separator_str)
+	local result_table = {}
+	for word in input_str:gmatch("([^" .. separator_str .. "]+)") do
+		table.insert(result_table, word)
+	end
+	return result_table
+end
+
 
 -- This is to prevent a small undefined behavior in Lua
 ---@diagnostic disable-next-line: redundant-parameter
