@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Astra IO - ArkForge Astra</title>
+        <title>File IO - ArkForge Astra</title>
 
 
         <!-- Custom HTML head -->
@@ -130,7 +130,7 @@
                         <a href="https://github.com/ArkForgeLabs/Astra" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/basic_usage/astra_io.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/std/file_io.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -226,19 +226,14 @@
 }
 
 </style>
-<h1 id="astra-io"><a class="header" href="#astra-io">Astra IO</a></h1>
-<p>Astra provides some IO functionality to help extend the standard library. This is included by default and not as a utility.</p>
-<h2 id="relative-imports"><a class="header" href="#relative-imports">Relative imports</a></h2>
-<p>You can use the <code>require</code> function to include code and modules relatively. For example:</p>
-<pre><code class="language-lua">local mylib = require("./folder/lib")
-</code></pre>
-<h2 id="astraio"><a class="header" href="#astraio">AstraIO</a></h2>
-<p>Is a global table that contains the IO functions. The current list is as follows:</p>
+<h1 id="file-io"><a class="header" href="#file-io">File IO</a></h1>
+<p>Astra provides some File IO functionality to help extend the standard library. Which contains the IO functions. The current list is as follows:</p>
 <ul>
 <li><code>get_metadata</code></li>
 <li><code>read_dir</code></li>
 <li><code>get_current_dir</code></li>
 <li><code>get_script_path</code></li>
+<li><code>get_separator</code></li>
 <li><code>change_dir</code></li>
 <li><code>exists</code></li>
 <li><code>create_dir</code></li>
@@ -247,16 +242,19 @@
 <li><code>remove_dir</code></li>
 <li><code>remove_dir_all</code></li>
 </ul>
+<p>They are fairly self explanitory and does not require further details. Example usage:</p>
+<pre><code class="language-lua">pprint(Astra.io.get_script_path())
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../basic_usage/deployment.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../std/importing.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../utilities/about.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../std/schema_validation.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -266,11 +264,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../basic_usage/deployment.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../std/importing.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../utilities/about.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../std/schema_validation.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

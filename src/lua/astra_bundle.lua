@@ -333,6 +333,8 @@ end
 
 -- The main global
 _G.Astra = {
+	---@diagnostic disable-next-line: undefined-global
+	version = astra_internal__version or "0.0.0",
 	http = {},
 	io = {},
 	utils = {},

@@ -3,29 +3,17 @@
 [Introduction](./introduction.md)
 [Getting Started](./getting_started.md)
 
-# Basic Usage
+# API
 
-- [Configuration](./basic_usage/configuration.md)
-- [Routes](./basic_usage/routes.md)
-- [Requests](./basic_usage/requests.md)
-- [Responses](./basic_usage/responses.md)
-- [Cookies](./basic_usage/cookies.md)
-- [Fault Tolerance](./basic_usage/fault_tolerance.md)
-- [Deployment](./basic_usage/deployment.md)
-- [Astra IO](./basic_usage/astra_io.md)
-
-# Utilities
-
-- [About utilities](./utilities/about.md)
-- [Schema Validation](./utilities/schema_validation.md)
-- [Markup Language Parsers](./utilities/markup_languages.md)
-- [Crypto](./utilities/crypto.md)
-- [PostgreSQL Driver](./utilities/sql_driver.md)
-- [Async Tasks](./utilities/async_tasks.md)
-- [HTTP Client](./utilities/http_client.md)
-- [Dotenv](./utilities/dotenv.md)
-- [Extra Goodies](./utilities/extra_goodies.md)
-- [Importing Overhaul](./utilities/importing.md)
+- [HTTP Server](./std/http/http_server.md)
+- [HTTP Client](./std/http/http_client.md)
+- [Importing](./std/importing.md)
+- [File IO](./std/file_io.md)
+- [Schema Validation](./std/schema_validation.md)
+- [Crypto](./std/crypto.md)
+- [SQL Driver](./std/sql_driver.md)
+- [Async Tasks](./std/async_tasks.md)
+- [Utilities](./std/utilities.md)
 
 # Internals
 

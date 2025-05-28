@@ -37,15 +37,6 @@ pub async fn run_command(file_path: String, extra_args: Option<Vec<String>>) {
         }
     }
 
-    // Set Astra version in Lua globals.
-    if let Ok(settings) = lua.globals().get::<mlua::Table>("Astra") {
-        if settings.set("version", crate_version!()).is_ok() {
-            if let Err(e) = lua.globals().set("Astra", settings) {
-                eprintln!("Error adding setting back to Astra: {e:#?}");
-            }
-        }
-    }
-
     // Load and execute the Lua script.
     #[allow(clippy::expect_used)]
     let user_file = std::fs::read_to_string(&file_path).expect("Couldn't read file");
@@ -171,6 +162,14 @@ async fn registration(lua: &mlua::Lua) -> String {
 
     if let Err(e) = crate::components::register_components(lua).await {
         eprintln!("Error setting up the components:\n{e}");
+    }
+
+    // Set Astra version in Lua globals.
+    if let Err(e) = lua
+        .globals()
+        .set("astra_internal__version", crate_version!())
+    {
+        eprintln!("Error adding version to Astra: {e:#?}");
     }
 
     if let Err(e) = lua

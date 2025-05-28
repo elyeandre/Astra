@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Routes - ArkForge Astra</title>
+        <title>SQL Driver - ArkForge Astra</title>
 
 
         <!-- Custom HTML head -->
@@ -130,7 +130,7 @@
                         <a href="https://github.com/ArkForgeLabs/Astra" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/basic_usage/routes.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/std/sql_driver.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -226,50 +226,38 @@
 }
 
 </style>
-<h1 id="routes"><a class="header" href="#routes">Routes</a></h1>
-<p>The <code>Astra</code> global table holds all of the route details. The routes are loaded at the start of the runtime and cannot be dynamically modified later on. There are also methods within the <code>Astra</code> table that makes it easy to add new routes. For example:</p>
-<pre><code class="language-lua">-- A simple GET index route with text return
-Astra:get("/", function()
-    return "hello from default Astra instance! " .. Astra.version
-end)
-</code></pre>
-<p>The syntax are as follows:</p>
-<pre><code class="language-lua">Astra.ROUTE_TYPE(ROUTE_PATH, CALLBACK);
+<h1 id="sql-driver"><a class="header" href="#sql-driver">SQL Driver</a></h1>
+<p>If your server requires access to an SQL database such as PostgreSQL and SQLite, Astra provides utilities for basic connection and querying.</p>
+<pre><code class="language-lua">-- connect to your db
+local db = database_connect("postgres", "postgres://astra_postgres:password@localhost/astr_database")
 
--- Where callback is:
-function(request?, response?);
+-- You can execute queries to the database along with optional parameters
+db:execute([[
+    CREATE TABLE IF NOT EXISTS test (id SERIAL PRIMARY KEY, name TEXT);
+
+    INSERT INTO TABLE test(name) VALUES ('Astra');
+]], {});
+
+-- And finally query either one which returns a single result or
+local result = db:query_one("SELECT * FROM test;", {});
+
+-- query all from tables which returns an array as result
+-- which also supports parameters for protection against SQL injection attacks
+local name = "Tom"
+local result = db:query_all("INSERT INTO test (name) VALUES ($1)", {name});
+
+pretty_print(result)
 </code></pre>
-<p>The following route types are supported as of now:</p>
-<ul>
-<li>GET</li>
-<li>POST</li>
-<li>PUT</li>
-<li>PATCH</li>
-<li>PARSE</li>
-<li>DELETE</li>
-<li>OPTIONS</li>
-<li>TRACE</li>
-</ul>
-<p>All lowercase and snake_case when calling with astra of course. There are two additional ones available:</p>
-<ul>
-<li>STATIC_DIR</li>
-<li>STATIC_FILE</li>
-</ul>
-<p>Which does as expected, serves a file or directory over a route.</p>
-<h2 id="route-logic"><a class="header" href="#route-logic">Route Logic</a></h2>
-<p>Each route function needs a callback which contains a route's logic. This callback function optionally can have two arguments: <code>request</code> and <code>response</code> respectively, and may optionally have a return.</p>
-<p>Interally requests and responses are each a struct in Rust initialized but not parsed/deserialized beforehand. This is to save performance overhead of serialization. However its content and be modified or accessed through their methods. We will discuss them later on.</p>
-<p>Return types of the callback can optionally be either empty, string, or a table. The table responses are parsed in Rust and serialized to JSON, and then returned. Empty responses does not include any content. Responses, or lack of them, are by default sent with status code of 200.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../basic_usage/configuration.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../std/crypto.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../basic_usage/requests.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../std/async_tasks.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -279,11 +267,11 @@ function(request?, response?);
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../basic_usage/configuration.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../std/crypto.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../basic_usage/requests.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../std/async_tasks.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

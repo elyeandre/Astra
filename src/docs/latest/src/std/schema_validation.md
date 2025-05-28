@@ -14,7 +14,7 @@ local schema = {
 -- Your actual data
 local example = { id = "123", name = 456 }
 -- Check the validation
-local is_valid, err = validate_table(example, schema)
+local is_valid, err = Astra.validate_table(example, schema)
 assert(not is_valid, "Validation failed: expected validation to fail")
 ```
 
@@ -42,7 +42,7 @@ local example = {
         },
     },
 }
-local is_valid, err = validate_table(example, schema)
+local is_valid, err = Astra.validate_table(example, schema)
 assert(is_valid, "Validation failed: " .. tostring(err))
 ```
 
@@ -78,6 +78,6 @@ local tbl = {
     }
 }
 
-local is_valid, err = validate_table(tbl, schema)
+local is_valid, err = Astra.validate_table(tbl, schema)
 assert(is_valid, "Validation failed: " .. tostring(err))
 ```

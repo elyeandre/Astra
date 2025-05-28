@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Configuration - ArkForge Astra</title>
+        <title>HTTP Server - ArkForge Astra</title>
 
 
         <!-- Custom HTML head -->
@@ -12,32 +12,32 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="../favicon.svg">
-        <link rel="shortcut icon" href="../favicon.png">
-        <link rel="stylesheet" href="../css/variables.css">
-        <link rel="stylesheet" href="../css/general.css">
-        <link rel="stylesheet" href="../css/chrome.css">
-        <link rel="stylesheet" href="../css/print.css" media="print">
+        <link rel="icon" href="../../favicon.svg">
+        <link rel="shortcut icon" href="../../favicon.png">
+        <link rel="stylesheet" href="../../css/variables.css">
+        <link rel="stylesheet" href="../../css/general.css">
+        <link rel="stylesheet" href="../../css/chrome.css">
+        <link rel="stylesheet" href="../../css/print.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
-        <link rel="stylesheet" href="../fonts/fonts.css">
+        <link rel="stylesheet" href="../../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../../fonts/fonts.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="../highlight.css">
-        <link rel="stylesheet" href="../tomorrow-night.css">
-        <link rel="stylesheet" href="../ayu-highlight.css">
+        <link rel="stylesheet" href="../../highlight.css">
+        <link rel="stylesheet" href="../../tomorrow-night.css">
+        <link rel="stylesheet" href="../../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
 
 
         <!-- Provide site root to javascript -->
         <script>
-            var path_to_root = "../";
+            var path_to_root = "../../";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "arkforge" : "dark";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc.js"></script>
+        <script src="../../toc.js"></script>
     </head>
     <body>
     <div id="body-container">
@@ -89,7 +89,7 @@
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
-                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
             </noscript>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -124,13 +124,13 @@
                     <h1 class="menu-title">ArkForge Astra</h1>
 
                     <div class="right-buttons">
-                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
                         <a href="https://github.com/ArkForgeLabs/Astra" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/basic_usage/configuration.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/std/http/http_server.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -226,29 +226,169 @@
 }
 
 </style>
-<h1 id="configuration"><a class="header" href="#configuration">Configuration</a></h1>
-<p>Astra can be configured in a few ways for runtime. As of now there is no native TLS/SSL support and needs a reverse proxy such as <a href="https://caddyserver.com/">Caddy</a> to handle that. Check <a href="./deployment.html">Deployment</a> for more information.</p>
-<p>However every configuration option will be available at the <code>Astra</code> global table instead. For example, changing the compression, port and hostname is as such:</p>
-<pre><code class="language-lua">-- configure the server with
-Astra.compression = false
-Astra.port = 8000
-Astra.hostname = "0.0.0.0"
+<h1 id="http-server"><a class="header" href="#http-server">HTTP Server</a></h1>
+<p>Astra offers HTTP1/2 web server through the <a href="https://github.com/tokio-rs/axum">axum</a> project. On the Lua's side, the server holds configuration and route details, which are then sent to the Rust for running them. Since it is running on Tokio, it can take advantage of all available resources automatically, making it easy for vertical scaling. Throughout this documentation, the word <code>server</code> is used to describe an HTTP web server table on the Lua's side. You can create one as such:</p>
+<pre><code class="language-lua">-- create a new server with
+local server = Astra.http.server.new()
 
 -- run the server with
-Astra:run()
+server:run()
 </code></pre>
-<p>You can also configure other languages that compiles to Lua such as <a href="https://pluto-lang.org/">Pluto</a> and <a href="https://fennel-lang.org/">Fennel</a>, although Pluto targets Lua 5.4 which might get support by 1.0 release of Astra. Astra's api is for pure Lua however, so it will be up to you to make sure it can call the right functions and tables.</p>
-<p>In the future, there may be binaries with different combinations prebuilt as well!</p>
+<h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
+<p>Astra can be configured in a few ways for runtime. As of now there is no native TLS/SSL support and needs a reverse proxy such as <a href="https://caddyserver.com/">Caddy</a> to handle that. Check <a href="./http_server.html#deployment">Deployment</a> for more information.</p>
+<p>However every configuration option will be available at the server instead. For example, changing the compression, port and hostname is as such:</p>
+<pre><code class="language-lua">-- configure the server with
+server.compression = false
+server.port = 8000
+server.hostname = "0.0.0.0"
+</code></pre>
+<p>You can also configure other languages that compiles to Lua such as <a href="https://fennel-lang.org/">Fennel</a>. Astra's api is for pure Lua however, so it will be up to you to make type definitions and make sure it can call the right functions and tables.</p>
+<h2 id="routes"><a class="header" href="#routes">Routes</a></h2>
+<p>The server holds all of the route details. The routes are loaded at the start of the runtime and cannot be dynamically modified later on. There are also methods within the server that makes it easy to add new routes. For example:</p>
+<pre><code class="language-lua">-- A simple GET index route with text return
+server:get("/", function()
+    return "hello from default Astra instance! " .. Astra.version
+end)
+</code></pre>
+<p>The syntax are as follows:</p>
+<pre><code class="language-lua">server:ROUTE_TYPE(ROUTE_PATH, CALLBACK);
+
+-- Where callback is:
+function(request?, response?);
+</code></pre>
+<p>The following route types are supported as of now:</p>
+<ul>
+<li>GET</li>
+<li>POST</li>
+<li>PUT</li>
+<li>PATCH</li>
+<li>PARSE</li>
+<li>DELETE</li>
+<li>OPTIONS</li>
+<li>TRACE</li>
+</ul>
+<p>All lowercase and snake_case when calling with astra of course. There are two additional ones available:</p>
+<ul>
+<li>STATIC_DIR</li>
+<li>STATIC_FILE</li>
+</ul>
+<p>Which does as expected, serves a file or directory over a route.</p>
+<h2 id="route-logic"><a class="header" href="#route-logic">Route Logic</a></h2>
+<p>Each route function needs a callback which contains a route's logic. This callback function optionally can have two arguments: <code>request</code> and <code>response</code> respectively, and may optionally have a return.</p>
+<p>Interally requests and responses are each a struct in Rust initialized but not parsed/deserialized beforehand. This is to save performance overhead of serialization. However its content and be modified or accessed through their methods. We will discuss them later on.</p>
+<p>Return types of the callback can optionally be either empty, string, or a table. The table responses are parsed in Rust and serialized to JSON, and then returned. Empty responses does not include any content. Responses, or lack of them, are by default sent with status code of 200.</p>
+<h2 id="requests"><a class="header" href="#requests">Requests</a></h2>
+<p>Requests are provided as the first argument of the route callbacks as a table (not deseralized). Each request in the route callbacks can be accessed through its methods. The following methods are available:</p>
+<ul>
+<li>body: <code>Body</code></li>
+<li>headers: <code>table&lt;string, string&gt;</code></li>
+<li>uri: <code>string</code></li>
+<li>queries: <code>table&lt;any, any&gt;</code></li>
+<li>method: <code>string</code></li>
+<li>multipart: <code>Multipart</code></li>
+</ul>
+<p>where Body has:</p>
+<ul>
+<li>text: <code>string</code></li>
+<li>json: <code>table</code></li>
+</ul>
+<p>and where Multipart has:</p>
+<ul>
+<li><code>save_file(file_path: string | nil)</code></li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-lua">server:get("/", function(req)
+    -- access the headers
+    pretty_print(req:headers())
+
+    -- print the body as text
+    print(req:body():text())
+end)
+</code></pre>
+<h2 id="responses"><a class="header" href="#responses">Responses</a></h2>
+<p>Responses are the second argument provided in the route callback. They allow you to modify the response to the way you want. Each response has the default 200 OK status along content header based on your response. The following methods are available:</p>
+<ul>
+<li><code>set_status_code(status_code: number)</code></li>
+<li><code>set_header(key: string, value: string)</code></li>
+<li><code>remove_header(key: string)</code></li>
+<li><code>get_headers()</code>: <code>table&lt;string, string&gt;</code></li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-lua">server:get("/", function(req, res)
+    -- set header code
+    res:set_status_code(300)
+    -- set headers
+    res:set_header("header-key", "header-value")
+
+    return "Responding with Code 300 cuz why not"
+end)
+</code></pre>
+<p>The headers, as stated, will include content type when sending to user, but can be changed while setting the type yourself.</p>
+<h2 id="cookies"><a class="header" href="#cookies">Cookies</a></h2>
+<p>Cookies allow you to store data on each HTTP request, if supported. Astra does not currently support signed and private cookies. You can create a new cookie by getting it from a request:</p>
+<pre><code class="language-lua">server:get("/", function(request)
+    local cookie = request:new_cookie("key", "value")
+
+    return "HEY"
+end)
+</code></pre>
+<p>You can also get a previously set cookie:</p>
+<pre><code class="language-lua">local cookie = request:get_cookie("key")
+</code></pre>
+<p>After modification or creation, they will have no effect unless you set them to the response</p>
+<pre><code class="language-lua">response:set_cookie("key", cookie)
+</code></pre>
+<p>And similary, remove them with</p>
+<pre><code class="language-lua">response:remove_cookie("key")
+</code></pre>
+<p>Each cookie contains extra details and functions which are as follows:</p>
+<pre><code class="language-lua">set_name(cookie: Cookie, name: string)
+set_value(cookie: Cookie, value: string)
+set_domain(cookie: Cookie, domain: string)
+set_path(cookie: Cookie, path: string)
+set_expiration(cookie: Cookie, expiration: number)
+set_http_only(cookie: Cookie, http_only: boolean)
+set_max_age(cookie: Cookie, max_age: number)
+set_permanent(cookie: Cookie)
+get_name(cookie: Cookie): string?
+get_value(cookie: Cookie): string?
+get_domain(cookie: Cookie): string?
+get_path(cookie: Cookie): string?
+get_expiration(cookie: Cookie): number?
+get_http_only(cookie: Cookie): boolean?
+get_max_age(cookie: Cookie): number?
+</code></pre>
+<h2 id="deployment"><a class="header" href="#deployment">Deployment</a></h2>
+<p>You can follow the steps covered in <a href="./configuration.html">Configuration</a> to setup the Astra itself.</p>
+<p>Astra does not support TLS/SSL as of yet, but may support by the 1.0 release. However generally a reverse proxy service is recommended for deployment. We recommend <a href="https://caddyserver.com/">Caddy</a> as it is easy to setup and use, especially for majority of our, and hopefully your, usecases. What caddy also does is automatically fetching TLS certificates for your domain as well which is always a good idea. You can install caddy through your system's package manager.</p>
+<p>Then open a new file with the name <code>Caddyfile</code> with the following content:</p>
+<pre><code class="language-caddy">your_domain.tld {
+    encode zstd gzip
+    reverse_proxy :8080
+}
+</code></pre>
+<p>and change <code>your_domain.tld</code> to your domain, and <code>:8080</code> to the port you have set for your server. After this, make sure your <code>443</code> and <code>80</code> ports are open through your firewall. For a linux server running ufw you can open them by:</p>
+<pre><code class="language-bash">sudo ufw allow 80
+sudo ufw allow 443
+</code></pre>
+<p>And finally run the caddy:</p>
+<pre><code class="language-bash">caddy run
+</code></pre>
+<p>Make sure your server is running before that. That is pretty much it for the basic deployment.</p>
+<h2 id="fault-tolerance"><a class="header" href="#fault-tolerance">Fault Tolerance</a></h2>
+<p>Astra ensures fault tolerance through several methods <a href="https://github.com/ArkForgeLabs/Astra/blob/main/src/main.rs#L1-L2">internally</a> and offers guidence on how you can ensure it on the Lua's endpoint as well.</p>
+<p>Fault-tolerance essentially describes the ability to tolerate crashing errors and continue execution whereas otherwise caused the server to shut down. In Astra's internal case, this is ensured by removing all of the crashing points and handle every error that could occur during runtime. This was achieved through denying unwraps and expects throughout the codebase for the runtime. However there are still crashes on startup for cases that needs to be looked into, such as Lua parsing and errors, bad path, and/or system issues such as port being unavailable or unauthorized for Astra.</p>
+<p>In Lua however, the errors are usually crash by default, which are still tolerated with Astra and does not shutdown the server. To handle the errors as values, where it allows you to ensure the server does not crash and the issues are handled, you can use features such as the <a href="https://www.lua.org/pil/8.4.html">pcall</a>. This is always recommended over any other method. For Astra's case, there are usually chained calls that each can faily on their own as well, hence wrapping them in lambda functions or individually pcall wrapping them always is a good idea.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../getting_started.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../../getting_started.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../basic_usage/routes.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../../std/http/http_client.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -258,11 +398,11 @@ Astra:run()
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../getting_started.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../../getting_started.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../basic_usage/routes.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../../std/http/http_client.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
@@ -277,13 +417,13 @@ Astra:run()
         </script>
 
 
-        <script src="../elasticlunr.min.js"></script>
-        <script src="../mark.min.js"></script>
-        <script src="../searcher.js"></script>
+        <script src="../../elasticlunr.min.js"></script>
+        <script src="../../mark.min.js"></script>
+        <script src="../../searcher.js"></script>
 
-        <script src="../clipboard.min.js"></script>
-        <script src="../highlight.js"></script>
-        <script src="../book.js"></script>
+        <script src="../../clipboard.min.js"></script>
+        <script src="../../highlight.js"></script>
+        <script src="../../book.js"></script>
 
         <!-- Custom JS scripts -->
 
