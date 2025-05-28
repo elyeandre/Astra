@@ -24,54 +24,56 @@ cargo install lua-astra --no-default-features --features lua54
 
 ## Example
 
-Typically in Astra you can register routes like below, binded to a method
-
 ```lua
-Astra:get("/", function()
+-- Create a new server
+local server = Astra.http.server:new()
+
+-- Register a route
+server:get("/", function()
     return "hello from default Astra instance!"
 end)
-```
 
-and starting the server with
+-- Configure the server
+server.port = 3000
 
-```lua
-Astra:run()
+-- Run the server
+server:run()
 ```
 
 You can also use the local variables within routes
 
 ```lua
 local counter = 0
-Astra:get("/count", function()
+server:get("/count", function()
     counter = counter + 1
     -- and also can return JSON
-    return { counter }
+    return { counter = counter }
 end)
 ```
 
 Requests and Responses and their configuration are provided when needed
 
 ```lua
-Astra:get("/", function(req, res)
+server:get("/", function(request, response)
     -- set header code
-    res:set_status_code(300)
+    response:set_status_code(300)
     -- set headers
-    res:set_header("header-key", "header-value")
+    response:set_header("header-key", "header-value")
 
     -- consume the request body
-    print(req:body():text())
+    print(request:body():text())
 
     return "Responding with Code 300 cuz why not"
 end)
 ```
 
-There are also utilities provided such as a PostgreSQL, http client requests, lua extra utils, and async tasks.
+There are also utilities provided such as a PostgreSQL/SQLite, http client requests, lua extra utils, and async tasks.
 
 ```lua
 -- spawn an async task that does not block the running thread
 spawn_task(function ()
     -- HTTP Request to check your IP address
-    local response = http_request("https://myip.wtf/json"):execute()
+    local response = Astra.http.request("https://myip.wtf/json"):execute()
     pretty_print(response:status_code())
     pretty_print(response:remote_address())
     pretty_print(response:body():json())
