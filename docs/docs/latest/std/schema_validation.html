@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Structure - ArkForge Astra</title>
+        <title>Schema Validation - ArkForge Astra</title>
 
 
         <!-- Custom HTML head -->
@@ -130,7 +130,7 @@
                         <a href="https://github.com/ArkForgeLabs/Astra" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/internals/structure.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/std/schema_validation.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -226,28 +226,89 @@
 }
 
 </style>
-<h1 id="structure"><a class="header" href="#structure">Structure</a></h1>
-<p>Astra is written in Rust and is built on top of <a href="https://docs.rs/axum">Axum</a>. Axum internally uses <a href="https://docs.rs/tokio">Tokio</a> for its async runtime and <a href="https://docs.rs/tower">Tower</a>. Astra also have other dependencies to assist with utilities and functionality of the runtime itself. One of them is <a href="https://github.com/mlua-rs/mlua">mlua</a> which is the library used for the Lua runtime.</p>
-<p>Astra's internal philosophy is to contain all routes in a single table array and use mlua <code>UserData</code> as much as possible for every other functionality. Since routes and server itself is the main point, utilities and functionality should be optional. Hence <code>main.rs</code>, <code>routes.rs</code> and <code>common.rs</code> are the main files that contain the essential details of the framework, while everything else is optional and extra. The utilities that require native system interopability must also be written in Rust. For example, the database drivers and the HTTP client.</p>
-<div class="mdbook-alerts mdbook-alerts-note">
-<p class="mdbook-alerts-title">
-  <span class="mdbook-alerts-icon"></span>
-  note
-</p>
-<p>If you wish to extend Astra with your own utilities written in Rust, check out <a href="./extending_astra.html">this guide</a>.</p>
-</div>
-<p>The source code structure is containing all of the sources in the <code>src</code> folder which divides between actual Rust code, <code>lua</code> folder which contains sources for the lua side and lua based utilities, and <code>docs</code> folder which contains sources for this documentation. The <code>docs</code> folder on the root only contains built doc files for usage with GitHub Pages.</p>
-<p>There is also <code>astra_build.lua</code> which is a small script for automating different operations within Astra, such as automatic doc builds, lua packing, changelogs, ...</p>
+<h1 id="schema-validation"><a class="header" href="#schema-validation">Schema Validation</a></h1>
+<p>Sometimes during development, your server likely recieves structured data such as JSON from outside. You likely also have a structure in mind for them. For these cases to validate that the structures are correct and to confidently go through them without risk of errors, hopefully, you can use the schema validation utility.</p>
+<p>Schema Validation essentially is a function that returns true if a given table is of a given structure. The structure is defined as a separate table that has the field names along the types and requirements. For example:</p>
+<pre><code class="language-lua">-- Your schema
+local schema = {
+    -- Type names along their types and requirements
+    id = { type = "number" },
+    name = { type = "string", required = false }
+}
+-- Your actual data
+local example = { id = "123", name = 456 }
+-- Check the validation
+local is_valid, err = Astra.validate_table(example, schema)
+assert(not is_valid, "Validation failed: expected validation to fail")
+</code></pre>
+<p>Almost all of the native lua types are accounted for. Deeply nesting is obviously supported as well:</p>
+<pre><code class="language-lua">local schema = {
+    user = {
+        type = "table",
+        schema = {
+            profile = {
+                type = "table",
+                schema = {
+                    id = { type = "number" },
+                    name = { type = "string" }
+                }
+            }
+        }
+    }
+}
+local example = {
+    user = {
+        profile = {
+            name = "John",
+        },
+    },
+}
+local is_valid, err = Astra.validate_table(example, schema)
+assert(is_valid, "Validation failed: " .. tostring(err))
+</code></pre>
+<p>As well as arrays:</p>
+<pre><code class="language-lua">local schema = {
+    -- normal single type array
+    numbers = { type = "array", array_item_type = "number" },
+    strings = { type = "array", array_item_type = "string" },
+    -- table array
+    entries = {
+        type = "array",
+        schema = {
+            id = { type = "number" },
+            text = { type = "string" }
+        }
+    }
+}
+
+local tbl = {
+    numbers = { 1, 2, 3 },
+    strings = { "a", "b", "c" },
+    entries = {
+        {
+            id = 123,
+            text = "hey!"
+        },
+        {
+            id = 456,
+            text = "hello!"
+        }
+    }
+}
+
+local is_valid, err = Astra.validate_table(tbl, schema)
+assert(is_valid, "Validation failed: " .. tostring(err))
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../std/utilities.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../std/file_io.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../internals/extending_astra.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../std/crypto.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -257,11 +318,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../std/utilities.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../std/file_io.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../internals/extending_astra.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../std/crypto.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

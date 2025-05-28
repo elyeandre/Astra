@@ -2,57 +2,6 @@
 
 __luapack_modules__ = {
     (function()
-        --!nocheck
-        
-        local utils = {}
-        
-        ---Pretty prints any table or value
-        ---@param value any
-        ---@diagnostic disable-next-line: duplicate-set-field
-        function _G.pretty_print(value)
-        	---@diagnostic disable-next-line: undefined-global
-        	astra_internal__pretty_print(value)
-        end
-        
-        _G.json = {
-        	---Encodes the value into a valid JSON string
-        	---@param value any
-        	---@return string
-        	---@diagnostic disable-next-line: duplicate-set-field
-        	encode = function(value)
-        		---@diagnostic disable-next-line: undefined-global
-        		return astra_internal__json_encode(value)
-        	end,
-        
-        	---Decodes the JSON string into a valid lua value
-        	---@param value string
-        	---@return any
-        	---@diagnostic disable-next-line: duplicate-set-field
-        	decode = function(value)
-        		---@diagnostic disable-next-line: undefined-global
-        		return astra_internal__json_decode(value)
-        	end,
-        }
-        
-        ---
-        ---Splits a sentence into an array given the separator
-        ---@param input_str string The input string
-        ---@param separator_str string The input string
-        ---@return table array
-        ---@nodiscard
-        ---@diagnostic disable-next-line: duplicate-set-field
-        function string.split(input_str, separator_str)
-        	local result_table = {}
-        	for word in input_str:gmatch("([^" .. separator_str .. "]+)") do
-        		table.insert(result_table, word)
-        	end
-        	return result_table
-        end
-        
-        return utils
-    
-    end),
-    (function()
         ---
         ---Schema validation function with support for nested tables and arrays of tables
         ---@param input_table table
@@ -200,7 +149,7 @@ __luapack_modules__ = {
         ---@diagnostic disable-next-line: redefined-local
         function import(moduleName)
         	---@diagnostic disable-next-line: param-type-mismatch, undefined-global
-        	local ok, result = pcall(astra_internal__require, moduleName)
+        	local ok, result = pcall(astra_internal__import, moduleName)
         	if not ok then
         		ok, result = require(moduleName)
         		if not ok then
@@ -226,145 +175,74 @@ __luapack_require__ = function(idx)
     return module
 end
 
----@diagnostic disable: duplicate-set-field
+--!nocheck
+---@diagnostic disable: duplicate-set-field, duplicate-doc-field
 
--- This is to prevent a small undefined behavior in Lua
----@diagnostic disable-next-line: redundant-parameter
-setmetatable(_G, {
-	---@diagnostic disable-next-line: redundant-parameter, unused-local
-	__index = function(T, k, v)
-		error("Called non-existing variable")
-	end,
-})
+---============================ TYPES ============================---
 
-_G.utils = __luapack_require__(1)
+-- MARK: HTTPServer
 
-_G.validate_table = __luapack_require__(2)
-
-_G.import = __luapack_require__(3)
-
-
--- MARK: Load envs
-
----@type fun(file_path: string)
----@diagnostic disable-next-line: undefined-global
-_G.dotenv_load = astra_internal__dotenv_load
-dotenv_load(".env")
-dotenv_load(".env.production")
-dotenv_load(".env.prod")
-dotenv_load(".env.development")
-dotenv_load(".env.dev")
-dotenv_load(".env.test")
-dotenv_load(".env.local")
-
----@diagnostic disable-next-line: undefined-global
-os.getenv = astra_internal__getenv
----Sets the environment variable.
----
----NOT SAFE WHEN USED IN MULTITHREADING ENVIRONMENT
----@diagnostic disable-next-line: undefined-global
-os.setenv = astra_internal__setenv
-
--- MARK: Astra
-
-_G.Astra = {
-	version = "0.0.0",
-	hostname = "127.0.0.1",
-	--- Enable or disable compression
-	compression = false,
-	port = 8080,
-	--- Contains all of the route details
-	routes = {},
-}
+---@class HTTPServer
+---@field version string
+---@field hostname string
+---@field compression boolean
+---@field port number
+---@field routes Route[]
+---@field __index HTTPServer
+---@field new fun(server: HTTPServer): HTTPServer
+---@field get fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
+---@field post fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
+---@field put fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
+---@field delete fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
+---@field options fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
+---@field patch fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
+---@field trace fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
+---@field static_dir fun(server: HTTPServer, serve_path: string, callback: callback, config: RouteConfiguration?)
+---@field static_file fun(server: HTTPServer, serve_path: string, callback: callback, config: RouteConfiguration?)
+---@field run fun(server: HTTPServer) Runs the server
 
 ---@diagnostic disable-next-line: duplicate-doc-alias
 ---@alias callback fun(request: Request, response: Response): any
 
 ---@class RouteConfiguration
----@diagnostic disable-next-line: duplicate-doc-field
 ---@field body_limit? number
 
----@param path string The URL path for the request.
----@param callback callback A function that will be called when the request is made.
----@param config? RouteConfiguration
-function Astra:get(path, callback, config)
-	table.insert(self.routes, { path = path, method = "get", func = callback, config = config or {} })
-end
+---@class Route
+---@field path string
+---@field method string
+---@field func function
+---@field static_dir string?
+---@field static_file string?
+---@field config RouteConfiguration?
 
----@param path string The URL path for the request.
----@param callback callback A function that will be called when the request is made.
----@param config? RouteConfiguration
-function Astra:post(path, callback, config)
-	table.insert(self.routes, { path = path, method = "post", func = callback, config = config or {} })
-end
-
----@param path string The URL path for the request.
----@param callback callback A function that will be called when the request is made.
----@param config? RouteConfiguration
-function Astra:put(path, callback, config)
-	table.insert(self.routes, { path = path, method = "put", func = callback, config = config or {} })
-end
-
----@param path string The URL path for the request.
----@param callback callback A function that will be called when the request is made.
----@param config? RouteConfiguration
-function Astra:delete(path, callback, config)
-	table.insert(self.routes, { path = path, method = "delete", func = callback, config = config or {} })
-end
-
----@param path string The URL path for the request.
----@param callback callback A function that will be called when the request is made.
----@param config? RouteConfiguration
-function Astra:options(path, callback, config)
-	table.insert(self.routes, { path = path, method = "options", func = callback, config = config or {} })
-end
-
----@param path string The URL path for the request.
----@param callback callback A function that will be called when the request is made.
----@param config? RouteConfiguration
-function Astra:patch(path, callback, config)
-	table.insert(self.routes, { path = path, method = "patch", func = callback, config = config or {} })
-end
-
----@param path string The URL path for the request.
----@param callback callback A function that will be called when the request is made.
----@param config? RouteConfiguration
-function Astra:trace(path, callback, config)
-	table.insert(self.routes, { path = path, method = "trace", func = callback, config = config or {} })
-end
+-- MARK: HTTPClient
 
 ---
----Registers a static folder to serve
----@param path string The URL path for the request.
----@param serve_path string The directory path relatively
----@param config? RouteConfiguration
-function Astra:static_dir(path, serve_path, config)
-	table.insert(
-		self.routes,
-		{ path = path, method = "static_dir", func = function() end, static_dir = serve_path, config = config or {} }
-	)
-end
+--- Represents an HTTP client response.
+---@class HTTPClientResponse
+---@field status_code fun(): table Gets the response HTTP Status code
+---@field body fun(): Body Gets the response HTTP Body which further can be parsed
+---@field headers fun(): table|nil Returns the entire headers list from the HTTP response
+---@field remote_address fun(): string|nil Gets the remote address of the HTTP response server
+
+---@diagnostic disable-next-line: duplicate-doc-alias
+---@alias http_client_callback fun(response: HTTPClientResponse)
 
 ---
----Registers a static file to serve
----@param path string The URL path for the request.
----@param serve_path string The directory path relatively
----@param config? RouteConfiguration
-function Astra:static_file(path, serve_path, config)
-	table.insert(
-		self.routes,
-		{ path = path, method = "static_file", func = function() end, static_file = serve_path, config = config or {} }
-	)
-end
+--- Represents an HTTP client request.
+---@class HTTPClientRequest
+---@field set_method fun(http_request: HTTPClientRequest, method: string): HTTPClientRequest Sets the HTTP method
+---@field set_header fun(http_request: HTTPClientRequest, key: string, value: string): HTTPClientRequest Sets a header
+---@field set_headers fun(http_request: HTTPClientRequest, headers: table): HTTPClientRequest Sets all of the headers
+---@field set_form fun(http_request: HTTPClientRequest, key: string, value: string): HTTPClientRequest Sets a form
+---@field set_forms fun(http_request: HTTPClientRequest, headers: table): HTTPClientRequest Sets all of the forms
+---@field set_body fun(http_request: HTTPClientRequest, body: string): HTTPClientRequest Sets the HTTP body
+---@field set_json fun(http_request: HTTPClientRequest, json: table): HTTPClientRequest Sets the HTTP json
+---@field set_file fun(http_request: HTTPClientRequest, file_path: string): HTTPClientRequest Sets the for-upload file path
+---@field execute fun(): HTTPClientResponse Executes the request and returns the response
+---@field execute_task fun(http_request: HTTPClientRequest, callback: http_client_callback) Executes the request as an async task
 
----
----Runs the Astra server
-function Astra:run()
-	---@diagnostic disable-next-line: undefined-global
-	astra_internal__start_server()
-end
-
--- MARK: Internal
+-- MARK: Common HTTP
 
 ---
 --- Represents an HTTP body.
@@ -441,64 +319,385 @@ end
 ---@field get_http_only fun(cookie: Cookie): boolean?
 ---@field get_max_age fun(cookie: Cookie): number?
 
---- @START_REMOVING_RUNTIME
+-- MARK: Database
 
-_G.AstraIO = {
+---
+--- SQLx driver
+---@class Database
+---@field execute fun(database: Database, sql: string, parameters: table | nil)
+---@field query_one fun(database: Database, sql: string, parameters: table | nil): table | nil
+---@field query_all fun(database: Database, sql: string, parameters: table | nil): table | nil
+---@field close fun(database: Database)
+
+---============================ DEFINITIONS ============================---
+
+-- The main global
+_G.Astra = {
+	---@diagnostic disable-next-line: undefined-global
+	version = astra_internal__version or "0.0.0",
+	http = {},
+	io = {},
+	utils = {},
+	crypto = {},
+}
+
+-- Imports
+_G.Astra.validate_table = __luapack_require__(1)
+
+_G.import = __luapack_require__(2)
+
+
+---@type fun(file_path: string)
+---@diagnostic disable-next-line: undefined-global
+_G.Astra.dotenv_load = astra_internal__dotenv_load
+_G.Astra.dotenv_load(".env")
+_G.Astra.dotenv_load(".env.production")
+_G.Astra.dotenv_load(".env.prod")
+_G.Astra.dotenv_load(".env.development")
+_G.Astra.dotenv_load(".env.dev")
+_G.Astra.dotenv_load(".env.test")
+_G.Astra.dotenv_load(".env.local")
+
+---@diagnostic disable-next-line: undefined-global
+os.getenv = astra_internal__getenv
+---Sets the environment variable.
+---
+---NOT SAFE WHEN USED IN MULTITHREADING ENVIRONMENT
+---@diagnostic disable-next-line: undefined-global
+os.setenv = astra_internal__setenv
+
+-- MARK: HTTPServer
+
+---@type HTTPServer
+---@diagnostic disable-next-line: missing-fields
+local Server = {}
+_G.Astra.http.server = Server
+
+function Server:new()
+	local server = {
+		version = "0.0.0",
+		hostname = "127.0.0.1",
+		--- Enable or disable compression
+		compression = false,
+		port = 8080,
+		--- Contains all of the route details
+		routes = {},
+	}
+
+	setmetatable(server, self)
+	self.__index = self
+	server:register_methods()
+	return server
+end
+
+---@diagnostic disable-next-line: inject-field
+function Server:register_methods()
+	local http_methods = { "get", "post", "put", "delete", "options", "patch", "trace" }
+
+	for _, method in ipairs(http_methods) do
+		self[method] = function(_, path, callback, config)
+			table.insert(self.routes, {
+				path = path,
+				method = method,
+				func = callback,
+				config = config or {},
+			})
+		end
+	end
+
+	self.static_dir = function(_, path, serve_path, config)
+		table.insert(self.routes, {
+			path = path,
+			method = "static_dir",
+			func = function() end,
+			static_dir = serve_path,
+			config = config or {},
+		})
+	end
+
+	self.static_file = function(_, path, serve_path, config)
+		table.insert(self.routes, {
+			path = path,
+			method = "static_file",
+			func = function() end,
+			static_file = serve_path,
+			config = config or {},
+		})
+	end
+
+	self.run = function(_)
+		---@diagnostic disable-next-line: undefined-global
+		astra_internal__start_server(self)
+	end
+end
+
+-- MARK: FileIO
+
+_G.Astra.io = {
 	---Returns the metadata of a file or directory
 	---@param path string
 	---@return FileMetadata
 	get_metadata = function(path)
-		return {}
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__get_metadata(path)
 	end,
 
 	---Returns the content of the directory
 	---@param path string Path to the file
 	---@return DirEntry[]
 	read_dir = function(path)
-		return {}
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__read_dir(path)
 	end,
 
 	---Returns the path of the current directory
 	---@return string
 	get_current_dir = function()
-		return ""
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__get_current_dir()
+	end,
+
+	---Returns the path separator based on the operating system
+	---@return string
+	get_separator = function()
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__get_separator()
 	end,
 
 	---Returns the path of the current running script
 	---@return string
 	get_script_path = function()
-		return ""
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__get_script_path()
 	end,
 
 	---Changes the current directory
 	---@param path string Path to the directory
-	change_dir = function(path) end,
+	change_dir = function(path)
+		---@diagnostic disable-next-line: undefined-global
+		astra_internal__change_dir(path)
+	end,
 
 	---Checks if a path exists
 	---@param path string Path to the file or directory
 	---@return boolean
 	exists = function(path)
-		return false
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__exists(path)
 	end,
 
 	---Creates a directory
 	---@param path string Path to the directory
-	create_dir = function(path) end,
+	create_dir = function(path)
+		---@diagnostic disable-next-line: undefined-global
+		astra_internal__create_dir(path)
+	end,
 
 	---Creates a directory recursively
 	---@param path string Path to the directory
-	create_dir_all = function(path) end,
+	create_dir_all = function(path)
+		---@diagnostic disable-next-line: undefined-global
+		astra_internal__create_dir_all(path)
+	end,
 
 	---Removes a file
 	---@param path string Path to the file
-	remove = function(path) end,
+	remove = function(path)
+		---@diagnostic disable-next-line: undefined-global
+		astra_internal__remove(path)
+	end,
 
 	---Removes a directory
 	---@param path string Path to the directory
-	remove_dir = function(path) end,
+	remove_dir = function(path)
+		---@diagnostic disable-next-line: undefined-global
+		astra_internal__remove_dir(path)
+	end,
 
 	---Removes a directory recursively
 	---@param path string Path to the directory
-	remove_dir_all = function(path) end,
+	remove_dir_all = function(path)
+		---@diagnostic disable-next-line: undefined-global
+		astra_internal__remove_dir_all(path)
+	end,
 }
---- @END_REMOVING_RUNTIME
+
+-- MARK: Database
+
+---
+---Opens a new SQL connection using the provided URL and returns a table representing the connection.
+---@param database_type "sqlite"|"postgres" The type of database to connect to.
+---@param url string The URL of the SQL database to connect to.
+---@param max_connections number? Max number of connections to the database pool
+---@return Database Database that represents the SQL connection.
+---@nodiscard
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function _G.Astra.database_connect(database_type, url, max_connections)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_inner__database_connect(database_type, url, max_connections)
+end
+
+-- MARK: HTTPClient
+
+---
+---Opens a new async HTTP Request. The request is running as a task in parallel
+---@param url string
+---@return HTTPClientRequest
+---@nodiscard
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function _G.Astra.http.request(url)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__http_request(url)
+end
+
+-- MARK: Async Task
+
+---
+--- Represents an async task
+---@class TaskHandler
+---@field abort fun() Aborts the running task
+
+---
+---Starts a new async task
+---@param callback fun() The callback to run the content of the async task
+---@return TaskHandler
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function spawn_task(callback)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__spawn_task(callback)
+end
+
+---
+---Starts a new async task with a delay in milliseconds
+---@param callback fun() The callback to run the content of the async task
+---@param timeout number The delay in milliseconds
+---@return TaskHandler
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function spawn_timeout(callback, timeout)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__spawn_timeout(callback, timeout)
+end
+
+---
+---Starts a new async task that runs infinitely in a loop but with a delay in milliseconds
+---@param callback fun() The callback to run the content of the async task
+---@param timeout number The delay in milliseconds
+---@return TaskHandler
+---@diagnostic disable-next-line: missing-return, lowercase-global
+function spawn_interval(callback, timeout)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__spawn_interval(callback, timeout)
+end
+
+-- MARK: Crypto
+
+_G.Astra.crypto = {
+	---
+	---Hashes a given string according to the provided hash type.
+	---@param hash_type "sha2_256"|"sha3_256"|"sha2_512"|"sha3_512"
+	---@param input string The input to be hashed
+	---@return string
+	---@diagnostic disable-next-line: missing-return, lowercase-global
+	hash = function(hash_type, input)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__hash(hash_type, input)
+	end,
+
+	base64 = {
+		---
+		---Encodes the given input as Base64
+		---@param input string The input to be encoded
+		---@return string
+		---@diagnostic disable-next-line: missing-return, lowercase-global
+		encode = function(input)
+			---@diagnostic disable-next-line: undefined-global
+			return astra_internal__base64_encode(input)
+		end,
+
+		---
+		---Encodes the given input as Base64 but URL safe
+		---@param input string The input to be encoded
+		---@return string
+		---@diagnostic disable-next-line: missing-return, lowercase-global
+		encode_urlsafe = function(input)
+			---@diagnostic disable-next-line: undefined-global
+			return astra_internal__base64_encode_urlsafe(input)
+		end,
+
+		---
+		---Decodes the given input as Base64
+		---@param input string The input to be decoded
+		---@return string
+		---@diagnostic disable-next-line: missing-return, lowercase-global
+		decode = function(input)
+			---@diagnostic disable-next-line: undefined-global
+			return astra_internal__base64_decode(input)
+		end,
+
+		---
+		---Decodes the given input as Base64 but URL safe
+		---@param input string The input to be decoded
+		---@return string
+		---@diagnostic disable-next-line: missing-return, lowercase-global
+		decode_urlsafe = function(input)
+			---@diagnostic disable-next-line: undefined-global
+			return astra_internal__base64_decode_urlsafe(input)
+		end,
+	},
+}
+
+-- MARK: JSON
+
+_G.Astra.json = {
+	---Encodes the value into a valid JSON string
+	---@param value any
+	---@return string
+	---@diagnostic disable-next-line: duplicate-set-field
+	encode = function(value)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__json_encode(value)
+	end,
+
+	---Decodes the JSON string into a valid lua value
+	---@param value string
+	---@return any
+	---@diagnostic disable-next-line: duplicate-set-field
+	decode = function(value)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__json_decode(value)
+	end,
+}
+
+-- MARK: Utils
+
+---Pretty prints any table or value
+---@param value any
+---@diagnostic disable-next-line: duplicate-set-field
+function _G.pprint(value)
+	---@diagnostic disable-next-line: undefined-global
+	astra_internal__pretty_print(value)
+end
+
+---
+---Splits a sentence into an array given the separator
+---@param input_str string The input string
+---@param separator_str string The input string
+---@return table array
+---@nodiscard
+---@diagnostic disable-next-line: duplicate-set-field
+function string.split(input_str, separator_str)
+	local result_table = {}
+	for word in input_str:gmatch("([^" .. separator_str .. "]+)") do
+		table.insert(result_table, word)
+	end
+	return result_table
+end
+
+-- This is to prevent a small undefined behavior in Lua
+---@diagnostic disable-next-line: redundant-parameter
+setmetatable(_G, {
+	---@diagnostic disable-next-line: redundant-parameter, unused-local
+	__index = function(T, k, v)
+		error("Called non-existing variable")
+	end,
+})

@@ -13,7 +13,7 @@ local import = require
 ---@diagnostic disable-next-line: redefined-local
 function import(moduleName)
 	---@diagnostic disable-next-line: param-type-mismatch, undefined-global
-	local ok, result = pcall(astra_internal__require, moduleName)
+	local ok, result = pcall(astra_internal__import, moduleName)
 	if not ok then
 		ok, result = require(moduleName)
 		if not ok then

@@ -1,14 +1,19 @@
-use mlua::LuaSerdeExt;
+use mlua::{LuaSerdeExt, UserData};
 
-pub fn essential_global_functions(lua: &mlua::Lua) {
+pub fn register_to_lua(lua: &mlua::Lua) {
     dotenv_function(lua);
     pretty_print(lua);
+    import(lua);
     // json
     json_encode(lua);
     json_decode(lua);
     // env
     getenv(lua);
     setenv(lua);
+    // async tasks
+    spawn_task(lua);
+    spawn_interval(lua);
+    spawn_timeout(lua);
 }
 
 pub fn dotenv_function(lua: &mlua::Lua) {
@@ -108,6 +113,121 @@ pub fn setenv(lua: &mlua::Lua) {
     }) {
         if let Err(e) = lua.globals().set("astra_internal__setenv", function) {
             println!("Could not register the function for setenv: {e}");
+        }
+    }
+}
+
+pub struct TaskHandler<T: Send + 'static>(tokio::task::JoinHandle<T>);
+
+impl<T: Send + 'static> UserData for TaskHandler<T> {
+    fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
+        methods.add_method("abort", |_, this, ()| {
+            this.0.abort();
+            Ok(())
+        });
+    }
+}
+
+fn create_async_function<F, T>(function: F) -> TaskHandler<T>
+where
+    F: Future<Output = T> + Send + 'static,
+    T: Send + 'static,
+{
+    let handle = tokio::spawn(function);
+    TaskHandler(handle)
+}
+
+fn spawn_task(lua: &mlua::Lua) {
+    if let Ok(function) = lua.create_async_function(|_, callback: mlua::Function| async move {
+        Ok(create_async_function(async move {
+            if let Err(e) = callback.call_async::<()>(()).await {
+                println!("Error running a task: {e}");
+            }
+        }))
+    }) {
+        if let Err(e) = lua.globals().set("astra_internal__spawn_task", function) {
+            println!("Could not register the function for spawn_task: {e}");
+        }
+    }
+}
+
+fn spawn_timeout(lua: &mlua::Lua) {
+    if let Ok(function) = lua.create_async_function(
+        |_, (callback, sleep_length): (mlua::Function, u64)| async move {
+            Ok(create_async_function(async move {
+                // sleep
+                tokio::time::sleep(std::time::Duration::from_millis(sleep_length)).await;
+
+                if let Err(e) = callback.call_async::<()>(()).await {
+                    println!("Error running a task: {e}");
+                }
+            }))
+        },
+    ) {
+        if let Err(e) = lua.globals().set("astra_internal__spawn_timeout", function) {
+            println!("Could not register the function for spawn_timeout: {e}");
+        }
+    }
+}
+
+fn spawn_interval(lua: &mlua::Lua) {
+    if let Ok(function) = lua.create_async_function(
+        |_, (callback, sleep_length): (mlua::Function, u64)| async move {
+            Ok(create_async_function(async move {
+                loop {
+                    if let Err(e) = callback.call_async::<()>(()).await {
+                        println!("Error running a task: {e}");
+                    }
+
+                    // sleep
+                    tokio::time::sleep(std::time::Duration::from_millis(sleep_length)).await;
+                }
+            }))
+        },
+    ) {
+        if let Err(e) = lua
+            .globals()
+            .set("astra_internal__spawn_interval", function)
+        {
+            println!("Could not register the function for spawn_interval: {e}");
+        }
+    }
+}
+
+fn import(lua: &mlua::Lua) {
+    if let Ok(function) = lua.create_async_function(|lua, path: String| async move {
+        if path.contains("astra_bundle") {
+            return Ok(mlua::Value::Nil);
+        }
+
+        let key_id = format!("ASTRA_INTERNAL__IMPORT_CACHE_{}", uuid::Uuid::new_v4());
+        let key_id = key_id.as_str();
+
+        let mut cache = lua
+            .globals()
+            .get::<std::collections::HashMap<String, mlua::RegistryKey>>(key_id)
+            .unwrap_or_default();
+
+        if let Some(key) = cache.get(&path) {
+            lua.registry_value::<mlua::Value>(key)
+        } else {
+            let cleaned_path = path.replace(".", std::path::MAIN_SEPARATOR_STR);
+            let file = std::fs::read_to_string(format!("{cleaned_path}.lua"))?;
+            let result = lua
+                .load(file)
+                .set_name(cleaned_path)
+                .eval_async::<mlua::Value>()
+                .await?;
+
+            let key = lua.create_registry_value(&result)?;
+            cache.insert(path, key);
+            lua.globals().set(key_id, cache)?;
+
+            Ok(result)
+        }
+    }) {
+        if let Err(e) = lua.globals().set("astra_internal__import", function) {
+            println!("Could not register the function for import: {e}");
         }
     }
 }

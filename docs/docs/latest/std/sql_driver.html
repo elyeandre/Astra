@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Structure - ArkForge Astra</title>
+        <title>SQL Driver - ArkForge Astra</title>
 
 
         <!-- Custom HTML head -->
@@ -130,7 +130,7 @@
                         <a href="https://github.com/ArkForgeLabs/Astra" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/internals/structure.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/std/sql_driver.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -226,28 +226,38 @@
 }
 
 </style>
-<h1 id="structure"><a class="header" href="#structure">Structure</a></h1>
-<p>Astra is written in Rust and is built on top of <a href="https://docs.rs/axum">Axum</a>. Axum internally uses <a href="https://docs.rs/tokio">Tokio</a> for its async runtime and <a href="https://docs.rs/tower">Tower</a>. Astra also have other dependencies to assist with utilities and functionality of the runtime itself. One of them is <a href="https://github.com/mlua-rs/mlua">mlua</a> which is the library used for the Lua runtime.</p>
-<p>Astra's internal philosophy is to contain all routes in a single table array and use mlua <code>UserData</code> as much as possible for every other functionality. Since routes and server itself is the main point, utilities and functionality should be optional. Hence <code>main.rs</code>, <code>routes.rs</code> and <code>common.rs</code> are the main files that contain the essential details of the framework, while everything else is optional and extra. The utilities that require native system interopability must also be written in Rust. For example, the database drivers and the HTTP client.</p>
-<div class="mdbook-alerts mdbook-alerts-note">
-<p class="mdbook-alerts-title">
-  <span class="mdbook-alerts-icon"></span>
-  note
-</p>
-<p>If you wish to extend Astra with your own utilities written in Rust, check out <a href="./extending_astra.html">this guide</a>.</p>
-</div>
-<p>The source code structure is containing all of the sources in the <code>src</code> folder which divides between actual Rust code, <code>lua</code> folder which contains sources for the lua side and lua based utilities, and <code>docs</code> folder which contains sources for this documentation. The <code>docs</code> folder on the root only contains built doc files for usage with GitHub Pages.</p>
-<p>There is also <code>astra_build.lua</code> which is a small script for automating different operations within Astra, such as automatic doc builds, lua packing, changelogs, ...</p>
+<h1 id="sql-driver"><a class="header" href="#sql-driver">SQL Driver</a></h1>
+<p>If your server requires access to an SQL database such as PostgreSQL and SQLite, Astra provides utilities for basic connection and querying.</p>
+<pre><code class="language-lua">-- connect to your db
+local db = database_connect("postgres", "postgres://astra_postgres:password@localhost/astr_database")
+
+-- You can execute queries to the database along with optional parameters
+db:execute([[
+    CREATE TABLE IF NOT EXISTS test (id SERIAL PRIMARY KEY, name TEXT);
+
+    INSERT INTO TABLE test(name) VALUES ('Astra');
+]], {});
+
+-- And finally query either one which returns a single result or
+local result = db:query_one("SELECT * FROM test;", {});
+
+-- query all from tables which returns an array as result
+-- which also supports parameters for protection against SQL injection attacks
+local name = "Tom"
+local result = db:query_all("INSERT INTO test (name) VALUES ($1)", {name});
+
+pretty_print(result)
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../std/utilities.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../std/crypto.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../internals/extending_astra.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../std/async_tasks.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -257,11 +267,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../std/utilities.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../std/crypto.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../internals/extending_astra.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../std/async_tasks.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

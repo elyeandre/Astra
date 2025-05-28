@@ -1,6 +1,6 @@
 [package]
 name = "lua-astra"
-version = "0.19.3"
+version = "0.20.0"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 description = "🔥 Blazingly Fast 🔥 web server runtime for Lua"
 documentation = "https://astra.arkforge.net/docs/latest"
@@ -42,7 +42,7 @@ mlua = { version = "0.10.3", features = [
 ] }
 
 # http
-axum = { version = "0.8.3", features = ["macros", "multipart"] }
+axum = { version = "0.8.3", features = ["macros", "multipart", "http2"] }
 axum-extra = { version = "0.10.1", features = ["cookie"] }
 reqwest = { version = "0.12.15", features = [
     "json",

@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Structure - ArkForge Astra</title>
+        <title>Importing - ArkForge Astra</title>
 
 
         <!-- Custom HTML head -->
@@ -130,7 +130,7 @@
                         <a href="https://github.com/ArkForgeLabs/Astra" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/internals/structure.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/std/importing.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -226,28 +226,31 @@
 }
 
 </style>
-<h1 id="structure"><a class="header" href="#structure">Structure</a></h1>
-<p>Astra is written in Rust and is built on top of <a href="https://docs.rs/axum">Axum</a>. Axum internally uses <a href="https://docs.rs/tokio">Tokio</a> for its async runtime and <a href="https://docs.rs/tower">Tower</a>. Astra also have other dependencies to assist with utilities and functionality of the runtime itself. One of them is <a href="https://github.com/mlua-rs/mlua">mlua</a> which is the library used for the Lua runtime.</p>
-<p>Astra's internal philosophy is to contain all routes in a single table array and use mlua <code>UserData</code> as much as possible for every other functionality. Since routes and server itself is the main point, utilities and functionality should be optional. Hence <code>main.rs</code>, <code>routes.rs</code> and <code>common.rs</code> are the main files that contain the essential details of the framework, while everything else is optional and extra. The utilities that require native system interopability must also be written in Rust. For example, the database drivers and the HTTP client.</p>
-<div class="mdbook-alerts mdbook-alerts-note">
-<p class="mdbook-alerts-title">
-  <span class="mdbook-alerts-icon"></span>
-  note
-</p>
-<p>If you wish to extend Astra with your own utilities written in Rust, check out <a href="./extending_astra.html">this guide</a>.</p>
-</div>
-<p>The source code structure is containing all of the sources in the <code>src</code> folder which divides between actual Rust code, <code>lua</code> folder which contains sources for the lua side and lua based utilities, and <code>docs</code> folder which contains sources for this documentation. The <code>docs</code> folder on the root only contains built doc files for usage with GitHub Pages.</p>
-<p>There is also <code>astra_build.lua</code> which is a small script for automating different operations within Astra, such as automatic doc builds, lua packing, changelogs, ...</p>
+<h1 id="importing"><a class="header" href="#importing">Importing</a></h1>
+<p>The Lua's default module and importing system has proven to have some issues with our approaches, namely async. Because of this, the <code>import</code> function have been introduced. The <code>import</code> function, imports the given module relative to the runtime binary, similar to how GOlang and Python imports work. The import order of the modules also affect the imported data, in case the module data is shared across. For example:</p>
+<pre><code class="language-lua">-- module A.lua:
+return { value = 0 }
+
+-- module B.lua:
+local a = import("A")
+a.value = 2
+
+-- main.lua
+local a = import("A")
+print(a.value) -- value = 0
+local b = import("B")
+print(a.value) -- value = 2
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../std/utilities.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../std/http/http_client.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../internals/extending_astra.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../std/file_io.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -257,11 +260,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../std/utilities.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../std/http/http_client.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../internals/extending_astra.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../std/file_io.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

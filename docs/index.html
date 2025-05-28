@@ -4,10 +4,7 @@
     <!-- Primary Meta Tags -->
     <title>Astra</title>
     <meta name="title" content="Astra" />
-    <meta
-      name="description"
-      content="🔥 Blazingly Fast 🔥 web server runtime for Lua"
-    />
+    <meta name="description" content="🔥 Blazingly Fast 🔥 lua runtime" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -15,7 +12,7 @@
     <meta property="og:title" content="Astra" />
     <meta
       property="og:description"
-      content="🔥 Blazingly Fast 🔥 web server runtime for Lua"
+      content="🔥 Blazingly Fast 🔥 lua runtime"
     />
     <meta property="og:image" content="https://astra.arkforge.net/banner.png" />
     <meta content="#0e0f0f" data-react-helmet="true" name="theme-color" />
@@ -26,7 +23,7 @@
     <meta property="twitter:title" content="Astra" />
     <meta
       property="twitter:description"
-      content="🔥 Blazingly Fast 🔥 web server runtime for Lua"
+      content="🔥 Blazingly Fast 🔥 lua runtime"
     />
     <meta
       property="twitter:image"
@@ -70,7 +67,10 @@
     <!-- Hero Section -->
     <section class="hero">
       <div class="hero-content">
-        <h1>The 🔥 Blazingly-Fast 🔥 Web Server runtime for Lua</h1>
+        <h1>
+          🔥 Blazingly-Fast 🔥 <br />
+          Lua runtime
+        </h1>
         <p>
           Built with Rust, Astra delivers unmatched performance, fault-tolerance
           and ease-of-use for your Lua servers
@@ -142,9 +142,17 @@
       <div class="code-block">
         <pre
           id="code-block-pre"
-        ><code class="language-lua" style="overflow-x: auto;">-- You can also use the local variables within routes
+        ><code class="language-lua" style="overflow-x: auto;">-- Create a new server
+local server = Astra.http.server:new()
+
+-- Register a route
+server:get("/", function()
+    return "hello from default Astra instance!"
+end)
+
+-- You can also use the local variables within routes
 local counter = 0
-Astra:get("/count", function(request, response)
+server:get("/count", function(request, response)
     -- consume the request body
     print(request:body():text())
 
@@ -155,8 +163,14 @@ Astra:get("/count", function(request, response)
 
     counter = counter + 1
     -- and also can return JSON
-    return { counter_value = counter }
+    return { counter = counter }
 end)
+
+-- Configure the server
+server.port = 3000
+
+-- Run the server
+server:run()
 </code></pre>
       </div>
     </section>
