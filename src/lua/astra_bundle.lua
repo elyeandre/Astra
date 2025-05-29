@@ -534,7 +534,7 @@ _G.Astra.io = {
 ---@diagnostic disable-next-line: missing-return, lowercase-global
 function _G.Astra.database_connect(database_type, url, max_connections)
 	---@diagnostic disable-next-line: undefined-global
-	return astra_inner__database_connect(database_type, url, max_connections)
+	return astra_internal__database_connect(database_type, url, max_connections)
 end
 
 -- MARK: HTTPClient

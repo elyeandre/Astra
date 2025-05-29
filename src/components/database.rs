@@ -66,7 +66,7 @@ impl crate::components::AstraComponent for Database {
             },
         )?;
         lua.globals()
-            .set("astra_inner__database_connect", database_constructor)?;
+            .set("astra_internal__database_connect", database_constructor)?;
 
         Ok(())
     }

@@ -20,8 +20,8 @@
 ---@field options fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
 ---@field patch fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
 ---@field trace fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
----@field static_dir fun(server: HTTPServer, serve_path: string, callback: callback, config: RouteConfiguration?)
----@field static_file fun(server: HTTPServer, serve_path: string, callback: callback, config: RouteConfiguration?)
+---@field static_dir fun(server: HTTPServer, serve_path: string, config: RouteConfiguration?)
+---@field static_file fun(server: HTTPServer, serve_path: string, config: RouteConfiguration?)
 ---@field run fun(server: HTTPServer) Runs the server
 
 ---@diagnostic disable-next-line: duplicate-doc-alias
@@ -355,7 +355,7 @@ _G.Astra.io = {
 ---@diagnostic disable-next-line: missing-return, lowercase-global
 function _G.Astra.database_connect(database_type, url, max_connections)
 	---@diagnostic disable-next-line: undefined-global
-	return astra_inner__database_connect(database_type, url, max_connections)
+	return astra_internal__database_connect(database_type, url, max_connections)
 end
 
 -- MARK: HTTPClient
