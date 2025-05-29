@@ -30,6 +30,7 @@ pub enum Method {
     Trace,
     StaticDir,
     StaticFile,
+    Templates,
 }
 #[derive(Debug, Clone, mlua::FromLua, PartialEq)]
 pub struct Route {
@@ -112,37 +113,6 @@ pub fn load_routes(server: mlua::Table) -> Router {
     let mut routes = Vec::new();
 
     let mut parse_route = |entry: &mlua::Table| -> mlua::Result<()> {
-        //
-        // Routes {
-        //     base_middleware = chain { ctx, logger },
-        //     { GET, "/test",    chain { rateLimit, auth } (handleTest) },
-        //     { GET, "/headers", rateLimit(handleHeaders) },
-        //     { GET, "/",        justHi },
-        // }
-
-        // let method: Method = lua.from_value(entry.get(1)?)?;
-        // let details: mlua::Value = entry.get(3)?;
-        // routes.push(routes::Route {
-        //     method,
-        //     path: lua.from_value(entry.get(2)?)?,
-        //     static_dir: if method == Method::StaticDir {
-        //         Some(lua.from_value::<String>(details.clone())?)
-        //     } else {
-        //         None
-        //     },
-        //     static_file: if method == Method::StaticFile {
-        //         Some(lua.from_value::<String>(details.clone())?)
-        //     } else {
-        //         None
-        //     },
-        //     function: if let Some(function) = details.as_function() {
-        //         function.clone()
-        //     } else {
-        //         lua.create_function(|_, _: ()| Ok(()))?
-        //     },
-        //     config: entry.get::<RouteConfiguration>(4).unwrap_or_default(),
-        // });
-
         routes.push(routes::Route {
             path: lua.from_value(entry.get("path")?)?,
             static_dir: lua.from_value(entry.get("static_dir")?)?,
@@ -167,6 +137,7 @@ pub fn load_routes(server: mlua::Table) -> Router {
             })
             .expect("Could not parse the routes");
 
+        let mut templates_added = false;
         for route_values in routes.clone() {
             let path = route_values.path.clone();
             let path = path.as_str();
@@ -216,6 +187,52 @@ pub fn load_routes(server: mlua::Table) -> Router {
                                 path,
                                 tower_http::services::ServeFile::new(serve_path),
                             )
+                        }
+                    } else {
+                        router
+                    }
+                }
+                Method::Templates => {
+                    if !templates_added {
+                        match tera::Tera::new(path) {
+                            Ok(templates) => {
+                                templates_added = true;
+                                let context = tera::Context::new();
+
+                                for i in templates.get_template_names() {
+                                    let route_path = i
+                                        .trim_end_matches(".html")
+                                        .trim_end_matches(".htm")
+                                        .trim_end_matches(".tera")
+                                        .trim_end_matches("index");
+
+                                    let template_render = match templates.render(i, &context) {
+                                        Ok(rendered) => axum::response::Html(rendered),
+                                        Err(e) => {
+                                            eprintln!("Error rendering templates: {e}");
+
+                                            axum::response::Html("503".to_string())
+                                        }
+                                    };
+                                    if route_path.ends_with("/") {
+                                        router = router.route(
+                                            &format!("/{}", route_path.trim_end_matches("/")),
+                                            get(move || async { template_render }),
+                                        );
+                                    } else {
+                                        router = router.route(
+                                            &format!("/{route_path}"),
+                                            get(move || async { template_render }),
+                                        );
+                                    }
+                                }
+
+                                router
+                            }
+                            Err(e) => {
+                                eprintln!("Error adding templates route: {e}");
+                                router
+                            }
                         }
                     } else {
                         router

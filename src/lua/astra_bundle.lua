@@ -197,8 +197,9 @@ end
 ---@field options fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
 ---@field patch fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
 ---@field trace fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
----@field static_dir fun(server: HTTPServer, serve_path: string, callback: callback, config: RouteConfiguration?)
----@field static_file fun(server: HTTPServer, serve_path: string, callback: callback, config: RouteConfiguration?)
+---@field static_dir fun(server: HTTPServer, path: string, serve_path: string, config: RouteConfiguration?)
+---@field static_file fun(server: HTTPServer, path: string, serve_path: string, config: RouteConfiguration?)
+---@field templates fun(server: HTTPServer, path: string, config: RouteConfiguration?)
 ---@field run fun(server: HTTPServer) Runs the server
 
 ---@diagnostic disable-next-line: duplicate-doc-alias
@@ -421,6 +422,15 @@ function Server:register_methods()
 			method = "static_file",
 			func = function() end,
 			static_file = serve_path,
+			config = config or {},
+		})
+	end
+
+	self.templates = function(_, path, config)
+		table.insert(self.routes, {
+			path = path,
+			method = "templates",
+			func = function() end,
 			config = config or {},
 		})
 	end
