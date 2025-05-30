@@ -8,6 +8,18 @@ template_engine:context_add("count", 5)
 -- Create an HTTP Server
 local server = Astra.http.server:new()
 
+-- Partial hydration
+local count = 0
+server:get("/hydrate", function(request, response)
+	-- your dynamic data
+	count = count + 1
+	template_engine:context_add("count", count)
+	-- response type
+	response:set_header("Content-Type", "text/html")
+	-- render the template
+	return template_engine:render("index.html")
+end)
+
 -- Serve the templates
 server:templates(template_engine)
 

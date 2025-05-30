@@ -1,6 +1,8 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use mlua::{FromLua, LuaSerdeExt, UserData};
+
+use crate::LUA;
 
 #[derive(Debug, Clone, FromLua)]
 pub struct TeraTemplating {
@@ -93,6 +95,32 @@ impl UserData for TeraTemplating {
                 None => Ok(mlua::Nil),
             }
         });
+
+        methods.add_method_mut(
+            "add_function",
+            |_, this, (name, func): (String, mlua::Function)| {
+                fn function(
+                    func: mlua::Function,
+                ) -> impl tera::Function {
+                    Box::new(move |args: &HashMap<String, tera::Value>| -> tera::Result<serde_json::Value> {
+                        match LUA.to_value(args) {
+                            Ok(val) =>  match func.call::<mlua::Value>(val) {
+                                Ok(val) =>  match LUA.from_value::<serde_json::Value>(val) {
+                                    Ok(val) => Ok(val),
+                                    Err(e) => Err(format!("ERROR TEMPLATE FUNCTION - Could not convert the return type: {e}").into()),
+                                },
+                                Err(e) => Err(format!("ERROR TEMPLATE FUNCTION - Could not run the function: {e}").into()),
+                            },
+                            Err(e) => Err(format!("ERROR TEMPLATE FUNCTION - Could not convert arguments into Lua table: {e}").into()),
+                        }
+                    })
+                }
+
+                this.env
+                    .register_function(&name, function(func));
+                Ok(())
+            },
+        );
 
         methods.add_method("render", |_, this, name: String| {
             match this.env.render(&name, &this.context) {
