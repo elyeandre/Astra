@@ -5,6 +5,13 @@ template_engine:exclude_templates({ "base.html" })
 -- Add some data for the templates
 template_engine:context_add("count", 5)
 
+-- You can also add functions to be used within the templates
+template_engine:add_function("test", function (args)
+	pprint(args)
+
+	return "YEE HAW"
+end)
+
 -- Create an HTTP Server
 local server = Astra.http.server:new()
 

@@ -9,6 +9,13 @@ local templates = Astra.new_templating_engine("examples/templates/**/*.html")
 templates:exclude_templates({ "base.html" })
 -- Add some data for the templates
 templates:context_add("count", 5)
+
+-- You can also add functions to be used within the templates
+-- Example within templates: { test(key="value") }
+template_engine:add_function("test", function (args)
+    pprint(args)
+    return "YEE HAW"
+end)
 ```
 
 There are two ways of templating in Astra:

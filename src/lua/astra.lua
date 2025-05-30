@@ -101,6 +101,9 @@
 ---@field set_cookie fun(response: Response, cookie: Cookie) Sets a cookie
 ---@field remove_cookie fun(response: Response, cookie: Cookie) Removes a cookie from the list
 
+---@diagnostic disable-next-line: duplicate-doc-alias
+--- @alias template_function fun(args: table): any
+
 ---
 --- Tera templating engine
 ---@class TemplateEngine
@@ -110,6 +113,7 @@
 ---@field context_add fun(templates: TemplateEngine, key: string, value: any)
 ---@field context_remove fun(templates: TemplateEngine, key: string)
 ---@field context_get fun(templates: TemplateEngine, key: string): any
+---@field add_function fun(templates: TemplateEngine, name: string, function: template_function): any
 ---@field render fun(templates: TemplateEngine, name: string): string
 
 -- MARK: FileIO
