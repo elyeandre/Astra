@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+<!-- The base template. Read more at: https://keats.github.io/tera/docs -->
+
+<!-- Title -->
+{% block title %}Nested Page{% endblock title %}
+
+<!-- Add headers -->
+{% block head %}
+<!-- Original contents inherited -->
+{{ super() }}
+
+<!-- Your content -->
+<style type="text/css">
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    height: 100vh;
+    display: grid;
+    justify-content: center;
+    align-items: center;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #28721e, #49982a);
+    color: white;
+    text-align: center;
+  }
+
+  .name {
+    font-size: 2rem;
+    letter-spacing: 1px;
+  }
+</style>
+{% endblock head %}
+
+<!-- Add content -->
+{% block content %}
+<h1>TODAY WE HAVE NESTING!</h1>
+<h3>Tomorrow... I am not sure</h3>
+{% endblock content %}

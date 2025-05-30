@@ -143,7 +143,7 @@ pub fn load_routes(server: mlua::Table) -> Router {
             .expect("Could not parse the routes");
 
         #[allow(clippy::expect_used)]
-        let parse_template_names = regex::Regex::new(r"\.(html|htm|tera)$|index$")
+        let parse_template_names = regex::Regex::new(r"(?:index)?\.(html|htm|tera)$")
             .expect("Could not build the template parser");
 
         for route_values in routes.clone() {
