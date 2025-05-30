@@ -199,7 +199,7 @@ end
 ---@field trace fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
 ---@field static_dir fun(server: HTTPServer, path: string, serve_path: string, config: RouteConfiguration?)
 ---@field static_file fun(server: HTTPServer, path: string, serve_path: string, config: RouteConfiguration?)
----@field templates fun(server: HTTPServer, path: string, config: RouteConfiguration?)
+---@field templates fun(server: HTTPServer, templates: TemplateEngine, config: RouteConfiguration?)
 ---@field run fun(server: HTTPServer) Runs the server
 
 ---@diagnostic disable-next-line: duplicate-doc-alias
@@ -277,6 +277,17 @@ end
 ---@field remove_header fun(response: Response, key: string) Removes a header from the headers list
 ---@field set_cookie fun(response: Response, cookie: Cookie) Sets a cookie
 ---@field remove_cookie fun(response: Response, cookie: Cookie) Removes a cookie from the list
+
+---
+--- Tera templating engine
+---@class TemplateEngine
+---@field add_template fun(templates: TemplateEngine, name: string, template: string)
+---@field add_template_file fun(templates: TemplateEngine, name: string, path: string)
+---@field exclude_templates fun(templates: TemplateEngine, names: string[])
+---@field context_add fun(templates: TemplateEngine, key: string, value: any)
+---@field context_remove fun(templates: TemplateEngine, key: string)
+---@field context_get fun(templates: TemplateEngine, key: string): any
+---@field render fun(templates: TemplateEngine, name: string): string
 
 -- MARK: FileIO
 
@@ -426,9 +437,10 @@ function Server:register_methods()
 		})
 	end
 
-	self.templates = function(_, path, config)
+	self.templates = function(_, templates, config)
 		table.insert(self.routes, {
-			path = path,
+			path = "/",
+			templates = templates,
 			method = "templates",
 			func = function() end,
 			config = config or {},
@@ -439,6 +451,15 @@ function Server:register_methods()
 		---@diagnostic disable-next-line: undefined-global
 		astra_internal__start_server(self)
 	end
+end
+
+--- Returns a new templating engine
+---@param dir string path to the directory
+---@return TemplateEngine
+---@nodiscard
+function _G.Astra.new_templating_engine(dir)
+	---@diagnostic disable-next-line: undefined-global
+	return astra_internal__new_tera(dir)
 end
 
 -- MARK: FileIO

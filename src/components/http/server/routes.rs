@@ -15,7 +15,10 @@ use axum::{
     response::IntoResponse,
     routing::{delete, get, options, patch, post, put, trace},
 };
-use axum_extra::extract::{CookieJar, cookie::Cookie};
+use axum_extra::{
+    extract::{CookieJar, cookie::Cookie},
+    routing::RouterExt,
+};
 use mlua::LuaSerdeExt;
 
 #[derive(Debug, Clone, Copy, mlua::FromLua, serde::Serialize, serde::Deserialize, PartialEq)]
@@ -32,13 +35,14 @@ pub enum Method {
     StaticFile,
     Templates,
 }
-#[derive(Debug, Clone, mlua::FromLua, PartialEq)]
+#[derive(Debug, Clone, mlua::FromLua)]
 pub struct Route {
     pub path: String,
-    pub static_dir: Option<String>,
-    pub static_file: Option<String>,
     pub method: Method,
     pub function: mlua::Function,
+    pub static_dir: Option<String>,
+    pub static_file: Option<String>,
+    pub templates: Option<crate::components::tera_templating::TeraTemplating>,
     pub config: RouteConfiguration,
 }
 
@@ -115,10 +119,11 @@ pub fn load_routes(server: mlua::Table) -> Router {
     let mut parse_route = |entry: &mlua::Table| -> mlua::Result<()> {
         routes.push(routes::Route {
             path: lua.from_value(entry.get("path")?)?,
-            static_dir: lua.from_value(entry.get("static_dir")?)?,
-            static_file: lua.from_value(entry.get("static_file")?)?,
             method: lua.from_value(entry.get("method")?)?,
             function: entry.get::<mlua::Function>("func")?,
+            static_dir: lua.from_value(entry.get("static_dir")?)?,
+            static_file: lua.from_value(entry.get("static_file")?)?,
+            templates: entry.get("templates")?,
             config: lua.from_value(entry.get("config")?)?,
         });
 
@@ -137,7 +142,10 @@ pub fn load_routes(server: mlua::Table) -> Router {
             })
             .expect("Could not parse the routes");
 
-        let mut templates_added = false;
+        #[allow(clippy::expect_used)]
+        let parse_template_names = regex::Regex::new(r"\.(html|htm|tera)$|index$")
+            .expect("Could not build the template parser");
+
         for route_values in routes.clone() {
             let path = route_values.path.clone();
             let path = path.as_str();
@@ -193,50 +201,34 @@ pub fn load_routes(server: mlua::Table) -> Router {
                     }
                 }
                 Method::Templates => {
-                    if !templates_added {
-                        match tera::Tera::new(path) {
-                            Ok(templates) => {
-                                templates_added = true;
-                                let context = tera::Context::new();
-
-                                for i in templates.get_template_names() {
-                                    let route_path = i
-                                        .trim_end_matches(".html")
-                                        .trim_end_matches(".htm")
-                                        .trim_end_matches(".tera")
-                                        .trim_end_matches("index");
-
-                                    let template_render = match templates.render(i, &context) {
-                                        Ok(rendered) => axum::response::Html(rendered),
-                                        Err(e) => {
-                                            eprintln!("Error rendering templates: {e}");
-
-                                            axum::response::Html("503".to_string())
-                                        }
-                                    };
-                                    if route_path.ends_with("/") {
-                                        router = router.route(
-                                            &format!("/{}", route_path.trim_end_matches("/")),
-                                            get(move || async { template_render }),
-                                        );
-                                    } else {
-                                        router = router.route(
-                                            &format!("/{route_path}"),
-                                            get(move || async { template_render }),
-                                        );
-                                    }
-                                }
-
-                                router
-                            }
+                    if let Some(templates) = route_values.templates {
+                        let render_template = |template_name: &str| match templates
+                            .env
+                            .render(template_name, &templates.context)
+                        {
+                            Ok(rendered) => axum::response::Html(rendered),
                             Err(e) => {
-                                eprintln!("Error adding templates route: {e}");
-                                router
+                                eprintln!("Error rendering template {}: {}", template_name, e);
+                                axum::response::Html("503".to_string())
+                            }
+                        };
+
+                        for i in templates.get_template_names() {
+                            let route_path = parse_template_names.replace(i, "");
+                            let template_render = render_template(i);
+
+                            if route_path.is_empty() {
+                                router = router.route("/", get(move || async { template_render }));
+                            } else {
+                                router = router.route_with_tsr(
+                                    &format!("/{}", route_path),
+                                    get(move || async { template_render }),
+                                );
                             }
                         }
-                    } else {
-                        router
                     }
+
+                    router
                 }
             }
         }
@@ -249,7 +241,7 @@ pub fn load_routes(server: mlua::Table) -> Router {
                         .layer(tower_http::compression::CompressionLayer::new()),
                 );
             }
-        };
+        }
     }
 
     router

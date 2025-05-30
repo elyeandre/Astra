@@ -1,18 +1,22 @@
-use mlua::{LuaSerdeExt, UserData};
+use std::sync::Arc;
 
-#[derive(Debug, Clone)]
+use mlua::{FromLua, LuaSerdeExt, UserData};
+
+#[derive(Debug, Clone, FromLua)]
 pub struct TeraTemplating {
-    env: tera::Tera,
-    context: tera::Context,
+    pub env: tera::Tera,
+    pub context: tera::Context,
+    pub exclusions: Vec<Arc<str>>,
 }
-impl super::AstraComponent for TeraTemplating {
-    fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
+impl TeraTemplating {
+    pub fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
         lua.globals().set(
             "astra_internal__new_tera",
             lua.create_function(|_, dir: String| match tera::Tera::new(&dir) {
                 Ok(env) => Ok(Self {
                     env,
                     context: tera::Context::new(),
+                    exclusions: Vec::new(),
                 }),
                 Err(e) => Err(mlua::Error::runtime(format!(
                     "Could not start the Tera templating engine: {e}"
@@ -21,6 +25,12 @@ impl super::AstraComponent for TeraTemplating {
         )?;
 
         Ok(())
+    }
+
+    pub fn get_template_names(&self) -> impl Iterator<Item = &str> {
+        self.env
+            .get_template_names()
+            .filter(|name| !self.exclusions.contains(&(*name).into()))
     }
 }
 impl UserData for TeraTemplating {
@@ -37,7 +47,6 @@ impl UserData for TeraTemplating {
                 ))),
             },
         );
-
         methods.add_method_mut(
             "add_template_file",
             |_, this, (name, path): (String, String)| match this
@@ -50,6 +59,13 @@ impl UserData for TeraTemplating {
                 ))),
             },
         );
+        methods.add_method_mut("exclude_templates", |_, this, names: Vec<String>| {
+            for i in names {
+                this.exclusions.push(i.into());
+            }
+
+            Ok(())
+        });
 
         methods.add_method_mut(
             "context_add",
@@ -69,8 +85,7 @@ impl UserData for TeraTemplating {
             }
         });
 
-        methods.add_method_mut("render", |_, this, name: String| {
-            println!("{:?}", this.env.get_template_names().collect::<Vec<_>>());
+        methods.add_method("render", |_, this, name: String| {
             match this.env.render(&name, &this.context) {
                 Ok(result) => Ok(result),
                 Err(e) => Err(mlua::Error::runtime(format!(

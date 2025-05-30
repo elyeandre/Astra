@@ -1418,6 +1418,7 @@ dependencies = [
  "clap",
  "dotenvy",
  "mlua",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",
