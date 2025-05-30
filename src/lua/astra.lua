@@ -275,7 +275,7 @@ function Server:register_methods()
 end
 
 --- Returns a new templating engine
----@param dir string path to the directory
+---@param dir? string path to the directory, for example: `"templates/**/[!exclude.html]*.html"`
 ---@return TemplateEngine
 ---@nodiscard
 function _G.Astra.new_templating_engine(dir)

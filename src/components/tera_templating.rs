@@ -12,15 +12,24 @@ impl TeraTemplating {
     pub fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
         lua.globals().set(
             "astra_internal__new_tera",
-            lua.create_function(|_, dir: String| match tera::Tera::new(&dir) {
-                Ok(env) => Ok(Self {
+            lua.create_function(|_, dir: Option<String>| {
+                let env = match dir {
+                    Some(dir) => match tera::Tera::new(&dir) {
+                        Ok(env) => env,
+                        Err(e) => {
+                            return Err(mlua::Error::runtime(format!(
+                                "Could not start the Tera templating engine: {e}"
+                            )));
+                        }
+                    },
+                    None => tera::Tera::default(),
+                };
+
+                Ok(Self {
                     env,
                     context: tera::Context::new(),
                     exclusions: Vec::new(),
-                }),
-                Err(e) => Err(mlua::Error::runtime(format!(
-                    "Could not start the Tera templating engine: {e}"
-                ))),
+                })
             })?,
         )?;
 
