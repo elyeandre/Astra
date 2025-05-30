@@ -1,6 +1,6 @@
 [package]
 name = "lua-astra"
-version = "0.20.0"
+version = "0.21.0"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 description = "🔥 Blazingly Fast 🔥 web server runtime for Lua"
 documentation = "https://astra.arkforge.net/docs/latest"
@@ -81,7 +81,6 @@ tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 version-compare = "0.2.0"
 regex = "1.11.1"
-notify = "8.0.0"
 
 # database
 sqlx = { version = "0.8.3", features = [
