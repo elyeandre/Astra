@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.21.0](https://github.com/ArkForgeLabs/Astra/compare/v0.20.0..0.21.0) - 2025-05-30
+
+### Documentation
+
+- added documentation for templating - ([3a6d097](https://github.com/ArkForgeLabs/Astra/commit/3a6d0976e33f1800d02fbfb5e984bfe99c3d55f0))
+
+### Features
+
+- initial tera templating added - ([952e863](https://github.com/ArkForgeLabs/Astra/commit/952e863b5371da2296264a88f67b2c4e602dbac5))
+- added template routes and lua intellisense - ([e0365d1](https://github.com/ArkForgeLabs/Astra/commit/e0365d19658bf8557287266ba30efe74cbf49499))
+- added exclusions and routes have been optimized - ([846783c](https://github.com/ArkForgeLabs/Astra/commit/846783c249d0d886aeb39284d409266643166ed7))
+- now you can create an empty template engine - ([dcd2eed](https://github.com/ArkForgeLabs/Astra/commit/dcd2eed63e5c968efecb9e12c14cc64f9fd79851))
+- added templating example - ([7a59a5c](https://github.com/ArkForgeLabs/Astra/commit/7a59a5c974556b53579629230a1a990921a11bfe))
+- added template functions - ([6cd72fe](https://github.com/ArkForgeLabs/Astra/commit/6cd72fef783d24c033c005b4810a9f032ce7ca04))
+
 ## [0.19.3](https://github.com/ArkForgeLabs/Astra/compare/v0.19.2..v0.19.3) - 2025-05-24
 
 ### Features

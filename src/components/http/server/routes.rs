@@ -15,7 +15,10 @@ use axum::{
     response::IntoResponse,
     routing::{delete, get, options, patch, post, put, trace},
 };
-use axum_extra::extract::{CookieJar, cookie::Cookie};
+use axum_extra::{
+    extract::{CookieJar, cookie::Cookie},
+    routing::RouterExt,
+};
 use mlua::LuaSerdeExt;
 
 #[derive(Debug, Clone, Copy, mlua::FromLua, serde::Serialize, serde::Deserialize, PartialEq)]
@@ -30,14 +33,16 @@ pub enum Method {
     Trace,
     StaticDir,
     StaticFile,
+    Templates,
 }
-#[derive(Debug, Clone, mlua::FromLua, PartialEq)]
+#[derive(Debug, Clone, mlua::FromLua)]
 pub struct Route {
     pub path: String,
-    pub static_dir: Option<String>,
-    pub static_file: Option<String>,
     pub method: Method,
     pub function: mlua::Function,
+    pub static_dir: Option<String>,
+    pub static_file: Option<String>,
+    pub templates: Option<crate::components::tera_templating::TeraTemplating>,
     pub config: RouteConfiguration,
 }
 
@@ -112,43 +117,13 @@ pub fn load_routes(server: mlua::Table) -> Router {
     let mut routes = Vec::new();
 
     let mut parse_route = |entry: &mlua::Table| -> mlua::Result<()> {
-        //
-        // Routes {
-        //     base_middleware = chain { ctx, logger },
-        //     { GET, "/test",    chain { rateLimit, auth } (handleTest) },
-        //     { GET, "/headers", rateLimit(handleHeaders) },
-        //     { GET, "/",        justHi },
-        // }
-
-        // let method: Method = lua.from_value(entry.get(1)?)?;
-        // let details: mlua::Value = entry.get(3)?;
-        // routes.push(routes::Route {
-        //     method,
-        //     path: lua.from_value(entry.get(2)?)?,
-        //     static_dir: if method == Method::StaticDir {
-        //         Some(lua.from_value::<String>(details.clone())?)
-        //     } else {
-        //         None
-        //     },
-        //     static_file: if method == Method::StaticFile {
-        //         Some(lua.from_value::<String>(details.clone())?)
-        //     } else {
-        //         None
-        //     },
-        //     function: if let Some(function) = details.as_function() {
-        //         function.clone()
-        //     } else {
-        //         lua.create_function(|_, _: ()| Ok(()))?
-        //     },
-        //     config: entry.get::<RouteConfiguration>(4).unwrap_or_default(),
-        // });
-
         routes.push(routes::Route {
             path: lua.from_value(entry.get("path")?)?,
-            static_dir: lua.from_value(entry.get("static_dir")?)?,
-            static_file: lua.from_value(entry.get("static_file")?)?,
             method: lua.from_value(entry.get("method")?)?,
             function: entry.get::<mlua::Function>("func")?,
+            static_dir: lua.from_value(entry.get("static_dir")?)?,
+            static_file: lua.from_value(entry.get("static_file")?)?,
+            templates: entry.get("templates")?,
             config: lua.from_value(entry.get("config")?)?,
         });
 
@@ -166,6 +141,10 @@ pub fn load_routes(server: mlua::Table) -> Router {
                 Ok(())
             })
             .expect("Could not parse the routes");
+
+        #[allow(clippy::expect_used)]
+        let parse_template_names = regex::Regex::new(r"(?:index)?\.(html|htm|tera)$")
+            .expect("Could not build the template parser");
 
         for route_values in routes.clone() {
             let path = route_values.path.clone();
@@ -221,6 +200,36 @@ pub fn load_routes(server: mlua::Table) -> Router {
                         router
                     }
                 }
+                Method::Templates => {
+                    if let Some(templates) = route_values.templates {
+                        let render_template = |template_name: &str| match templates
+                            .env
+                            .render(template_name, &templates.context)
+                        {
+                            Ok(rendered) => axum::response::Html(rendered),
+                            Err(e) => {
+                                eprintln!("Error rendering template {}: {}", template_name, e);
+                                axum::response::Html("503".to_string())
+                            }
+                        };
+
+                        for i in templates.get_template_names() {
+                            let route_path = parse_template_names.replace(i, "");
+                            let template_render = render_template(i);
+
+                            if route_path.is_empty() {
+                                router = router.route("/", get(move || async { template_render }));
+                            } else {
+                                router = router.route_with_tsr(
+                                    &format!("/{}", route_path),
+                                    get(move || async { template_render }),
+                                );
+                            }
+                        }
+                    }
+
+                    router
+                }
             }
         }
 
@@ -232,7 +241,7 @@ pub fn load_routes(server: mlua::Table) -> Router {
                         .layer(tower_http::compression::CompressionLayer::new()),
                 );
             }
-        };
+        }
     }
 
     router

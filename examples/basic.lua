@@ -1,6 +1,6 @@
 -- import for intellisense. This line is replaced
 -- by the bundle code during runtime
-require("../src/lua/astra_bundle")
+import("../src/lua/astra_bundle")
 
 local server = Astra.http.server:new()
 
