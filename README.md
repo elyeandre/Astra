@@ -80,6 +80,12 @@ spawn_task(function ()
 end)
 ```
 
+## Community Projects
+
+- Astra Trails - <https://github.com/0riginaln0/astra-trails>
+
+If you have a project that uses or extends Astra, let us know about it by extending the list above or opening a new [issue](https://github.com/ArkForgeLabs/Astra/issues/new)
+
 ## Note
 
 This project may have breaking changes in minor versions until v1.0. Afterwhich semver will be followed. Contributions are always welcome!
