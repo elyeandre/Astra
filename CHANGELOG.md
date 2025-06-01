@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.21.1](https://github.com/ArkForgeLabs/Astra/compare/v0.21.0..0.21.1) - 2025-06-01
+
+### Bug Fixes
+
+- #39 - ([4879eaf](https://github.com/ArkForgeLabs/Astra/commit/4879eaf98cfb4bdaca0ae19226aadd385468faf2))
+
+### Documentation
+
+- added guide for regex - ([90dec9a](https://github.com/ArkForgeLabs/Astra/commit/90dec9a44124dcae812351d73394b7267f7d3b5d))
+
+### Features
+
+- Added regular expressions - ([4879eaf](https://github.com/ArkForgeLabs/Astra/commit/4879eaf98cfb4bdaca0ae19226aadd385468faf2))
+- added a debugging mode for the template routes - ([cb4b079](https://github.com/ArkForgeLabs/Astra/commit/cb4b079be1f3dc6d002abade6773b90a9719b58c))
+
+### Miscellaneous Chores
+
+- updated the readme to include Astra Trails - ([5c0bf82](https://github.com/ArkForgeLabs/Astra/commit/5c0bf823b458bc0f04f7931836ef54b927c52496))
+
+### Refactoring
+
+- moved templating path logics to within the Lua's side - ([08acab2](https://github.com/ArkForgeLabs/Astra/commit/08acab23c77170e5a26898c91d95b79f224debe7))
+
 ## [0.21.0](https://github.com/ArkForgeLabs/Astra/compare/v0.20.0..0.21.0) - 2025-05-30
 
 ### Documentation
