@@ -199,7 +199,9 @@ end
 ---@field trace fun(server: HTTPServer, path: string, callback: callback, config: RouteConfiguration?)
 ---@field static_dir fun(server: HTTPServer, path: string, serve_path: string, config: RouteConfiguration?)
 ---@field static_file fun(server: HTTPServer, path: string, serve_path: string, config: RouteConfiguration?)
+-- TODO?: Take these two out of server and into the template engine instead
 ---@field templates fun(server: HTTPServer, templates: TemplateEngine, config: RouteConfiguration?)
+---@field templates_debug fun(server: HTTPServer, templates: TemplateEngine, config: RouteConfiguration?)
 ---@field run fun(server: HTTPServer) Runs the server
 
 ---@diagnostic disable-next-line: duplicate-doc-alias
@@ -288,6 +290,7 @@ end
 ---@field add_template_file fun(templates: TemplateEngine, name: string, path: string)
 ---@field get_template_names fun(template: TemplateEngine): string[]
 ---@field exclude_templates fun(templates: TemplateEngine, names: string[])
+---@field reload_templates fun(templates: TemplateEngine)
 ---@field context_add fun(templates: TemplateEngine, key: string, value: any)
 ---@field context_remove fun(templates: TemplateEngine, key: string)
 ---@field context_get fun(templates: TemplateEngine, key: string): any
@@ -454,33 +457,48 @@ function Server:register_methods()
 		})
 	end
 
+	local function normalize_paths(path)
+		-- Ensure path starts with "/"
+		if path:sub(1, 1) ~= "/" then
+			path = "/" .. path
+		end
+
+		-- If empty, it's just the root
+		if path == "/" then
+			return { "/" }
+		end
+
+		-- Return both with and without trailing slash
+		if path:sub(-1) == "/" then
+			return { path, path:sub(1, -2) }
+		else
+			return { path, path .. "/" }
+		end
+	end
 	self.templates = function(_, templates, config)
 		local names = templates:get_template_names()
 		for _, value in ipairs(names) do
 			local path = templates_re:replace(value, "")
 			local content = templates:render(value)
-			pprint("path: " .. path)
-
-			local function normalize_paths(path)
-				if path == "" then
-					return { "/" }
-				end
-
-				-- to add / at the start if it doesn't have it already
-				path = (path:sub(1, 1) ~= "/") and ("/" .. path) or path
-
-				-- for both /route and /route/
-				if path:sub(-1) == "/" then
-					return { path, path:sub(1, -2) }
-				else
-					return { path, path .. "/" }
-				end
-			end
 
 			for _, route in ipairs(normalize_paths(path)) do
 				self:get(route, function(_, response)
 					response:set_header("Content-Type", "text/html")
 					return content
+				end)
+			end
+		end
+	end
+	self.templates_debug = function(_, templates, config)
+		local names = templates:get_template_names()
+		for _, value in ipairs(names) do
+			local path = templates_re:replace(value, "")
+
+			for _, route in ipairs(normalize_paths(path)) do
+				self:get(route, function(_, response)
+					templates:reload_templates()
+					response:set_header("Content-Type", "text/html")
+					return templates:render(value)
 				end)
 			end
 		end

@@ -7,9 +7,7 @@ template_engine:context_add("count", 5)
 
 -- You can also add functions to be used within the templates
 template_engine:add_function("test", function (args)
-	pprint(args)
-
-	return "YEE HAW"
+	return args.name
 end)
 
 -- Create an HTTP Server
@@ -29,6 +27,9 @@ end)
 
 -- Serve the templates
 server:templates(template_engine)
+
+-- Or for debugging
+-- server:templates_debug(template_engine)
 
 -- Run
 server:run()

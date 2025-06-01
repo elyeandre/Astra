@@ -26,6 +26,8 @@ This is where your templates are compiled and ran at the start of your server. T
 
 ```lua
 server:templates(templates)
+-- Or for debugging that have reload capabilities
+server:templates_debug(template_engine)
 ```
 
 ## Partial Hydration

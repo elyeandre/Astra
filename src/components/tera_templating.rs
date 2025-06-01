@@ -83,6 +83,14 @@ impl UserData for TeraTemplating {
 
             Ok(())
         });
+        methods.add_method_mut("reload_templates", |_, this, _: ()| {
+            match this.env.full_reload() {
+                Ok(()) => Ok(()),
+                Err(e) => Err(mlua::Error::runtime(format!(
+                    "ERROR TERRA - Could not reload the templates: {e}"
+                ))),
+            }
+        });
 
         methods.add_method_mut(
             "context_add",

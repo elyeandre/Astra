@@ -727,6 +727,8 @@ end)
 <h2 id="static-serve"><a class="header" href="#static-serve">Static serve</a></h2>
 <p>This is where your templates are compiled and ran at the start of your server. The data for these templates do not change once compiled.</p>
 <pre><code class="language-lua">server:templates(templates)
+-- Or for debugging that have reload capabilities
+server:templates_debug(template_engine)
 </code></pre>
 <h2 id="partial-hydration"><a class="header" href="#partial-hydration">Partial Hydration</a></h2>
 <p>This method allows you to include dynamic data and render them yourself.</p>
