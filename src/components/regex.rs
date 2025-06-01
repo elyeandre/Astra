@@ -41,8 +41,11 @@ impl UserData for LuaRegex {
 
         methods.add_method(
             "replace",
-            |_, this, (content, replace, limit): (String, String, usize)| {
-                Ok(this.re.replacen(&content, limit, replace).to_string())
+            |_, this, (content, replace, limit): (String, String, Option<usize>)| {
+                Ok(this
+                    .re
+                    .replacen(&content, limit.unwrap_or_default(), replace)
+                    .to_string())
             },
         );
     }

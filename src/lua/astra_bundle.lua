@@ -286,6 +286,7 @@ end
 ---@class TemplateEngine
 ---@field add_template fun(templates: TemplateEngine, name: string, template: string)
 ---@field add_template_file fun(templates: TemplateEngine, name: string, path: string)
+---@field get_template_names fun(template: TemplateEngine): string[]
 ---@field exclude_templates fun(templates: TemplateEngine, names: string[])
 ---@field context_add fun(templates: TemplateEngine, key: string, value: any)
 ---@field context_remove fun(templates: TemplateEngine, key: string)
@@ -419,10 +420,12 @@ end
 ---@diagnostic disable-next-line: inject-field
 function Server:register_methods()
 	local http_methods = { "get", "post", "put", "delete", "options", "patch", "trace" }
+	local templates_re = Astra.regex([[(?:index)?\.(html|lua|tera)$]])
 
 	for _, method in ipairs(http_methods) do
 		self[method] = function(_, path, callback, config)
-			table.insert(self.routes, {
+			local index = (path == "/") and 1 or #self.routes + 1
+			table.insert(self.routes, index, {
 				path = path,
 				method = method,
 				func = callback,
@@ -452,13 +455,35 @@ function Server:register_methods()
 	end
 
 	self.templates = function(_, templates, config)
-		table.insert(self.routes, {
-			path = "/",
-			templates = templates,
-			method = "templates",
-			func = function() end,
-			config = config or {},
-		})
+		local names = templates:get_template_names()
+		for _, value in ipairs(names) do
+			local path = templates_re:replace(value, "")
+			local content = templates:render(value)
+			pprint("path: " .. path)
+
+			local function normalize_paths(path)
+				if path == "" then
+					return { "/" }
+				end
+
+				-- to add / at the start if it doesn't have it already
+				path = (path:sub(1, 1) ~= "/") and ("/" .. path) or path
+
+				-- for both /route and /route/
+				if path:sub(-1) == "/" then
+					return { path, path:sub(1, -2) }
+				else
+					return { path, path .. "/" }
+				end
+			end
+
+			for _, route in ipairs(normalize_paths(path)) do
+				self:get(route, function(_, response)
+					response:set_header("Content-Type", "text/html")
+					return content
+				end)
+			end
+		end
 	end
 
 	self.run = function(_)

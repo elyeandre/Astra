@@ -70,6 +70,12 @@ impl UserData for TeraTemplating {
                 ))),
             },
         );
+        methods.add_method("get_template_names", |_, this, _: ()| {
+            Ok(this
+                .get_template_names()
+                .map(|name| name.to_string())
+                .collect::<Vec<_>>())
+        });
         methods.add_method_mut("exclude_templates", |_, this, names: Vec<String>| {
             for i in names {
                 this.exclusions.push(i.into());

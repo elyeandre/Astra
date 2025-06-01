@@ -15,10 +15,7 @@ use axum::{
     response::IntoResponse,
     routing::{delete, get, options, patch, post, put, trace},
 };
-use axum_extra::{
-    extract::{CookieJar, cookie::Cookie},
-    routing::RouterExt,
-};
+use axum_extra::extract::{CookieJar, cookie::Cookie};
 use mlua::LuaSerdeExt;
 
 #[derive(Debug, Clone, Copy, mlua::FromLua, serde::Serialize, serde::Deserialize, PartialEq)]
@@ -33,7 +30,6 @@ pub enum Method {
     Trace,
     StaticDir,
     StaticFile,
-    Templates,
 }
 #[derive(Debug, Clone, mlua::FromLua)]
 pub struct Route {
@@ -42,7 +38,6 @@ pub struct Route {
     pub function: mlua::Function,
     pub static_dir: Option<String>,
     pub static_file: Option<String>,
-    pub templates: Option<crate::components::tera_templating::TeraTemplating>,
     pub config: RouteConfiguration,
 }
 
@@ -123,7 +118,6 @@ pub fn load_routes(server: mlua::Table) -> Router {
             function: entry.get::<mlua::Function>("func")?,
             static_dir: lua.from_value(entry.get("static_dir")?)?,
             static_file: lua.from_value(entry.get("static_file")?)?,
-            templates: entry.get("templates")?,
             config: lua.from_value(entry.get("config")?)?,
         });
 
@@ -141,10 +135,6 @@ pub fn load_routes(server: mlua::Table) -> Router {
                 Ok(())
             })
             .expect("Could not parse the routes");
-
-        #[allow(clippy::expect_used)]
-        let parse_template_names = regex::Regex::new(r"(?:index)?\.(html|htm|tera)$")
-            .expect("Could not build the template parser");
 
         for route_values in routes.clone() {
             let path = route_values.path.clone();
@@ -199,36 +189,6 @@ pub fn load_routes(server: mlua::Table) -> Router {
                     } else {
                         router
                     }
-                }
-                Method::Templates => {
-                    if let Some(templates) = route_values.templates {
-                        let render_template = |template_name: &str| match templates
-                            .env
-                            .render(template_name, &templates.context)
-                        {
-                            Ok(rendered) => axum::response::Html(rendered),
-                            Err(e) => {
-                                eprintln!("Error rendering template {}: {}", template_name, e);
-                                axum::response::Html("503".to_string())
-                            }
-                        };
-
-                        for i in templates.get_template_names() {
-                            let route_path = parse_template_names.replace(i, "");
-                            let template_render = render_template(i);
-
-                            if route_path.is_empty() {
-                                router = router.route("/", get(move || async { template_render }));
-                            } else {
-                                router = router.route_with_tsr(
-                                    &format!("/{}", route_path),
-                                    get(move || async { template_render }),
-                                );
-                            }
-                        }
-                    }
-
-                    router
                 }
             }
         }
