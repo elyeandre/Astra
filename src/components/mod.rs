@@ -5,6 +5,7 @@ mod database;
 mod fileio;
 pub mod global_functions;
 pub mod http;
+mod regex;
 mod tera_templating;
 
 pub trait AstraComponent {

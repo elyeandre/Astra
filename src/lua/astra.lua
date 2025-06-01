@@ -168,6 +168,12 @@
 ---@field query_all fun(database: Database, sql: string, parameters: table | nil): table | nil
 ---@field close fun(database: Database)
 
+-- MARK: Regex
+---@class Regex
+---@field captures fun(regex: Regex, content: string): string[][]
+---@field replace fun(regex: Regex, content: string, replacement: string, limit: number?)
+---@field is_match fun(regex: Regex, content: string): boolean
+
 ---============================ DEFINITIONS ============================---
 
 -- The main global
@@ -194,6 +200,10 @@ _G.Astra.dotenv_load(".env.development")
 _G.Astra.dotenv_load(".env.dev")
 _G.Astra.dotenv_load(".env.test")
 _G.Astra.dotenv_load(".env.local")
+
+---@type fun(expression: string): Regex
+---@diagnostic disable-next-line: undefined-global
+_G.Astra.regex = astra_internal__regex
 
 ---@diagnostic disable-next-line: undefined-global
 os.getenv = astra_internal__getenv
