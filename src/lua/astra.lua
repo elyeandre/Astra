@@ -171,7 +171,7 @@
 -- MARK: Regex
 ---@class Regex
 ---@field captures fun(regex: Regex, content: string): string[][]
----@field replace fun(regex: Regex, content: string, replacement: string, limit: number?)
+---@field replace fun(regex: Regex, content: string, replacement: string, limit: number?): string
 ---@field is_match fun(regex: Regex, content: string): boolean
 
 ---============================ DEFINITIONS ============================---

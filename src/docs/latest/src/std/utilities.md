@@ -23,3 +23,29 @@ This is the load order of these files (They can overwrite the ones loaded previo
 - `.env.dev`
 - `.env.test`
 - `.env.local`
+
+## Regex
+
+Astra has support for a very performant regex engine. The regex code is advised to be compiled once and reused multiple times to save up even more on performence. Example:
+
+```lua
+-- Create a new regex
+local my_re = Astra.regex([[(?:index)?\.(html|lua|tera)$]])
+
+-- Capture all of the hits as list of string lists (string[][])
+pprint(my_re:captures([[
+path/to/file.html
+examples/templates/index.html
+src/components/base.tera
+]]))
+
+-- Check for matches available
+pprint(my_re:is_match("static/index.lua"))
+
+-- Or replace matches
+local content = "examples/templates/index.html"
+local to_replace_with = ""
+local number_of_replaces = 1 -- can omit it and not add it at all as argument
+local new_string = my_re:replace(content, to_replace_with, number_of_replaces)
+pprint(new_string)
+```
