@@ -13,6 +13,12 @@ end)
 -- Create an HTTP Server
 local server = Astra.http.server:new()
 
+-- Serve the templates
+template_engine:add_to_server(server)
+
+-- Or for debugging
+-- template_engine:add_to_server_debug(server)
+
 -- Partial hydration
 local count = 0
 server:get("/hydrate", function(request, response)
@@ -24,12 +30,6 @@ server:get("/hydrate", function(request, response)
 	-- render the template
 	return template_engine:render("index.html")
 end)
-
--- Serve the templates
-server:templates(template_engine)
-
--- Or for debugging
--- server:templates_debug(template_engine)
 
 -- Run
 server:run()

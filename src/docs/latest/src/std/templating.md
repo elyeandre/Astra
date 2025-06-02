@@ -25,9 +25,9 @@ There are two ways of templating in Astra:
 This is where your templates are compiled and ran at the start of your server. The data for these templates do not change once compiled.
 
 ```lua
-server:templates(templates)
+templates:add_to_server(server)
 -- Or for debugging that have reload capabilities
-server:templates_debug(template_engine)
+templates:add_to_server_debug(server)
 ```
 
 ## Partial Hydration

@@ -5,15 +5,15 @@ use mlua::{FromLua, LuaSerdeExt, UserData};
 use crate::LUA;
 
 #[derive(Debug, Clone, FromLua)]
-pub struct TeraTemplating {
+pub struct TemplatingEngine {
     pub env: tera::Tera,
     pub context: tera::Context,
     pub exclusions: Vec<Arc<str>>,
 }
-impl TeraTemplating {
+impl TemplatingEngine {
     pub fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
         lua.globals().set(
-            "astra_internal__new_tera",
+            "astra_internal__new_templating_engine",
             lua.create_function(|_, dir: Option<String>| {
                 let env = match dir {
                     Some(dir) => match tera::Tera::new(&dir) {
@@ -44,7 +44,7 @@ impl TeraTemplating {
             .filter(|name| !self.exclusions.contains(&(*name).into()))
     }
 }
-impl UserData for TeraTemplating {
+impl UserData for TemplatingEngine {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
         methods.add_method_mut(
             "add_template",

@@ -19,7 +19,7 @@ pub async fn register_components(lua: &mlua::Lua) -> mlua::Result<()> {
     database::Database::register_to_lua(lua)?;
     crypto::register_to_lua(lua)?;
     fileio::register_to_lua(lua)?;
-    tera_templating::TeraTemplating::register_to_lua(lua)?;
+    tera_templating::TemplatingEngine::register_to_lua(lua)?;
     regex::LuaRegex::register_to_lua(lua)?;
 
     Ok(())
