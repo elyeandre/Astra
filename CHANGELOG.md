@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.21.2](https://github.com/ArkForgeLabs/Astra/compare/v0.21.1..0.21.2) - 2025-06-02
+
+### Refactoring
+
+- [**breaking**] moved `server:templates` to `template_engine:add_to_server` and added `add_to_server_debug` as well - ([fbf70ba](https://github.com/ArkForgeLabs/Astra/commit/fbf70ba59eb7730c2314b68ec75ad12d7ecb0446))
+
 ## [0.21.1](https://github.com/ArkForgeLabs/Astra/compare/v0.21.0..0.21.1) - 2025-06-01
 
 ### Bug Fixes
