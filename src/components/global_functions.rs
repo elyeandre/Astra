@@ -117,12 +117,25 @@ pub fn setenv(lua: &mlua::Lua) {
     }
 }
 
-pub struct TaskHandler<T: Send + 'static>(tokio::task::JoinHandle<T>);
-
+pub struct TaskHandler<T: Send + 'static> {
+    pub handler: Option<tokio::task::JoinHandle<T>>,
+}
 impl<T: Send + 'static> UserData for TaskHandler<T> {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method("abort", |_, this, ()| {
-            this.0.abort();
+        methods.add_method_mut("abort", |_, this, ()| {
+            let handler = this.handler.take();
+            if let Some(handler) = handler {
+                handler.abort();
+            }
+            Ok(())
+        });
+
+        methods.add_async_method_mut("await", |_, mut this, ()| async move {
+            let handler = this.handler.take();
+            if let Some(handler) = handler {
+                // TODO: Handle the return
+                let _ = handler.await;
+            }
             Ok(())
         });
     }
@@ -134,7 +147,9 @@ where
     T: Send + 'static,
 {
     let handle = tokio::spawn(function);
-    TaskHandler(handle)
+    TaskHandler {
+        handler: Some(handle),
+    }
 }
 
 fn spawn_task(lua: &mlua::Lua) {

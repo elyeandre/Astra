@@ -6,6 +6,9 @@ use std::str::FromStr;
 pub async fn run_command(file_path: String, extra_args: Option<Vec<String>>) {
     let lua = &LUA;
 
+    // ! Move VM preparation into a separate function
+    // ! To enable VM creation on route request
+
     // Set the script path.
     #[allow(clippy::expect_used)]
     let path =
