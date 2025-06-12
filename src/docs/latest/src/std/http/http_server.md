@@ -96,7 +96,7 @@ Example:
 ```lua
 server:get("/", function(req)
     -- access the headers
-    pretty_print(req:headers())
+    pprint(req:headers())
 
     -- print the body as text
     print(req:body():text())

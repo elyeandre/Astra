@@ -2,7 +2,7 @@ use mlua::{LuaSerdeExt, UserData};
 
 pub fn register_to_lua(lua: &mlua::Lua) {
     dotenv_function(lua);
-    pretty_print(lua);
+    pprint(lua);
     import(lua);
     // json
     json_encode(lua);
@@ -28,7 +28,7 @@ pub fn dotenv_function(lua: &mlua::Lua) {
     }
 }
 
-pub fn pretty_print(lua: &mlua::Lua) {
+pub fn pprint(lua: &mlua::Lua) {
     if let Ok(function) = lua.create_function(|_, input: mlua::Value| {
         println!("{input:#?}");
 

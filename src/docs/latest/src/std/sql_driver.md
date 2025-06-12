@@ -21,5 +21,5 @@ local result = db:query_one("SELECT * FROM test;", {});
 local name = "Tom"
 local result = db:query_all("INSERT INTO test (name) VALUES ($1)", {name});
 
-pretty_print(result)
+pprint(result)
 ```

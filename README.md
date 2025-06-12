@@ -74,9 +74,9 @@ There are also utilities provided such as a PostgreSQL/SQLite, http client reque
 spawn_task(function ()
     -- HTTP Request to check your IP address
     local response = Astra.http.request("https://myip.wtf/json"):execute()
-    pretty_print(response:status_code())
-    pretty_print(response:remote_address())
-    pretty_print(response:body():json())
+    pprint(response:status_code())
+    pprint(response:remote_address())
+    pprint(response:body():json())
 end)
 ```
 

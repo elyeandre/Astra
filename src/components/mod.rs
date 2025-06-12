@@ -5,8 +5,8 @@ mod database;
 mod fileio;
 pub mod global_functions;
 pub mod http;
+mod jinja_templating;
 mod regex;
-mod tera_templating;
 
 pub trait AstraComponent {
     fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()>;
@@ -19,7 +19,8 @@ pub async fn register_components(lua: &mlua::Lua) -> mlua::Result<()> {
     database::Database::register_to_lua(lua)?;
     crypto::register_to_lua(lua)?;
     fileio::register_to_lua(lua)?;
-    tera_templating::TemplatingEngine::register_to_lua(lua)?;
+    // tera_templating::TemplatingEngine::register_to_lua(lua)?;
+    jinja_templating::TemplatingEngine::register_to_lua(lua)?;
     regex::LuaRegex::register_to_lua(lua)?;
 
     Ok(())

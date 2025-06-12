@@ -286,14 +286,15 @@ end
 ---@field add_template fun(templates: TemplateEngine, name: string, template: string)
 ---@field add_template_file fun(templates: TemplateEngine, name: string, path: string)
 ---@field get_template_names fun(template: TemplateEngine): string[]
----@field exclude_templates fun(templates: TemplateEngine, names: string[])
----@field reload_templates fun(templates: TemplateEngine)
+---@field exclude_templates fun(templates: TemplateEngine, names: string[]) Excludes template files from being added to the server for rendering
+---@field reload_templates fun(templates: TemplateEngine) Refreshes the template code from the glob given at the start
 ---@field context_add fun(templates: TemplateEngine, key: string, value: any)
 ---@field context_remove fun(templates: TemplateEngine, key: string)
 ---@field context_get fun(templates: TemplateEngine, key: string): any
----@field add_function fun(templates: TemplateEngine, name: string, function: template_function): any
----@field render fun(templates: TemplateEngine, name: string): string
----@field add_to_server fun(templates: TemplateEngine, server: HTTPServer)
+---@field add_function fun(templates: TemplateEngine, name: string, function: template_function): any Add a function to the templates
+---@field render fun(templates: TemplateEngine, name: string): string Renders the given template into a string with the available context
+---@field add_to_server fun(templates: TemplateEngine, server: HTTPServer) Adds the templates to the server
+---Adds the templates to the server in debugging manner, where the content refreshes on each request
 ---@field add_to_server_debug fun(templates: TemplateEngine, server: HTTPServer)
 
 -- MARK: FileIO
@@ -402,7 +403,7 @@ os.setenv = astra_internal__setenv
 ---@diagnostic disable-next-line: duplicate-set-field
 function _G.pprint(value)
 	---@diagnostic disable-next-line: undefined-global
-	astra_internal__pretty_print(value)
+	astra_internal__pprint(value)
 end
 
 ---
@@ -430,6 +431,8 @@ function _G.Astra.new_templating_engine(dir)
 	---@type TemplateEngine
 	---@diagnostic disable-next-line: undefined-global
 	local engine = astra_internal__new_templating_engine(dir)
+	---@type TemplateEngine
+	---@diagnostic disable-next-line: missing-fields
 	local TemplateEngineWrapper = { engine = engine }
 	local templates_re = Astra.regex([[(?:index)?\.(html|lua|tera)$]])
 
@@ -452,8 +455,6 @@ function _G.Astra.new_templating_engine(dir)
 		end
 	end
 
-	---Adds the templates to the server
-	---@param server HTTPServer
 	function TemplateEngineWrapper:add_to_server(server)
 		local names = self.engine:get_template_names()
 		for _, value in ipairs(names) do
@@ -469,9 +470,6 @@ function _G.Astra.new_templating_engine(dir)
 		end
 	end
 
-	---Adds the templates to the server in debugging manner,
-	---where the content refreshes on each request
-	---@param server HTTPServer
 	function TemplateEngineWrapper:add_to_server_debug(server)
 		local names = self.engine:get_template_names()
 		for _, value in ipairs(names) do
@@ -486,8 +484,6 @@ function _G.Astra.new_templating_engine(dir)
 			end
 		end
 	end
-
-	pprint(engine)
 
 	local templating_methods = {
 		"add_template",
@@ -505,7 +501,7 @@ function _G.Astra.new_templating_engine(dir)
 	for _, method in ipairs(templating_methods) do
 		---@diagnostic disable-next-line: assign-type-mismatch
 		TemplateEngineWrapper[method] = function(self, ...)
-			self.engine[method](engine, ...)
+			self.engine[method](self.engine, ...)
 		end
 	end
 

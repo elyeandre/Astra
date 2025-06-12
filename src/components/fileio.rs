@@ -15,7 +15,7 @@ pub fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
     )?;
 
     lua_globals.set(
-        "astra_internal__read_file",
+        "astra_internal__read_file_bytes",
         lua.create_async_function(|_, path: String| async {
             match tokio::fs::read(path).await {
                 Ok(result) => Ok(result),
@@ -25,7 +25,7 @@ pub fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
     )?;
 
     lua_globals.set(
-        "astra_internal__read_file_all",
+        "astra_internal__read_file_string",
         lua.create_async_function(|_, path: String| async {
             match tokio::fs::read_to_string(path).await {
                 Ok(result) => Ok(result),

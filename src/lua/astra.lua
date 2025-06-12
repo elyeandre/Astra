@@ -224,7 +224,7 @@ os.setenv = astra_internal__setenv
 ---@diagnostic disable-next-line: duplicate-set-field
 function _G.pprint(value)
 	---@diagnostic disable-next-line: undefined-global
-	astra_internal__pretty_print(value)
+	astra_internal__pprint(value)
 end
 
 ---

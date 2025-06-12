@@ -5,10 +5,10 @@ Sometimes your server needs to access other servers and make an HTTP Request, fo
 ```lua
 -- By default its always a GET request
 local response = Astra.http.request("https://example.com/"):execute()
-pretty_print(response:status_code())
-pretty_print(response:headers())
-pretty_print(response:remote_address())
-pretty_print(response:body():text())
+pprint(response:status_code())
+pprint(response:headers())
+pprint(response:remote_address())
+pprint(response:body():text())
 ```
 
 The `Astra.http.request` function returns a `HTTPClientRequest` object which can be further modified to the needs before execution. The way to do these modification is through chained setters.

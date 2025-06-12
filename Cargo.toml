@@ -61,7 +61,16 @@ tower-http = { version = "0.6.2", features = [
     "decompression-full",
 ] }
 time = "0.3.41"
+
+# templating
 tera = { version = "1.20.0" }
+minijinja = { version = "2.10.2", features = [
+    "loader",
+    "urlencode",
+    "loop_controls",
+    "speedups",
+] }
+glob = "0.3.2"
 
 # data formats
 serde = { version = "1.0.219", features = ["derive"] }
@@ -81,6 +90,7 @@ tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 version-compare = "0.2.0"
 regex = "1.11.1"
+if_chain = "1.0.2"
 
 # database
 sqlx = { version = "0.8.3", features = [
