@@ -104,7 +104,7 @@
 --- @alias template_function fun(args: table): any
 
 ---
---- Tera templating engine
+--- Jinja2 templating engine
 ---@class TemplateEngine
 ---@field add_template fun(templates: TemplateEngine, name: string, template: string)
 ---@field add_template_file fun(templates: TemplateEngine, name: string, path: string)
