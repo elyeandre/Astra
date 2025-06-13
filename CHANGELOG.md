@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.22.0](https://github.com/ArkForgeLabs/Astra/compare/v0.21.2..0.22.0) - 2025-06-13
+
+### Bug Fixes
+
+- #65 added await for async tasks - ([4c39a6c](https://github.com/ArkForgeLabs/Astra/commit/4c39a6c8507dd888b88d2427343191637e5e6a7f))
+
+### Documentation
+
+- updated documentation from tera to jinja - ([c42af7c](https://github.com/ArkForgeLabs/Astra/commit/c42af7c2f7a86e44f9cfa59739a4ece25826a059))
+
+### Features
+
+- moved from tera to minijinja - ([33bbcab](https://github.com/ArkForgeLabs/Astra/commit/33bbcab58fee9332cb3676f5e1cb37b5555f19c3))
+- minijinja functions are now working, added `remove_template` - ([ceef94b](https://github.com/ArkForgeLabs/Astra/commit/ceef94bbdc0aa1ce2364cc3a6e00177402fd9963))
+
+### BREAKING
+
+- `context_add`, `context_remove`, and `context_get` are removed. Instead you can add context while rendering or adding to the server
+
 ## [0.21.2](https://github.com/ArkForgeLabs/Astra/compare/v0.21.1..0.21.2) - 2025-06-02
 
 ### Refactoring
