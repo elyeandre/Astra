@@ -1,20 +1,20 @@
 use crate::LUA;
 use minijinja::ErrorKind::UndefinedError;
 use mlua::{ExternalError, FromLua, LuaSerdeExt, UserData};
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
 /// Will include the name, path, and source
 #[derive(Debug, Clone, FromLua)]
 struct Template {
     name: String,
-    path: String,
+    path: Option<String>,
     source: String,
 }
 
 #[derive(Debug, Clone, FromLua)]
 pub struct TemplatingEngine<'a> {
     pub env: minijinja::Environment<'a>,
-    pub templates: Vec<Template>,
+    templates: Vec<Template>,
     pub exclusions: Vec<Arc<str>>,
 }
 impl TemplatingEngine<'static> {
@@ -40,7 +40,7 @@ impl TemplatingEngine<'static> {
                                     Ok(source) => {
                                         engine.templates.push(Template {
                                             name: name.clone(),
-                                            path,
+                                            path: Some(path),
                                             source: source.clone(),
                                         });
 
@@ -65,17 +65,23 @@ impl TemplatingEngine<'static> {
     }
 }
 impl TemplatingEngine<'_> {
-    pub fn get_template_names(&self) -> impl Iterator<Item = &str> {
-        self.env.templates().filter_map(|(name, _)| {
-            if self.exclusions.contains(&(*name).into()) {
-                Some(name)
+    pub fn reload_templates(&mut self) -> mlua::Result<()> {
+        for i in self.templates.iter() {
+            let source = if let Some(source) = i
+                .path
+                .clone()
+                .and_then(|path| std::fs::read_to_string(path).ok())
+            {
+                source
             } else {
-                None
-            }
-        })
-    }
+                i.source.clone()
+            };
 
-    pub fn reload_templates(&self) -> mlua::Result<()> {
+            if let Err(e) = self.env.add_template_owned(i.name.clone(), source) {
+                return Err(e.into_lua_err());
+            }
+        }
+
         Ok(())
     }
 }
@@ -85,36 +91,69 @@ impl UserData for TemplatingEngine<'_> {
             "add_template",
             |_, this, (name, template): (String, String)| match this
                 .env
-                .add_template_owned(name, template)
+                .add_template_owned(name.clone(), template.clone())
             {
-                Ok(()) => Ok(()),
+                Ok(()) => {
+                    this.templates.push(Template {
+                        name,
+                        path: None,
+                        source: template,
+                    });
+
+                    Ok(())
+                }
                 Err(e) => Err(mlua::Error::runtime(format!(
-                    "ERROR TERRA - Could not add a template: {e}"
+                    "TEMPLATING ERROR - Could not add a template: {e}"
                 ))),
             },
         );
         methods.add_method_mut(
             "add_template_file",
             |_, this, (name, path): (String, String)| match std::fs::read_to_string(&path) {
-                Ok(source) => match this.env.add_template_owned(name, source) {
-                    Ok(()) => Ok(()),
-                    Err(e) => Err(mlua::Error::runtime(format!(
-                        "ERROR TERRA - Could not add a template: {e}"
-                    ))),
+                Ok(source) => match this.env.add_template_owned(name.clone(), source.clone()) {
+                    Ok(()) => {
+                        this.templates.push(Template {
+                            name,
+                            path: Some(path),
+                            source,
+                        });
+
+                        Ok(())
+                    }
+                    Err(e) => Err(e.into_lua_err()),
                 },
-                Err(e) => Err(mlua::Error::runtime(format!(
-                    "TEMPLATING ERROR - Could not find or open the file at the given path. {e}"
-                ))),
+                Err(e) => Err(e.into_lua_err()),
             },
         );
+        methods.add_method_mut("remove_template", |_, this, name: String| {
+            this.env.remove_template(&name.clone());
+
+            this.templates = this
+                .templates
+                .iter()
+                .filter(|template| template.name != name)
+                .cloned()
+                .collect::<Vec<_>>();
+
+            Ok(())
+        });
         methods.add_method("get_template_names", |_, this, _: ()| {
-            Ok(this
-                .get_template_names()
-                .map(|name| name.to_string())
-                .collect::<Vec<_>>())
+            let names = this
+                .templates
+                .iter()
+                .map(|template| template.name.clone())
+                .collect::<Vec<_>>();
+
+            Ok(names)
         });
         methods.add_method_mut("exclude_templates", |_, this, names: Vec<String>| {
             for i in names {
+                this.templates = this
+                    .templates
+                    .iter()
+                    .filter(|template| template.name != i)
+                    .cloned()
+                    .collect::<Vec<_>>();
                 this.exclusions.push(i.into());
             }
 
@@ -124,19 +163,23 @@ impl UserData for TemplatingEngine<'_> {
         methods.add_method_mut(
             "add_function",
             |_, this, (name, func): (String, mlua::Function)| {
-                let function = move |args: &HashMap<String, minijinja::Value>| -> Result<minijinja::Value, minijinja::Error> {
-                        match LUA.to_value(args) {
+                let function = move |args: minijinja::Value|
+                                                                            -> Result<minijinja::Value, minijinja::Error> {
+                        match LUA.to_value(&args) {
                             Ok(val) =>  match func.call::<mlua::Value>(val) {
                                 Ok(val) =>  match LUA.from_value::<minijinja::Value>(val) {
                                     Ok(val) => Ok(val),
-                                    Err(e) => 
-                                        Err(minijinja::Error::new(UndefinedError, format!("ERROR TEMPLATE FUNCTION - Could not convert the return type: {e}"))),
+                                    Err(e) =>
+                                        Err(minijinja::Error::new(UndefinedError,
+                                                format!("ERROR TEMPLATE FUNCTION - Could not convert the return type: {e}"))),
                                 },
-                                Err(e) => 
-                                    Err(minijinja::Error::new(UndefinedError,format!("ERROR TEMPLATE FUNCTION - Could not run the function: {e}"))),
+                                Err(e) =>
+                                    Err(minijinja::Error::new(UndefinedError,
+                                            format!("ERROR TEMPLATE FUNCTION - Could not run the function: {e}"))),
                             },
-                            Err(e) => 
-                                Err(minijinja::Error::new(UndefinedError,format!("ERROR TEMPLATE FUNCTION - Could not convert arguments into Lua table: {e}"))),
+                            Err(e) =>
+                                Err(minijinja::Error::new(UndefinedError,
+                                        format!("ERROR TEMPLATE FUNCTION - Could not convert arguments into Lua table: {e}"))),
                         }
                 };
 
@@ -150,18 +193,21 @@ impl UserData for TemplatingEngine<'_> {
 
         methods.add_method(
             "render",
-            |lua, this, (name, context): (String, mlua::Table)| match this.env.get_template(&name) {
-                Ok(result) => match result
-                    .render(lua.from_value::<minijinja::Value>(lua.to_value(&context)?)?)
-                {
-                    Ok(result) => Ok(result),
-                    Err(e) => Err(mlua::Error::runtime(format!(
-                        "ERROR TEMPLATE - Could not render template: {e}"
-                    ))),
-                },
-                Err(e) => Err(mlua::Error::runtime(format!(
-                    "ERROR TEMPLATE - Could not get template: {e}"
-                ))),
+            |lua, this, (name, context): (String, Option<mlua::Table>)| match this
+                .env
+                .get_template(&name)
+            {
+                Ok(result) => {
+                    match result.render(if let Some(context) = context {
+                        lua.from_value::<minijinja::Value>(lua.to_value(&context)?)?
+                    } else {
+                        minijinja::Value::UNDEFINED
+                    }) {
+                        Ok(result) => Ok(result),
+                        Err(e) => Err(e.into_lua_err()),
+                    }
+                }
+                Err(e) => Err(e.into_lua_err()),
             },
         );
     }
