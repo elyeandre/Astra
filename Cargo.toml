@@ -1,6 +1,6 @@
 [package]
 name = "lua-astra"
-version = "0.22.1"
+version = "0.22.2"
 authors = ["Elham Aryanpur <elhamaryanpur5@gmail.com>"]
 description = "🔥 Blazingly Fast 🔥 web server runtime for Lua"
 documentation = "https://astra.arkforge.net/docs/latest"
@@ -84,6 +84,7 @@ chrono = { version = "0.4.40", features = ["serde"] }
 
 # runtime
 tokio = { version = "1.44.1", features = ["macros", "rt-multi-thread"] }
+pollster = "0.4.0"
 clap = { version = "4.5.34", features = ["cargo", "derive"] }
 dotenvy = "0.15.7"
 tracing = "0.1.41"

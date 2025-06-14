@@ -163,8 +163,9 @@ impl UserData for TemplatingEngine<'_> {
             |_, this, (name, func): (String, mlua::Function)| {
                 let function = move |args: minijinja::Value|
                                                                             -> Result<minijinja::Value, minijinja::Error> {
+                    pollster::block_on(async {
                         match LUA.to_value(&args) {
-                            Ok(val) =>  match func.call::<mlua::Value>(val) {
+                            Ok(val) =>  match func.call_async::<mlua::Value>(val).await {
                                 Ok(val) =>  match LUA.from_value::<minijinja::Value>(val) {
                                     Ok(val) => Ok(val),
                                     Err(e) =>
@@ -179,6 +180,7 @@ impl UserData for TemplatingEngine<'_> {
                                 Err(minijinja::Error::new(UndefinedError,
                                         format!("ERROR TEMPLATE FUNCTION - Could not convert arguments into Lua table: {e}"))),
                         }
+                    })
                 };
 
                 // have to leak the name
