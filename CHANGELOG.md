@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.22.2](https://github.com/ArkForgeLabs/Astra/compare/v0.22.1..0.22.2) - 2025-06-14
+
+### Bug Fixes
+
+- async code within functions are now possible - ([be6d0f6](https://github.com/ArkForgeLabs/Astra/commit/be6d0f6e1680b6c19008f84305a20c08fc603e41))
+
 ## [0.22.1](https://github.com/ArkForgeLabs/Astra/compare/v0.22.0..0.22.1) - 2025-06-14
 
 ### Bug Fixes
