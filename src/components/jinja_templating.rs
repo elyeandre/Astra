@@ -138,13 +138,11 @@ impl UserData for TemplatingEngine<'_> {
             Ok(())
         });
         methods.add_method("get_template_names", |_, this, _: ()| {
-            let names = this
+            Ok(this
                 .templates
                 .iter()
                 .map(|template| template.name.clone())
-                .collect::<Vec<_>>();
-
-            Ok(names)
+                .collect::<Vec<_>>())
         });
         methods.add_method_mut("exclude_templates", |_, this, names: Vec<String>| {
             for i in names {

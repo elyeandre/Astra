@@ -321,7 +321,7 @@ function _G.Astra.new_templating_engine(dir)
 	for _, method in ipairs(templating_methods) do
 		---@diagnostic disable-next-line: assign-type-mismatch
 		TemplateEngineWrapper[method] = function(self, ...)
-			self.engine[method](self.engine, ...)
+			return self.engine[method](self.engine, ...)
 		end
 	end
 
