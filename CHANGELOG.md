@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.22.1](https://github.com/ArkForgeLabs/Astra/compare/v0.22.0..0.22.1) - 2025-06-14
+
+### Bug Fixes
+
+- the templating engine was not returning anything - ([6b8a02e](https://github.com/ArkForgeLabs/Astra/commit/6b8a02ea52a4406cd4f293133c4c5d1c759ddb7d))
+
 ## [0.22.0](https://github.com/ArkForgeLabs/Astra/compare/v0.21.2..0.22.0) - 2025-06-13
 
 ### Bug Fixes
