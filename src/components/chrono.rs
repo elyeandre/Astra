@@ -1,5 +1,17 @@
-use chrono::prelude::*;
+use chrono::{offset::LocalResult, prelude::*};
 use mlua::UserData;
+
+macro_rules! set_and_validate {
+    ($x:expr, $method:ident, $arg:expr, $err_msg:expr) => {
+        match $x.$method($arg) {
+            Some(n) => {
+                $x = n;
+                Ok(())
+            }
+            None => Err(mlua::Error::runtime($err_msg)),
+        }
+    };
+}
 
 pub struct LuaDateTime {
     dt: DateTime<FixedOffset>,
@@ -28,14 +40,25 @@ impl super::AstraComponent for LuaDateTime {
                 sec,
                 milli
             ): (i32, u32, u32, u32, u32, u32, u32)| {
-                let dt = Local
-                    .with_ymd_and_hms(year, month, day, hour, min, sec)
-                    .unwrap()
-                    .with_nanosecond(milli * 1000000)
-                    .unwrap()
-                    .fixed_offset();
-
-                Ok(Self{dt})
+                match NaiveDate::from_ymd_opt(year, month, day) {
+                    Some(naive_date) => {
+                        match naive_date.and_hms_milli_opt(hour, min, sec, milli) {
+                            Some(naive_datetime) => {
+                                match naive_datetime.and_local_timezone(Local) {
+                                    LocalResult::Single(dt) => Ok(Self{dt: dt.fixed_offset()}),
+                                    LocalResult::Ambiguous(earliest, _latest) => {
+                                        Ok(Self{dt: earliest.fixed_offset()})
+                                    }
+                                    LocalResult::None => {
+                                        Err(mlua::Error::runtime("Error while resolving local time!"))
+                                    }
+                                }
+                            }
+                            None => Err(mlua::Error::runtime("Invalid time!"))
+                        }
+                    }
+                    None => Err(mlua::Error::runtime("Invalid date!"))
+                }
             })?
         )?;
 
@@ -58,14 +81,17 @@ impl super::AstraComponent for LuaDateTime {
                 sec,
                 milli
             ): (i32, u32, u32, u32, u32, u32, u32)| {
-                let dt = Utc
-                    .with_ymd_and_hms(year, month, day, hour, min, sec)
-                    .unwrap()
-                    .with_nanosecond(milli * 1000000)
-                    .unwrap()
-                    .fixed_offset();
-
-                Ok(Self{dt})
+               match NaiveDate::from_ymd_opt(year, month, day) {
+                    Some(naive_date) => {
+                        match naive_date.and_hms_milli_opt(hour, min, sec, milli) {
+                            Some(naive_datetime) => {
+                                Ok(Self{dt: naive_datetime.and_utc().fixed_offset()})
+                            }
+                            None => Err(mlua::Error::runtime("Invalid time!"))
+                        }
+                    }
+                    None => Err(mlua::Error::runtime("Invalid date!"))
+                }
             })?
         )?;
 
@@ -100,55 +126,46 @@ impl UserData for LuaDateTime {
         });
 
         methods.add_method_mut("set_year", |_, this, year: i32| {
-            this.dt = this.dt.with_year(year).expect("Invalid year!");
-
-            Ok(())
+            set_and_validate!(this.dt, with_year, year, "Invalid Year!")
         });
 
         methods.add_method_mut("set_month", |_, this, month: u32| {
-            this.dt = this.dt.with_month(month).expect("Invalid month!");
-
-            Ok(())
+            set_and_validate!(this.dt, with_month, month, "Invalid month!")
         });
 
         methods.add_method_mut("set_date", |_, this, date: u32| {
-            this.dt = this.dt.with_day(date).expect("Invalid date!");
-
-            Ok(())
+            set_and_validate!(this.dt, with_day, date, "Invalid date!")
         });
 
         methods.add_method_mut("set_hour", |_, this, hour: u32| {
-            this.dt = this.dt.with_hour(hour).expect("Invalid hour!");
-
-            Ok(())
+            set_and_validate!(this.dt, with_hour, hour, "Invalid hour!")
         });
 
         methods.add_method_mut("set_minute", |_, this, min: u32| {
-            this.dt = this.dt.with_minute(min).expect("Invalid minute!");
-            Ok(())
+            set_and_validate!(this.dt, with_minute, min, "Invalid minute!")
         });
 
         methods.add_method_mut("set_second", |_, this, sec: u32| {
-            this.dt = this.dt.with_second(sec).expect("Invalid second!");
-
-            Ok(())
+            set_and_validate!(this.dt, with_second, sec, "Invalid second!")
         });
 
         methods.add_method_mut("set_millisecond", |_, this, milli: u32| {
-            this.dt = this
-                .dt
-                .with_nanosecond(milli * 1000000)
-                .expect("Invalid nanosecond!");
-
-            Ok(())
+            set_and_validate!(
+                this.dt,
+                with_nanosecond,
+                milli * 1000000,
+                "Invalid millisecond!"
+            )
         });
 
         methods.add_method_mut("set_epoch_milliseconds", |_, this, milli: i64| {
-            this.dt = DateTime::from_timestamp_millis(milli)
-                .expect("Invalid millisecond!")
-                .with_timezone(&this.dt.timezone().fix());
-
-            Ok(())
+            match DateTime::from_timestamp_millis(milli) {
+                Some(dt) => {
+                    this.dt = dt.with_timezone(&this.dt.timezone().fix());
+                    Ok(())
+                }
+                None => Err(mlua::Error::runtime("Invalid millisecond!")),
+            }
         });
 
         methods.add_method("to_date_string", |_, this, ()| {
