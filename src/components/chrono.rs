@@ -22,7 +22,7 @@ impl super::AstraComponent for LuaDateTime {
         let table = lua.create_table()?;
 
         table.set(
-            "astra_internal__new_now",
+            "astra_internal__datetime_new_now",
             lua.create_function(|_, ()| {
                 let dt = Local::now().fixed_offset();
                 Ok(Self { dt })
@@ -30,7 +30,7 @@ impl super::AstraComponent for LuaDateTime {
         )?;
 
         table.set(
-            "astra_internal__new_from",
+            "astra_internal__datetime_new_from",
             lua.create_function(
                 |_,
                  (year, month, day, hour, min, sec, milli): (
@@ -73,7 +73,7 @@ impl super::AstraComponent for LuaDateTime {
         )?;
 
         table.set(
-            "astra_internal__new_utc_now",
+            "astra_internal__datetime_new_utc_now",
             lua.create_function(|_, ()| {
                 let dt = Utc::now().fixed_offset();
                 Ok(Self { dt })
@@ -81,7 +81,7 @@ impl super::AstraComponent for LuaDateTime {
         )?;
 
         table.set(
-            "astra_internal__new_utc_from",
+            "astra_internal__datetime_new_utc_from",
             lua.create_function(
                 |_,
                  (year, month, day, hour, min, sec, milli): (
@@ -123,7 +123,7 @@ impl UserData for LuaDateTime {
 
         methods.add_method("get_month", |_, this, ()| Ok(this.dt.month()));
 
-        methods.add_method("get_date", |_, this, ()| Ok(this.dt.day()));
+        methods.add_method("get_day", |_, this, ()| Ok(this.dt.day()));
 
         methods.add_method("get_weekday", |_, this, ()| {
             Ok(this.dt.weekday().num_days_from_sunday())
@@ -135,7 +135,11 @@ impl UserData for LuaDateTime {
 
         methods.add_method("get_second", |_, this, ()| Ok(this.dt.second()));
 
-        methods.add_method("get_epoch_millis", |_, this, ()| {
+        methods.add_method("get_millisecond", |_, this, ()| {
+            Ok(this.dt.timestamp_subsec_millis())
+        });
+
+        methods.add_method("get_epoch_milliseconds", |_, this, ()| {
             Ok(this.dt.timestamp_millis())
         });
 
@@ -151,8 +155,8 @@ impl UserData for LuaDateTime {
             set_and_validate!(this.dt, with_month, month, "Invalid month!")
         });
 
-        methods.add_method_mut("set_date", |_, this, date: u32| {
-            set_and_validate!(this.dt, with_day, date, "Invalid date!")
+        methods.add_method_mut("set_day", |_, this, day: u32| {
+            set_and_validate!(this.dt, with_day, day, "Invalid date!")
         });
 
         methods.add_method_mut("set_hour", |_, this, hour: u32| {
