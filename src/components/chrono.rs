@@ -19,9 +19,7 @@ pub struct LuaDateTime {
 
 impl super::AstraComponent for LuaDateTime {
     fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
-        let table = lua.create_table()?;
-
-        table.set(
+        lua.globals().set(
             "astra_internal__datetime_new_now",
             lua.create_function(|_, ()| {
                 let dt = Local::now().fixed_offset();
@@ -29,9 +27,10 @@ impl super::AstraComponent for LuaDateTime {
             })?,
         )?;
 
-        table.set(
+        lua.globals().set(
             "astra_internal__datetime_new_from",
             lua.create_function(
+                #[allow(clippy::type_complexity)]
                 |_,
                  (year, month, day, hour, min, sec, milli): (
                     i32,
@@ -72,7 +71,7 @@ impl super::AstraComponent for LuaDateTime {
             )?,
         )?;
 
-        table.set(
+        lua.globals().set(
             "astra_internal__datetime_new_utc_now",
             lua.create_function(|_, ()| {
                 let dt = Utc::now().fixed_offset();
@@ -80,9 +79,10 @@ impl super::AstraComponent for LuaDateTime {
             })?,
         )?;
 
-        table.set(
+        lua.globals().set(
             "astra_internal__datetime_new_utc_from",
             lua.create_function(
+                #[allow(clippy::type_complexity)]
                 |_,
                  (year, month, day, hour, min, sec, milli): (
                     i32,
