@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.23.0](https://github.com/ArkForgeLabs/Astra/compare/v0.22.2..0.23.0) - 2025-06-22
+
+### Bug Fixes
+
+- #16 better error handling for chrono utility - ([7977da3](https://github.com/ArkForgeLabs/Astra/commit/7977da333e1d4f7e35705040caaf72eb80b1dc05))
+- renamed methods and functions - ([4441886](https://github.com/ArkForgeLabs/Astra/commit/4441886aa153841161f0e9dd39500bc71baf9a9f))
+- mend clipboard mishap - ([8962303](https://github.com/ArkForgeLabs/Astra/commit/8962303c911da92102402a58c1fd3e2a2b4d114b))
+- directly set datetime constructors as globals - ([98e7ea9](https://github.com/ArkForgeLabs/Astra/commit/98e7ea9298ac71bf387166f1785d53a384a9c1cd))
+
+### Features
+
+- #16 added chrono utility - ([f952ecb](https://github.com/ArkForgeLabs/Astra/commit/f952ecb87808518f7c8b455ba2c3e92fd96f4a67))
+- more flexible datetime construction - ([1e69842](https://github.com/ArkForgeLabs/Astra/commit/1e69842dfc71d197d4515f12d39778b894be3be7))
+- added type definitions for struct LuaDateTime - ([09b307c](https://github.com/ArkForgeLabs/Astra/commit/09b307c1818aab8aeb2a26954ff6a2460bf93439))
+
 ## [0.22.2](https://github.com/ArkForgeLabs/Astra/compare/v0.22.1..0.22.2) - 2025-06-14
 
 ### Bug Fixes
