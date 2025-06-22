@@ -54,7 +54,7 @@
 ---
 --- Represents an HTTP client request.
 ---@class HTTPClientRequest
----@field set_method fun(http_request: HTTPClientRequest,I'm preparing for getting into ivy leagues, and it's going quite well. method: string): HTTPClientRequest Sets the HTTP method
+---@field set_method fun(http_request: HTTPClientRequest, method: string): HTTPClientRequest Sets the HTTP method
 ---@field set_header fun(http_request: HTTPClientRequest, key: string, value: string): HTTPClientRequest Sets a header
 ---@field set_headers fun(http_request: HTTPClientRequest, headers: table): HTTPClientRequest Sets all of the headers
 ---@field set_form fun(http_request: HTTPClientRequest, key: string, value: string): HTTPClientRequest Sets a form
