@@ -159,68 +159,82 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="datetime"><a class="header" href="#datetime">DateTime</a></h1>
-<p>Astra provides date &amp; time functionality as an extension to the standard library. It is loosely inspired by the <a href="https://www.w3schools.com/jsref/jsref_obj_date.asp">JavaScript Date</a> implementation. It contains 4 constructors and 25 methods as of now.</p>
-<h2 id="quick-view"><a class="header" href="#quick-view">Quick View</a></h2>
-<ul>
-<li><a href="#constructors">Constructors</a>
-<ul>
-<li><a href="#new_now"><code>new_now()</code></a></li>
-<li><a href="#new_from"><code>new_from()</code></a></li>
-<li><a href="#new_utc_now"><code>new_utc_now()</code></a></li>
-<li><a href="#new_utc_from"><code>new_utc_from()</code></a></li>
-</ul>
-</li>
-<li><a href="#functions">Functions</a>
-<ul>
-<li>Getters
-<ul>
-<li><a href="#get_year"><code>get_year()</code></a></li>
-<li><a href="#get_month"><code>get_month()</code></a></li>
-<li><a href="#get_day"><code>get_day()</code></a></li>
-<li><a href="#get_weekday"><code>get_weekday()</code></a></li>
-<li><a href="#get_hour"><code>get_hour()</code></a></li>
-<li><a href="#get_minute"><code>get_minute()</code></a></li>
-<li><a href="#get_second"><code>get_second()</code></a></li>
-<li><a href="#get_millisecond"><code>get_millisecond()</code></a></li>
-<li><a href="#get_epoch_milliseconds"><code>get_epoch_milliseconds()</code></a></li>
-<li><a href="#get_timezone_offset"><code>get_timezone_offset()</code></a></li>
-</ul>
-</li>
-<li>Setters
-<ul>
-<li><a href="#set_yearyear-number"><code>set_year()</code></a></li>
-<li><a href="#set_monthmonth-number"><code>set_month()</code></a></li>
-<li><a href="#set_dayday-number"><code>set_day()</code></a></li>
-<li><a href="#set_hourhour-number"><code>set_hour()</code></a></li>
-<li><a href="#set_minutemin-number"><code>set_minute()</code></a></li>
-<li><a href="#set_secondsec-number"><code>set_second()</code></a></li>
-<li><a href="#set_millisecondmilli-number"><code>set_millisecond()</code></a></li>
-<li><a href="#set_epoch_millisecondsmilli-number"><code>set_epoch_milliseconds()</code></a></li>
-</ul>
-</li>
-<li>Formats
-<ul>
-<li><a href="#to_date_string"><code>to_date_string()</code></a></li>
-<li><a href="#to_time_string"><code>to_time_string()</code></a></li>
-<li><a href="#to_datetime_string"><code>to_datetime_string()</code></a></li>
-<li><a href="#to_iso_string"><code>to_iso_string()</code></a></li>
-<li><a href="#to_locale_date_string"><code>to_locale_date_string()</code></a></li>
-<li><a href="#to_locale_time_string"><code>to_locale_time_string()</code></a></li>
-<li><a href="#to_locale_datetime_string"><code>to_locale_datetime_string()</code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h2 id="constructors"><a class="header" href="#constructors">Constructors</a></h2>
-<h3 id="new_now"><a class="header" href="#new_now"><code>new_now()</code></a></h3>
-<p>Returns a DateTime object which corresponds to the current date, time &amp; local offset from UTC.</p>
-<pre><code class="language-lua">local dt = Astra.datetime.new_now()
-</code></pre>
-<h3 id="new_from"><a class="header" href="#new_from"><code>new_from()</code></a></h3>
-<p>Returns a DateTime object which corresponds to the provided date and/or time arguments &amp; local offset from UTC.</p>
-<pre><code class="language-lua">-- You can provide the following arguments:
+                        <style>
+.mdbook-alerts {
+  padding: 8px 16px;
+  margin-bottom: 16px;
+  border-left: 0.25em solid var(--mdbook-alerts-color);
+}
+
+.mdbook-alerts > *:first-child {
+  margin-top: 0;
+}
+
+.mdbook-alerts > *:last-child {
+  margin-bottom: 0;
+}
+
+.mdbook-alerts-title {
+  display: flex;
+  font-weight: 600;
+  align-items: center;
+  line-height: 1;
+  color: var(--mdbook-alerts-color);
+  text-transform: capitalize;
+}
+
+.mdbook-alerts-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.2em;
+  background-color: currentColor;
+  -webkit-mask: no-repeat center / 100%;
+  mask: no-repeat center / 100%;
+  -webkit-mask-image: var(--mdbook-alerts-icon);
+  mask-image: var(--mdbook-alerts-icon);
+}
+
+.mdbook-alerts-note {
+  --mdbook-alerts-color: rgb(9, 105, 218);
+  /* https://icon-sets.iconify.design/material-symbols/info-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 17q.425 0 .713-.288T13 16v-4q0-.425-.288-.712T12 11q-.425 0-.712.288T11 12v4q0 .425.288.713T12 17m0-8q.425 0 .713-.288T13 8q0-.425-.288-.712T12 7q-.425 0-.712.288T11 8q0 .425.288.713T12 9m0 13q-2.075 0-3.9-.788t-3.175-2.137q-1.35-1.35-2.137-3.175T2 12q0-2.075.788-3.9t2.137-3.175q1.35-1.35 3.175-2.137T12 2q2.075 0 3.9.788t3.175 2.137q1.35 1.35 2.138 3.175T22 12q0 2.075-.788 3.9t-2.137 3.175q-1.35 1.35-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12q0-3.35-2.325-5.675T12 4Q8.65 4 6.325 6.325T4 12q0 3.35 2.325 5.675T12 20m0-8"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-tip {
+  --mdbook-alerts-color: rgb(26, 127, 55);
+  /* https://icon-sets.iconify.design/material-symbols/lightbulb-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 22q-.825 0-1.412-.587T10 20h4q0 .825-.587 1.413T12 22m-3-3q-.425 0-.712-.288T8 18q0-.425.288-.712T9 17h6q.425 0 .713.288T16 18q0 .425-.288.713T15 19zm-.75-3q-1.725-1.025-2.738-2.75T4.5 9.5q0-3.125 2.188-5.312T12 2q3.125 0 5.313 2.188T19.5 9.5q0 2.025-1.012 3.75T15.75 16zm.6-2h6.3q1.125-.8 1.738-1.975T17.5 9.5q0-2.3-1.6-3.9T12 4Q9.7 4 8.1 5.6T6.5 9.5q0 1.35.613 2.525T8.85 14M12 14"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-important {
+  --mdbook-alerts-color: rgb(130, 80, 223);
+  /* https://icon-sets.iconify.design/material-symbols/chat-info-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 7q.425 0 .713-.288T13 6q0-.425-.288-.712T12 5q-.425 0-.712.288T11 6q0 .425.288.713T12 7m0 8q.425 0 .713-.288T13 14v-4q0-.425-.288-.712T12 9q-.425 0-.712.288T11 10v4q0 .425.288.713T12 15m-6 3l-2.3 2.3q-.475.475-1.088.213T2 19.575V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18zm-.85-2H20V4H4v13.125zM4 16V4z"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-warning {
+  --mdbook-alerts-color: rgb(154, 103, 0);
+  /* https://icon-sets.iconify.design/material-symbols/warning-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M2.725 21q-.275 0-.5-.137t-.35-.363q-.125-.225-.137-.488t.137-.512l9.25-16q.15-.25.388-.375T12 3q.25 0 .488.125t.387.375l9.25 16q.15.25.138.513t-.138.487q-.125.225-.35.363t-.5.137zm1.725-2h15.1L12 6zM12 18q.425 0 .713-.288T13 17q0-.425-.288-.712T12 16q-.425 0-.712.288T11 17q0 .425.288.713T12 18m0-3q.425 0 .713-.288T13 14v-3q0-.425-.288-.712T12 10q-.425 0-.712.288T11 11v3q0 .425.288.713T12 15m0-2.5"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-caution {
+  --mdbook-alerts-color: rgb(207, 34, 46);
+  /* https://icon-sets.iconify.design/material-symbols/brightness-alert-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 17q.425 0 .713-.288T13 16q0-.425-.288-.712T12 15q-.425 0-.712.288T11 16q0 .425.288.713T12 17m0-4q.425 0 .713-.288T13 12V8q0-.425-.288-.712T12 7q-.425 0-.712.288T11 8v4q0 .425.288.713T12 13m-3.35 7H6q-.825 0-1.412-.587T4 18v-2.65L2.075 13.4q-.275-.3-.425-.662T1.5 12q0-.375.15-.737t.425-.663L4 8.65V6q0-.825.588-1.412T6 4h2.65l1.95-1.925q.3-.275.663-.425T12 1.5q.375 0 .738.15t.662.425L15.35 4H18q.825 0 1.413.588T20 6v2.65l1.925 1.95q.275.3.425.663t.15.737q0 .375-.15.738t-.425.662L20 15.35V18q0 .825-.587 1.413T18 20h-2.65l-1.95 1.925q-.3.275-.662.425T12 22.5q-.375 0-.737-.15t-.663-.425zm.85-2l2.5 2.5l2.5-2.5H18v-3.5l2.5-2.5L18 9.5V6h-3.5L12 3.5L9.5 6H6v3.5L3.5 12L6 14.5V18zm2.5-6"%2F%3E%3C%2Fsvg%3E');
+}
+
+</style>
+<h1 id="datetime"><a class="header" href="#datetime">DateTime</a></h1>
+<p>Astra provides date &amp; time functionality as an extension to the standard library. It is loosely inspired by the <a href="https://www.w3schools.com/jsref/jsref_obj_date.asp">JavaScript Date</a> implementation.</p>
+<pre><code class="language-lua">-- Returns a DateTime object which corresponds to the current date, time &amp; local offset from UTC.
+local dt = Astra.datetime.new_now()
+-- or for UTC
+local dt = Astra.datetime.new_utc_now()
+
+-- Returns a DateTime object which corresponds to the provided date and/or time arguments &amp; local offset from UTC.
+-- You can provide the following arguments:
 --     year: number
 --     month: number?
 --     day: number?
@@ -231,80 +245,37 @@
 --
 -- Providing the year is mandatory.
 -- The other values, if not provided, will default to the following in respective order: 1, 1, 0, 0, 0, 0
-
 local dt = Astra.datetime.new_from(2001, 7, 8, 0, 24, 48, 241)
-</code></pre>
-<h3 id="new_utc_now"><a class="header" href="#new_utc_now"><code>new_utc_now()</code></a></h3>
-<p>Returns a DateTime object which corresponds to the current date &amp; time in UTC.</p>
-<pre><code class="language-lua">local dt = Astra.datetime.new_utc_now()
-</code></pre>
-<h3 id="new_utc_from"><a class="header" href="#new_utc_from"><code>new_utc_from()</code></a></h3>
-<p>Returns a DateTime object which corresponds to the provided date and/or time arguments in UTC.</p>
-<pre><code class="language-lua">-- You can provide the following arguments:
---     year: number
---     month: number?
---     day: number?
---     hour: number?
---     min: number?
---     sec: number?
---     milli: number?
--- Providing the year is mandatory.
--- The other values, if not provided, will default to the following in respective order: 1, 1, 0, 0, 0, 0
-
+-- or for UTC
 local dt = Astra.datetime.new_utc_from(2001, 7, 8, 0, 24, 48, 241)
 </code></pre>
-<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
-<h3 id="get_year"><a class="header" href="#get_year"><code>get_year()</code></a></h3>
-<p>Returns the year number in the calendar date.</p>
-<h3 id="get_month"><a class="header" href="#get_month"><code>get_month()</code></a></h3>
-<p>Returns the month number starting from 1.</p>
-<h3 id="get_day"><a class="header" href="#get_day"><code>get_day()</code></a></h3>
-<p>Returns the day of the month starting from 1.</p>
-<h3 id="get_weekday"><a class="header" href="#get_weekday"><code>get_weekday()</code></a></h3>
-<p>Returns a day-of-the-week number starting from Sunday = 0</p>
-<h3 id="get_hour"><a class="header" href="#get_hour"><code>get_hour()</code></a></h3>
-<p>Returns the hour number from 0 to 23.</p>
-<h3 id="get_minute"><a class="header" href="#get_minute"><code>get_minute()</code></a></h3>
-<p>Returns the minute number from 0 to 59.</p>
-<h3 id="get_second"><a class="header" href="#get_second"><code>get_second()</code></a></h3>
-<p>Returns the second number from 0 to 59.</p>
-<h3 id="get_millisecond"><a class="header" href="#get_millisecond"><code>get_millisecond()</code></a></h3>
-<p>Returns the number of milliseconds since the last second boundary.
-In the event of a leap second, this may exceed 999.</p>
-<h3 id="get_epoch_milliseconds"><a class="header" href="#get_epoch_milliseconds"><code>get_epoch_milliseconds()</code></a></h3>
-<p>Returns the number of non-leap-milliseconds since January 1, 1970 UTC.</p>
-<h3 id="get_timezone_offset"><a class="header" href="#get_timezone_offset"><code>get_timezone_offset()</code></a></h3>
-<p>Returns the number of minutes to add to convert from UTC to the local time.</p>
-<h3 id="set_yearyear-number"><a class="header" href="#set_yearyear-number"><code>set_year(year: number)</code></a></h3>
-<p>Changes the year number of the DateTime object.</p>
-<h3 id="set_monthmonth-number"><a class="header" href="#set_monthmonth-number"><code>set_month(month: number)</code></a></h3>
-<p>Changes the month number of the DateTime object.</p>
-<h3 id="set_dayday-number"><a class="header" href="#set_dayday-number"><code>set_day(day: number)</code></a></h3>
-<p>Changes the day-of-the-month number of the DateTime object.</p>
-<h3 id="set_hourhour-number"><a class="header" href="#set_hourhour-number"><code>set_hour(hour: number)</code></a></h3>
-<p>Changes the hour number of the DateTime object.</p>
-<h3 id="set_minutemin-number"><a class="header" href="#set_minutemin-number"><code>set_minute(min: number)</code></a></h3>
-<p>Changes the minute number of the DateTime object.</p>
-<h3 id="set_secondsec-number"><a class="header" href="#set_secondsec-number"><code>set_second(sec: number)</code></a></h3>
-<p>Changes the second number of the DateTime object.</p>
-<h3 id="set_millisecondmilli-number"><a class="header" href="#set_millisecondmilli-number"><code>set_millisecond(milli: number)</code></a></h3>
-<p>Changes the millisecond number since the last second boundary of the DateTime object.</p>
-<h3 id="set_epoch_millisecondsmilli-number"><a class="header" href="#set_epoch_millisecondsmilli-number"><code>set_epoch_milliseconds(milli: number)</code></a></h3>
-<p>Changes the number of non-leap milliseconds since January 1, 1970 UTC of the DateTime object.</p>
-<h3 id="to_date_string"><a class="header" href="#to_date_string"><code>to_date_string()</code></a></h3>
-<p>Returns the date stored in the DateTime object as a string in the format <code>Sun Jul 08 2001</code>.</p>
-<h3 id="to_time_string"><a class="header" href="#to_time_string"><code>to_time_string()</code></a></h3>
-<p>Returns the time stored in the DateTime object as a string in the format <code>00:34:48 ACST+0930</code>.</p>
-<h3 id="to_datetime_string"><a class="header" href="#to_datetime_string"><code>to_datetime_string()</code></a></h3>
-<p>Returns the date &amp; time stored in the DateTime object as a string in the format <code>Sun Jul 08 2001 00:34:48 ACST+0930</code>.</p>
-<h3 id="to_iso_string"><a class="header" href="#to_iso_string"><code>to_iso_string()</code></a></h3>
-<p>Returns the DateTime object as a string in the ISO8601 format with millisecond precision.</p>
-<h3 id="to_locale_date_string"><a class="header" href="#to_locale_date_string"><code>to_locale_date_string()</code></a></h3>
-<p>Returns the date stored in the DateTime object as a string in your locale's format.</p>
-<h3 id="to_locale_time_string"><a class="header" href="#to_locale_time_string"><code>to_locale_time_string()</code></a></h3>
-<p>Returns the time stored in the DateTime object as a string in your locale's format.</p>
-<h3 id="to_locale_datetime_string"><a class="header" href="#to_locale_datetime_string"><code>to_locale_datetime_string()</code></a></h3>
-<p>Returns the date &amp; time stored in the DateTime object as a string in your locale's format.</p>
+<p>Available methods:</p>
+<ul>
+<li><code>get_year()</code></li>
+<li><code>get_month()</code></li>
+<li><code>get_day()</code></li>
+<li><code>get_weekday()</code></li>
+<li><code>get_hour()</code></li>
+<li><code>get_minute()</code></li>
+<li><code>get_second()</code></li>
+<li><code>get_millisecond()</code></li>
+<li><code>get_epoch_milliseconds()</code></li>
+<li><code>get_timezone_offset()</code></li>
+<li><code>set_year(year: number)</code></li>
+<li><code>set_month(month: number)</code></li>
+<li><code>set_hour(hour: number)</code></li>
+<li><code>set_minute(min: number)</code></li>
+<li><code>set_second(sec: number)</code></li>
+<li><code>set_millisecond(milli: number)</code></li>
+<li><code>set_epoch_milliseconds(milli: number)</code></li>
+<li><code>to_date_string()</code></li>
+<li><code>to_time_string()</code></li>
+<li><code>to_datetime_string()</code></li>
+<li><code>to_iso_string()</code></li>
+<li><code>to_locale_date_string()</code></li>
+<li><code>to_locale_time_string()</code></li>
+<li><code>to_locale_datetime_string()</code></li>
+</ul>
 
                     </main>
 
