@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Utilities - ArkForge Astra</title>
+        <title>DateTime - ArkForge Astra</title>
 
 
         <!-- Custom HTML head -->
@@ -130,7 +130,7 @@
                         <a href="https://github.com/ArkForgeLabs/Astra" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/std/utilities.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/std/datetime.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -226,56 +226,66 @@
 }
 
 </style>
-<h1 id="utilities"><a class="header" href="#utilities">Utilities</a></h1>
-<p>These are some of the smaller utilities and functionality that are usually globally available regardless of the <code>Astra</code> namespace:</p>
-<h2 id="pretty-print"><a class="header" href="#pretty-print">Pretty Print</a></h2>
-<p><code>pprint</code> function is a wrapper over <code>print</code> function that also lets you print tables as well as other values.</p>
-<h2 id="string-split"><a class="header" href="#string-split">String Split</a></h2>
-<p><code>string.split</code> splits a string according to the seperator provided and result into an array of chunks.</p>
-<h2 id="dotenv"><a class="header" href="#dotenv">Dotenv</a></h2>
-<p>It is always a good idea to never include sensitive API keys within your server code. For these reasons we usually recommend using a <code>.env</code> file. Astra automatically loads them if they are present in the same folder into the environment, accessible through the <code>os.getenv</code>. You can also load your own file using the global <code>Astra.dotenv_load</code> function.</p>
-<p>This is the load order of these files (They can overwrite the ones loaded previously):</p>
-<ul>
-<li><code>.env</code></li>
-<li><code>.env.production</code></li>
-<li><code>.env.prod</code></li>
-<li><code>.env.development</code></li>
-<li><code>.env.dev</code></li>
-<li><code>.env.test</code></li>
-<li><code>.env.local</code></li>
-</ul>
-<h2 id="regex"><a class="header" href="#regex">Regex</a></h2>
-<p>Astra has support for a very performant regex engine. The regex code is advised to be compiled once and reused multiple times to save up even more on performence. Example:</p>
-<pre><code class="language-lua">-- Create a new regex
-local my_re = Astra.regex([[(?:index)?\.(html|lua|tera)$]])
+<h1 id="datetime"><a class="header" href="#datetime">DateTime</a></h1>
+<p>Astra provides date &amp; time functionality as an extension to the standard library. It is loosely inspired by the <a href="https://www.w3schools.com/jsref/jsref_obj_date.asp">JavaScript Date</a> implementation.</p>
+<pre><code class="language-lua">-- Returns a DateTime object which corresponds to the current date, time &amp; local offset from UTC.
+local dt = Astra.datetime.new_now()
+-- or for UTC
+local dt = Astra.datetime.new_utc_now()
 
--- Capture all of the hits as list of string lists (string[][])
-pprint(my_re:captures([[
-path/to/file.html
-examples/templates/index.html
-src/components/base.tera
-]]))
-
--- Check for matches available
-pprint(my_re:is_match("static/index.lua"))
-
--- Or replace matches
-local content = "examples/templates/index.html"
-local to_replace_with = ""
-local number_of_replaces = 1 -- can omit it and not add it at all as argument
-local new_string = my_re:replace(content, to_replace_with, number_of_replaces)
-pprint(new_string)
+-- Returns a DateTime object which corresponds to the provided date and/or time arguments &amp; local offset from UTC.
+-- You can provide the following arguments:
+--     year: number
+--     month: number?
+--     day: number?
+--     hour: number?
+--     min: number?
+--     sec: number?
+--     milli: number?
+--
+-- Providing the year is mandatory.
+-- The other values, if not provided, will default to the following in respective order: 1, 1, 0, 0, 0, 0
+local dt = Astra.datetime.new_from(2001, 7, 8, 0, 24, 48, 241)
+-- or for UTC
+local dt = Astra.datetime.new_utc_from(2001, 7, 8, 0, 24, 48, 241)
 </code></pre>
+<p>Available methods:</p>
+<ul>
+<li><code>get_year()</code></li>
+<li><code>get_month()</code></li>
+<li><code>get_day()</code></li>
+<li><code>get_weekday()</code></li>
+<li><code>get_hour()</code></li>
+<li><code>get_minute()</code></li>
+<li><code>get_second()</code></li>
+<li><code>get_millisecond()</code></li>
+<li><code>get_epoch_milliseconds()</code></li>
+<li><code>get_timezone_offset()</code></li>
+<li><code>set_year(year: number)</code></li>
+<li><code>set_month(month: number)</code></li>
+<li><code>set_hour(hour: number)</code></li>
+<li><code>set_minute(min: number)</code></li>
+<li><code>set_second(sec: number)</code></li>
+<li><code>set_millisecond(milli: number)</code></li>
+<li><code>set_epoch_milliseconds(milli: number)</code></li>
+<li><code>to_date_string()</code></li>
+<li><code>to_time_string()</code></li>
+<li><code>to_datetime_string()</code></li>
+<li><code>to_iso_string()</code></li>
+<li><code>to_locale_date_string()</code></li>
+<li><code>to_locale_time_string()</code></li>
+<li><code>to_locale_datetime_string()</code></li>
+</ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../std/datetime.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../std/async_tasks.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../internals/structure.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../std/utilities.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -285,11 +295,11 @@ pprint(new_string)
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../std/datetime.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../std/async_tasks.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../internals/structure.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../std/utilities.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

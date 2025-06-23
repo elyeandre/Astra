@@ -14,6 +14,7 @@
 - [Crypto](./std/crypto.md)
 - [SQL Driver](./std/sql_driver.md)
 - [Async Tasks](./std/async_tasks.md)
+- [DateTime](./std/datetime.md)
 - [Utilities](./std/utilities.md)
 
 # Internals
