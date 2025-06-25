@@ -203,7 +203,7 @@ impl UserData for LuaDateTime {
         });
 
         methods.add_method("to_iso_string", |_, this, ()| {
-            Ok(this.dt.to_rfc3339_opts(SecondsFormat::Millis, false))
+            Ok(this.dt.to_rfc3339_opts(SecondsFormat::Millis, true))
         });
 
         methods.add_method("to_locale_date_string", |_, this, ()| {
