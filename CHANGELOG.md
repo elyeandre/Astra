@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.23.1](https://github.com/ArkForgeLabs/Astra/compare/v0.23.0..0.23.1) - 2025-06-25
+
+### Bug Fixes
+
+- more accurate iso8601 format - ([b30d1af](https://github.com/ArkForgeLabs/Astra/commit/b30d1af5ad0d29aebaf6c7c6db2e781086817054))
+
+### Refactoring
+
+- rename `chrono.rs` to `datetime.rs` - ([8242b82](https://github.com/ArkForgeLabs/Astra/commit/8242b821c887fe4dc6ea7ec4959e55f30a1cc793))
+
 ## [0.23.0](https://github.com/ArkForgeLabs/Astra/compare/v0.22.2..0.23.0) - 2025-06-22
 
 ### Bug Fixes
