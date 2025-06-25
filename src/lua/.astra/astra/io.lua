@@ -3,12 +3,22 @@
 Astra.io = {}
 
 ---@class FileMetadata
----@field last_accessed fun(file_metadata: FileMetadata): number
----@field created_at fun(file_metadata: FileMetadata): number
----@field last_modified fun(file_metadata: FileMetadata): number
----@field file_type fun(file_metadata: FileMetadata): FileType
----@field file_permissions fun(file_metadata: FileMetadata): FileIOPermissions
+local FileMetadata = {}
 
+---@return number
+function FileMetadata:last_accessed() end
+
+---@return number
+function FileMetadata:created_at() end
+
+---@return number
+function FileMetadata:last_modified() end
+
+---@return FileType
+function FileMetadata:file_type() end
+
+---@return FileIOPermissions
+function FileMetadata:file_permissions() end
 
 ---Returns the metadata of a file or directory
 ---@param path string
@@ -62,22 +72,54 @@ function Astra.io.remove_dir(path) end
 function Astra.io.remove_dir_all(path) end
 
 ---@class FileType
----@field is_file    fun(file_type: FileType): boolean
----@field is_dir     fun(file_type: FileType): boolean
----@field is_symlink fun(file_type: FileType): boolean
+local FileType = {}
+
+---@return boolean
+function FileType:is_file() end
+
+---@return boolean
+function FileType:is_dir() end
+
+---@return boolean
+function FileType:is_symlink() end
 
 ---@class DirEntry
----@field file_name fun(dir_entry: DirEntry): string Returns the file_name of the entry
----@field file_type fun(dir_entry: DirEntry): FileType
----@field path      fun(dir_entry: DirEntry): string Returns the path of each entry in the list
+local DirEntry = {}
+
+---Returns the file_name of the entry
+---@return string
+function DirEntry:file_name() end
+
+---@return FileType
+function DirEntry:file_type() end
+
+---Returns the path of each entry in the list
+---@return string
+function DirEntry:path() end
 
 ---@class FileMetadata
----@field last_accessed    fun(file_metadata: FileMetadata): number
----@field created_at       fun(file_metadata: FileMetadata): number
----@field last_modified    fun(file_metadata: FileMetadata): number
----@field file_type        fun(file_metadata: FileMetadata): FileType
----@field file_permissions fun(file_metadata: FileMetadata): FileIOPermissions
+local FileMetadata = {}
+
+---@return number
+function FileMetadata:last_accessed() end
+
+---@return number
+function FileMetadata:created_at() end
+
+---@return number
+function FileMetadata:last_modified() end
+
+---@return FileType
+function FileMetadata:file_type() end
+
+---@return FileIOPermissions
+function FileMetadata:file_permissions() end
 
 ---@class FileIOPermissions
----@field is_readonly  fun(file_io_permissions: FileIOPermissions): boolean
----@field set_readonly fun(file_io_permissions: FileIOPermissions, value: boolean)
+local FileIOPermissions = {}
+
+---@return boolean
+function FileIOPermissions:is_readonly() end
+
+---@param value boolean
+function FileIOPermissions:set_readonly(value) end

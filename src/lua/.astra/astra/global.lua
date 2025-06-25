@@ -4,7 +4,6 @@
 ---@param value any
 function pprint(value) end
 
-
 ---The import function is similar to the lua's require functions.
 ---With the exception of the async import capability required for the
 ---Astra's utilities.
@@ -12,11 +11,15 @@ function pprint(value) end
 ---@return any
 function import(moduleName) end
 
-
 ---Represents an async task
 ---@class TaskHandler
----@field abort fun() Aborts the running task
----@field await fun() Awaits the task
+local TaskHandler = {}
+
+---Aborts the running task
+function TaskHandler:abort() end
+
+---Awaits the task
+function TaskHandler:await() end
 
 ---Starts a new async task
 ---@param callback fun() The callback to run the content of the async task
@@ -34,4 +37,3 @@ function spawn_timeout(callback, timeout) end
 ---@param timeout number The delay in milliseconds
 ---@return TaskHandler
 function spawn_interval(callback, timeout) end
-
