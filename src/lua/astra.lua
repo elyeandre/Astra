@@ -664,6 +664,37 @@ _G.Astra.json = {
 	end,
 }
 
+-- MARK: Datetime
+_G.Astra.datetime = {
+	-- Returns the current local time as a DateTime object
+	---@return DateTime
+	new_now = function()
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__datetime_new_now()
+	end,
+
+	-- Returns the current UTC time as a DateTime object
+	---@return DateTime
+	new_utc_now = function()
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__datetime_new_now(true)
+	end,
+
+	--- Returns a user-specified time period as a DateTime object with the local time offset
+	---@type fun(year: number, month: number?, date: number?, hour: number?, min: number?, sec: number?, milli: number?): DateTime
+	new_from = function(year, month, date, hour, min, sec, milli)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__datetime_new_from(year, month, date, hour, min, sec, milli, false)
+	end,
+
+	--- Returns a user-specified time period as a UTC DateTime object
+	---@type fun(year: number, month: number?, date: number?, hour: number?, min: number?, sec: number?, milli: number?): DateTime
+	new_utc_from = function(year, month, date, hour, min, sec, milli)
+		---@diagnostic disable-next-line: undefined-global
+		return astra_internal__datetime_new_from(year, month, date, hour, min, sec, milli, true)
+	end,
+}
+
 --------------
 
 -- This is to prevent a small undefined behavior in Lua
@@ -674,47 +705,3 @@ setmetatable(_G, {
 		error("Called non-existing variable")
 	end,
 })
-
-_G.Astra.datetime = {
-	-- Returns the current local time as a DateTime object
-	---@return DateTime
-	new_now = function()
-		---@diagnostic disable-next-line: undefined-global
-		return astra_internal__datetime_new_now()
-	end,
-
-	-- Returns a user-specified time period as a DateTime object with the local time offset
-	---@param year number
-	---@param month number?
-	---@param date number?
-	---@param hour number?
-	---@param min number?
-	---@param sec number?
-	---@param milli number?
-	---@return DateTime
-	new_from = function(year, month, date, hour, min, sec, milli)
-		---@diagnostic disable-next-line: undefined-global
-		return astra_internal__datetime_new_from(year, month, date, hour, min, sec, milli)
-	end,
-
-	-- Returns the current UTC time as a DateTime object
-	---@return DateTime
-	new_utc_now = function()
-		---@diagnostic disable-next-line: undefined-global
-		return astra_internal__datetime_new_utc_now()
-	end,
-
-	-- Returns a user-specified time period as a UTC DateTime object
-	---@param year number
-	---@param month number?
-	---@param date number?
-	---@param hour number?
-	---@param min number?
-	---@param sec number?
-	---@param milli number?
-	---@return DateTime
-	new_utc_from = function(year, month, date, hour, min, sec, milli)
-		---@diagnostic disable-next-line: undefined-global
-		return astra_internal__datetime_new_utc_from(year, month, date, hour, min, sec, milli)
-	end,
-}
