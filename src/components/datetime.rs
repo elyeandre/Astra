@@ -1,18 +1,6 @@
 use chrono::{offset::LocalResult, prelude::*};
 use mlua::UserData;
 
-macro_rules! set_and_validate {
-    ($x:expr, $method:ident, $arg:expr, $err_msg:expr) => {
-        match $x.$method($arg) {
-            Some(n) => {
-                $x = n;
-                Ok(())
-            }
-            None => Err(mlua::Error::runtime($err_msg)),
-        }
-    };
-}
-
 pub struct LuaDateTime {
     dt: DateTime<FixedOffset>,
 }
@@ -119,67 +107,70 @@ impl super::AstraComponent for LuaDateTime {
 
 impl UserData for LuaDateTime {
     fn add_methods<M: mlua::UserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method("get_year", |_, this, ()| Ok(this.dt.year()));
+        macro_rules! add_getter_method {
+            ($method_name:expr, $field:ident) => {
+                methods.add_method($method_name, |_, this, ()| Ok(this.dt.$field()));
+            };
+            ($method_name:expr, $field:ident, $conversion:expr) => {
+                methods.add_method($method_name, |_, this, ()| {
+                    Ok($conversion(this.dt.$field()))
+                });
+            };
+        }
+        macro_rules! add_setter_method {
+            ($method_name:expr,$method:ident, $field_type:ty, $error_msg:expr) => {
+                methods.add_method_mut($method_name, |_, this, field: $field_type| {
+                    match this.dt.$method(field) {
+                        Some(n) => {
+                            this.dt = n;
+                            Ok(())
+                        }
+                        None => Err(mlua::Error::runtime($error_msg)),
+                    }
+                });
+            };
+        }
+        macro_rules! add_formatted_method {
+            ($method_name:expr, $format_str:expr) => {
+                methods.add_method($method_name, |_, this, ()| {
+                    Ok(format!("{}", this.dt.format($format_str)))
+                });
+            };
+            ($method_name:expr, $operation:expr) => {
+                methods.add_method($method_name, |_, this, ()| Ok($operation));
+            };
+        }
 
-        methods.add_method("get_month", |_, this, ()| Ok(this.dt.month()));
+        add_getter_method!("get_year", year);
+        add_getter_method!("get_month", month);
+        add_getter_method!("get_day", day);
+        add_getter_method!("get_weekday", weekday, |w: Weekday| w
+            .num_days_from_sunday());
+        add_getter_method!("get_hour", hour);
+        add_getter_method!("get_minute", minute);
+        add_getter_method!("get_second", second);
+        add_getter_method!("get_millisecond", timestamp_subsec_millis);
+        add_getter_method!("get_epoch_milliseconds", timestamp_millis);
+        add_getter_method!("get_timezone_offset", offset, |offset: &FixedOffset| offset
+            .local_minus_utc()
+            / 60);
 
-        methods.add_method("get_day", |_, this, ()| Ok(this.dt.day()));
+        add_setter_method!("set_year", with_year, i32, "Invalid year!");
+        add_setter_method!("set_month", with_month, u32, "Invalid month!");
+        add_setter_method!("set_day", with_day, u32, "Invalid day!");
+        add_setter_method!("set_hour", with_hour, u32, "Invalid hour!");
+        add_setter_method!("set_minute", with_minute, u32, "Invalid minute!");
+        add_setter_method!("set_second", with_second, u32, "Invalid second!");
 
-        methods.add_method("get_weekday", |_, this, ()| {
-            Ok(this.dt.weekday().num_days_from_sunday())
+        methods.add_method_mut("set_millisecond", |_, this, field: u32| {
+            match this.dt.with_nanosecond(field * 1_000_000) {
+                Some(n) => {
+                    this.dt = n;
+                    Ok(())
+                }
+                None => Err(mlua::Error::runtime("Invalid millisecond!")),
+            }
         });
-
-        methods.add_method("get_hour", |_, this, ()| Ok(this.dt.hour()));
-
-        methods.add_method("get_minute", |_, this, ()| Ok(this.dt.minute()));
-
-        methods.add_method("get_second", |_, this, ()| Ok(this.dt.second()));
-
-        methods.add_method("get_millisecond", |_, this, ()| {
-            Ok(this.dt.timestamp_subsec_millis())
-        });
-
-        methods.add_method("get_epoch_milliseconds", |_, this, ()| {
-            Ok(this.dt.timestamp_millis())
-        });
-
-        methods.add_method("get_timezone_offset", |_, this, ()| {
-            Ok(this.dt.offset().local_minus_utc() / 60)
-        });
-
-        methods.add_method_mut("set_year", |_, this, year: i32| {
-            set_and_validate!(this.dt, with_year, year, "Invalid Year!")
-        });
-
-        methods.add_method_mut("set_month", |_, this, month: u32| {
-            set_and_validate!(this.dt, with_month, month, "Invalid month!")
-        });
-
-        methods.add_method_mut("set_day", |_, this, day: u32| {
-            set_and_validate!(this.dt, with_day, day, "Invalid date!")
-        });
-
-        methods.add_method_mut("set_hour", |_, this, hour: u32| {
-            set_and_validate!(this.dt, with_hour, hour, "Invalid hour!")
-        });
-
-        methods.add_method_mut("set_minute", |_, this, min: u32| {
-            set_and_validate!(this.dt, with_minute, min, "Invalid minute!")
-        });
-
-        methods.add_method_mut("set_second", |_, this, sec: u32| {
-            set_and_validate!(this.dt, with_second, sec, "Invalid second!")
-        });
-
-        methods.add_method_mut("set_millisecond", |_, this, milli: u32| {
-            set_and_validate!(
-                this.dt,
-                with_nanosecond,
-                milli * 1000000,
-                "Invalid millisecond!"
-            )
-        });
-
         methods.add_method_mut("set_epoch_milliseconds", |_, this, milli: i64| {
             match DateTime::from_timestamp_millis(milli) {
                 Some(dt) => {
@@ -190,32 +181,14 @@ impl UserData for LuaDateTime {
             }
         });
 
-        methods.add_method("to_date_string", |_, this, ()| {
-            Ok(format!("{}", this.dt.format("%a %b %d %Y")))
-        });
-
-        methods.add_method("to_time_string", |_, this, ()| {
-            Ok(format!("{}", this.dt.format("%T %Z%z")))
-        });
-
-        methods.add_method("to_datetime_string", |_, this, ()| {
-            Ok(format!("{}", this.dt.format("%a %b %d Y %T %Z%z")))
-        });
-
+        add_formatted_method!("to_date_string", "%a %b %d %Y");
+        add_formatted_method!("to_time_string", "%T %Z%z");
+        add_formatted_method!("to_datetime_string", "%a %b %d %Y %T %Z%z");
         methods.add_method("to_iso_string", |_, this, ()| {
             Ok(this.dt.to_rfc3339_opts(SecondsFormat::Millis, false))
         });
-
-        methods.add_method("to_locale_date_string", |_, this, ()| {
-            Ok(format!("{}", this.dt.format("%x")))
-        });
-
-        methods.add_method("to_locale_time_string", |_, this, ()| {
-            Ok(format!("{}", this.dt.format("%X")))
-        });
-
-        methods.add_method("to_locale_datetime_string", |_, this, ()| {
-            Ok(format!("{}", this.dt.format("%c")))
-        });
+        add_formatted_method!("to_locale_date_string", "%x");
+        add_formatted_method!("to_locale_time_string", "%X");
+        add_formatted_method!("to_locale_datetime_string", "%c");
     }
 }
