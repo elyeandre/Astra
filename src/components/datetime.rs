@@ -9,8 +9,12 @@ impl super::AstraComponent for LuaDateTime {
     fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
         lua.globals().set(
             "astra_internal__datetime_new_now",
-            lua.create_function(|_, ()| {
-                let dt = Local::now().fixed_offset();
+            lua.create_function(|_, is_utc: bool| {
+                let dt = if is_utc {
+                    Utc::now().fixed_offset()
+                } else {
+                    Local::now().fixed_offset()
+                };
                 Ok(Self { dt })
             })?,
         )?;
@@ -20,7 +24,7 @@ impl super::AstraComponent for LuaDateTime {
             lua.create_function(
                 #[allow(clippy::type_complexity)]
                 |_,
-                 (year, month, day, hour, min, sec, milli): (
+                 (year, month, day, hour, min, sec, milli, is_utc): (
                     i32,
                     Option<u32>,
                     Option<u32>,
@@ -28,74 +32,37 @@ impl super::AstraComponent for LuaDateTime {
                     Option<u32>,
                     Option<u32>,
                     Option<u32>,
+                    bool,
                 )| {
-                    match NaiveDate::from_ymd_opt(year, month.unwrap_or(1), day.unwrap_or(1)) {
-                        Some(naive_date) => {
-                            match naive_date.and_hms_milli_opt(
-                                hour.unwrap_or(0),
-                                min.unwrap_or(0),
-                                sec.unwrap_or(0),
-                                milli.unwrap_or(0),
-                            ) {
-                                Some(naive_datetime) => {
-                                    match naive_datetime.and_local_timezone(Local) {
-                                        LocalResult::Single(dt) => Ok(Self {
-                                            dt: dt.fixed_offset(),
-                                        }),
-                                        LocalResult::Ambiguous(earliest, _latest) => Ok(Self {
-                                            dt: earliest.fixed_offset(),
-                                        }),
-                                        LocalResult::None => Err(mlua::Error::runtime(
-                                            "Error while resolving local time!",
-                                        )),
-                                    }
-                                }
-                                None => Err(mlua::Error::runtime("Invalid time!")),
-                            }
-                        }
-                        None => Err(mlua::Error::runtime("Invalid date!")),
-                    }
-                },
-            )?,
-        )?;
-
-        lua.globals().set(
-            "astra_internal__datetime_new_utc_now",
-            lua.create_function(|_, ()| {
-                let dt = Utc::now().fixed_offset();
-                Ok(Self { dt })
-            })?,
-        )?;
-
-        lua.globals().set(
-            "astra_internal__datetime_new_utc_from",
-            lua.create_function(
-                #[allow(clippy::type_complexity)]
-                |_,
-                 (year, month, day, hour, min, sec, milli): (
-                    i32,
-                    Option<u32>,
-                    Option<u32>,
-                    Option<u32>,
-                    Option<u32>,
-                    Option<u32>,
-                    Option<u32>,
-                )| {
-                    match NaiveDate::from_ymd_opt(year, month.unwrap_or(1), day.unwrap_or(1)) {
-                        Some(naive_date) => {
-                            match naive_date.and_hms_milli_opt(
-                                hour.unwrap_or(0),
-                                min.unwrap_or(0),
-                                sec.unwrap_or(0),
-                                milli.unwrap_or(0),
-                            ) {
-                                Some(naive_datetime) => Ok(Self {
+                    match NaiveDate::from_ymd_opt(year, month.unwrap_or(1), day.unwrap_or(1))
+                        .and_then(|naive_date| {
+                            naive_date.and_hms_milli_opt(
+                                hour.unwrap_or_default(),
+                                min.unwrap_or_default(),
+                                sec.unwrap_or_default(),
+                                milli.unwrap_or_default(),
+                            )
+                        }) {
+                        Some(naive_datetime) => {
+                            if is_utc {
+                                Ok(Self {
                                     dt: naive_datetime.and_utc().fixed_offset(),
-                                }),
-                                None => Err(mlua::Error::runtime("Invalid time!")),
+                                })
+                            } else {
+                                match naive_datetime.and_local_timezone(Local) {
+                                    LocalResult::Single(dt) => Ok(Self {
+                                        dt: dt.fixed_offset(),
+                                    }),
+                                    LocalResult::Ambiguous(earliest, _latest) => Ok(Self {
+                                        dt: earliest.fixed_offset(),
+                                    }),
+                                    LocalResult::None => Err(mlua::Error::runtime(
+                                        "Error while resolving local time!",
+                                    )),
+                                }
                             }
                         }
-                        None => Err(mlua::Error::runtime("Invalid date!")),
+                        None => Err(mlua::Error::runtime("Invalid time!")),
                     }
                 },
             )?,
