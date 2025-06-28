@@ -5,27 +5,13 @@ Astra.datetime = {}
 ---@return DateTime
 function Astra.datetime.new_now() end
 
----@param year number
----@param month number?
----@param day number?
----@param hour number?
----@param min number?
----@param sec number?
----@param milli number?
----@return DateTime
+---@type fun(year: number, month: number?, day: number?, hour: number?, min: number?, sec: number?, milli: number?): DateTime
 function Astra.datetime.new_from(year, month, day, hour, min, sec, milli) end
 
 ---@return DateTime
 function Astra.datetime.new_utc_now() end
 
----@param year number
----@param month number?
----@param day number?
----@param hour number?
----@param min number?
----@param sec number?
----@param milli number?
----@return DateTime
+---@type fun(year: number, month: number?, day: number?, hour: number?, min: number?, sec: number?, milli: number?): DateTime
 function Astra.datetime.new_utc_from(year, month, day, hour, min, sec, milli) end
 
 ---@class DateTime
