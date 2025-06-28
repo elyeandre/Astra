@@ -44,7 +44,7 @@ pub async fn run_command(file_path: String, extra_args: Option<Vec<String>>) {
     #[allow(clippy::expect_used)]
     let user_file = std::fs::read_to_string(&file_path).expect("Couldn't read file");
     if let Err(e) = lua.load(user_file).set_name(file_path).exec_async().await {
-        eprintln!("{}", e);
+        eprintln!("{e}");
     }
 
     // Wait for all Tokio tasks to finish.
@@ -187,8 +187,11 @@ async fn registration(lua: &mlua::Lua) -> String {
     lib
 }
 
-/// Prepares the Lua prelude.
 fn prepare_prelude() -> (String, String) {
+    //! Make a global hashmap for each Rust native lib to add type definition
+    //! And here add the libs through crabtime comptime lib
+    //! And connect everything to astra.lua so that it can be ran on runtime with customization
+
     /// Filters lines between start and end markers.
     fn filter(input: String, start: &str, end: &str) -> String {
         let mut new_lines = Vec::new();

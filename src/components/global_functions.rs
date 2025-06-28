@@ -215,7 +215,8 @@ fn import(lua: &mlua::Lua) {
             return Ok(mlua::Value::Nil);
         }
 
-        let key_id = format!("ASTRA_INTERNAL__IMPORT_CACHE_{}", uuid::Uuid::new_v4());
+        // TODO: check if this fixes imports
+        let key_id = format!("ASTRA_INTERNAL__IMPORT_CACHE_{path}");
         let key_id = key_id.as_str();
 
         let mut cache = lua
