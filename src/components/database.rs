@@ -36,7 +36,7 @@ impl crate::components::AstraComponent for Database {
                     "sqlite" => {
                         match sqlx::sqlite::SqlitePoolOptions::new()
                             .max_connections(max_connections)
-                            .connect(format!("sqlite:{}", url).as_str())
+                            .connect(format!("sqlite:{url}").as_str())
                             .await
                         {
                             Ok(pool) => Ok(Database {
