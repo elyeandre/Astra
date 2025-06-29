@@ -37,3 +37,27 @@ function spawn_timeout(callback, timeout) end
 ---@param timeout number The delay in milliseconds
 ---@return TaskHandler
 function spawn_interval(callback, timeout) end
+
+---Splits a sentence into an array given the separator
+---@param input_str string The input string
+---@param separator_str string The input string
+---@return table array
+---@nodiscard
+function string.split(input_str, separator_str) end
+
+---Sets the environment variable.
+---
+---NOT SAFE WHEN USED IN MULTITHREADING ENVIRONMENT
+function os.setenv() end
+
+Astra.json = {}
+
+---Encodes the value into a valid JSON string
+---@param value any
+---@return string
+function Astra.json.encode(value) end
+
+---Decodes the JSON string into a valid lua value
+---@param value string
+---@return any
+function Astra.json.decode(value) end
