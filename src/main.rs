@@ -39,7 +39,10 @@ enum AstraCLI {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         extra_args: Option<Vec<String>>,
     },
-    #[command(about = "Exports the packages Lua bundle for import for IntelliSense")]
+    #[command(
+        about = "Exports the packages Lua bundle for import for IntelliSense",
+        alias = "export"
+    )]
     ExportBundle {
         /// Path to the export file.
         path: Option<String>,

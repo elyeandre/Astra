@@ -66,11 +66,38 @@ pub async fn export_bundle_command(folder_path: Option<String>) {
         .expect("Error setting up the standard library");
     lua_lib.extend(std_lib);
 
-    let folder_path = std::path::Path::new(&folder_path.unwrap_or(".".to_string()));
+    let folder_path = std::path::Path::new(&folder_path.unwrap_or(".".to_string())).join(".astra");
 
-    // Write the bundled library to the file.
-    #[allow(clippy::expect_used)]
-    std::fs::write(file_path, lib).expect("Could not export the bundled library");
+    let _ = std::fs::create_dir_all(&folder_path);
+    for (file_path, content) in lua_lib {
+        // Write the bundled library to the file.
+        std::fs::write(folder_path.join(&file_path), content)
+            .unwrap_or_else(|e| panic!("Could not export the {file_path}: {e}"));
+    }
+
+    let runtime = if cfg!(feature = "lua54") {
+        "Lua 5.4"
+    } else if cfg!(feature = "luajit52") {
+        "LuaJIT"
+    } else if cfg!(feature = "lua51") {
+        "Lua 5.1"
+    } else if cfg!(feature = "lua52") {
+        "Lua 5.2"
+    } else if cfg!(feature = "lua53") {
+        "Lua 5.3"
+    } else {
+        "LuaJIT"
+    };
+    let luarc_file = include_str!("../.luarc.json")
+        .replace("src", ".astra")
+        .replace("LuaJIT", runtime);
+    if let Ok(does_luarc_exist) = std::fs::exists(".luarc.json") {
+        if !does_luarc_exist {
+            std::fs::write(".luarsc.json", luarc_file)
+                .unwrap_or_else(|e| panic!("Could not export the .luarc.json: {e}"));
+        }
+    }
+
     println!("🚀 Successfully exported the bundled library!");
     std::process::exit(0);
 }
@@ -203,11 +230,8 @@ fn prepare_prelude() -> Vec<(String, String)> {
     let mut lua_lib = include_dir::include_dir!("./src/lua/libs")
         .files()
         .filter_map(|file| {
-            if let Some(name) = file
-                .path()
-                .file_name()
-                .map(|name| name.to_str().and_then(|name| Some(name.replace("@", ""))))
-                && let Some(name) = name
+            if let Some(name) = file.path().file_name()
+                && let Some(name) = name.to_str().map(|name| name.to_string())
                 && let Some(content) = file.contents_utf8()
             {
                 Some((name, content.replace("@ASTRA_VERSION", crate_version!())))
