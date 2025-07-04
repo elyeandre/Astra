@@ -229,7 +229,7 @@ fn import(lua: &mlua::Lua) {
             lua.registry_value::<mlua::Value>(key)
         } else {
             let cleaned_path = path.replace(".", std::path::MAIN_SEPARATOR_STR);
-            let file = std::fs::read_to_string(format!("{cleaned_path}.lua"))?;
+            let file = tokio::fs::read_to_string(format!("{cleaned_path}.lua")).await?;
             let result = lua
                 .load(file)
                 .set_name(cleaned_path)
