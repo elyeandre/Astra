@@ -3,29 +3,33 @@ use mlua::LuaSerdeExt;
 mod crypto;
 mod database;
 mod datetime;
-mod fileio;
-pub mod global_functions;
+pub mod global;
 pub mod http;
-mod jinja_templating;
+mod io;
 mod regex;
+mod templates;
 
-pub trait AstraComponent {
-    fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()>;
-}
-
-pub async fn register_components(lua: &mlua::Lua) -> mlua::Result<()> {
-    global_functions::register_to_lua(lua);
+pub async fn register_components(lua: &mlua::Lua) -> mlua::Result<Vec<(String, String)>> {
+    let global = global::register_to_lua(lua);
     http::server::register_to_lua(lua)?;
     http::client::HTTPClientRequest::register_to_lua(lua)?;
-    database::Database::register_to_lua(lua)?;
-    crypto::register_to_lua(lua)?;
-    fileio::register_to_lua(lua)?;
-    // tera_templating::TemplatingEngine::register_to_lua(lua)?;
-    jinja_templating::TemplatingEngine::register_to_lua(lua)?;
-    regex::LuaRegex::register_to_lua(lua)?;
-    datetime::LuaDateTime::register_to_lua(lua)?;
+    let database = database::Database::register_to_lua(lua)?;
+    let datetime = datetime::LuaDateTime::register_to_lua(lua)?;
+    let crypto = crypto::register_to_lua(lua)?;
+    let fileio = io::register_to_lua(lua)?;
+    let templates = templates::TemplatingEngine::register_to_lua(lua)?;
+    let regex = regex::LuaRegex::register_to_lua(lua)?;
 
-    Ok(())
+    Ok(vec![
+        ("global.lua".to_string(), global.to_string()),
+        ("http.lua".to_string(), http::type_definitions()),
+        ("database.lua".to_string(), database.to_string()),
+        ("crypto.lua".to_string(), crypto.to_string()),
+        ("io.lua".to_string(), fileio.to_string()),
+        ("templates.lua".to_string(), templates.to_string()),
+        ("regex.lua".to_string(), regex.to_string()),
+        ("datetime.lua".to_string(), datetime.to_string()),
+    ])
 }
 
 #[derive(Debug, Clone)]

@@ -39,13 +39,19 @@ enum AstraCLI {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         extra_args: Option<Vec<String>>,
     },
-    #[command(about = "Exports the packages Lua bundle for import for IntelliSense")]
+    #[command(
+        about = "Exports the packages Lua bundle for import for IntelliSense",
+        alias = "export"
+    )]
     ExportBundle {
         /// Path to the export file.
-        file_path: Option<String>,
+        path: Option<String>,
     },
     #[command(about = "Updates to the latest version", alias = "update")]
-    Upgrade,
+    Upgrade {
+        /// Custom user agent for requesting the updates
+        user_agent: Option<String>,
+    },
 }
 
 /// Initializes the Astra CLI.
@@ -65,9 +71,9 @@ pub async fn main() {
             file_path,
             extra_args,
         } => commands::run_command(file_path, extra_args).await,
-        AstraCLI::ExportBundle { file_path } => commands::export_bundle_command(file_path).await,
-        AstraCLI::Upgrade => {
-            if let Err(e) = commands::upgrade_command().await {
+        AstraCLI::ExportBundle { path } => commands::export_bundle_command(path).await,
+        AstraCLI::Upgrade { user_agent } => {
+            if let Err(e) = commands::upgrade_command(user_agent).await {
                 eprintln!("Could not update to the latest version: {e}");
             }
         }

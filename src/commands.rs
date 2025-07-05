@@ -19,7 +19,7 @@ pub async fn run_command(file_path: String, extra_args: Option<Vec<String>>) {
         .expect("Could not set the script path to OnceCell");
 
     // Register Lua components.
-    let _ = registration(lua).await;
+    registration(lua).await;
 
     // Handle extra arguments.
     if let Some(extra_args) = extra_args {
@@ -58,25 +58,61 @@ pub async fn run_command(file_path: String, extra_args: Option<Vec<String>>) {
 }
 
 /// Exports the Lua bundle.
-pub async fn export_bundle_command(file_path: Option<String>) {
-    let (lib, _) = prepare_prelude();
-    let file_path = file_path.unwrap_or_else(|| "astra_bundle.lua".to_string());
-
-    // Write the bundled library to the file.
+pub async fn export_bundle_command(folder_path: Option<String>) {
+    let mut lua_lib = prepare_prelude();
     #[allow(clippy::expect_used)]
-    std::fs::write(file_path, lib).expect("Could not export the bundled library");
+    let std_lib = crate::components::register_components(&LUA)
+        .await
+        .expect("Error setting up the standard library");
+    lua_lib.extend(std_lib);
+
+    let folder_path = std::path::Path::new(&folder_path.unwrap_or(".".to_string())).join(".astra");
+
+    let _ = std::fs::create_dir_all(&folder_path);
+    for (file_path, content) in lua_lib {
+        // Write the bundled library to the file.
+        std::fs::write(folder_path.join(&file_path), content)
+            .unwrap_or_else(|e| panic!("Could not export the {file_path}: {e}"));
+    }
+
+    let runtime = if cfg!(feature = "lua54") {
+        "Lua 5.4"
+    } else if cfg!(feature = "luajit52") {
+        "LuaJIT"
+    } else if cfg!(feature = "lua51") {
+        "Lua 5.1"
+    } else if cfg!(feature = "lua52") {
+        "Lua 5.2"
+    } else if cfg!(feature = "lua53") {
+        "Lua 5.3"
+    } else {
+        "LuaJIT"
+    };
+    let luarc_file = include_str!("../.luarc.json")
+        .replace("src", ".astra")
+        .replace("LuaJIT", runtime);
+    if let Ok(does_luarc_exist) = std::fs::exists(".luarc.json") {
+        if !does_luarc_exist {
+            std::fs::write(".luarsc.json", luarc_file)
+                .unwrap_or_else(|e| panic!("Could not export the .luarc.json: {e}"));
+        }
+    }
+
     println!("🚀 Successfully exported the bundled library!");
     std::process::exit(0);
 }
 
 /// Upgrades to the latest version.
-pub async fn upgrade_command() -> Result<(), Box<dyn std::error::Error>> {
+pub async fn upgrade_command(user_agent: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
+    let user_agent = user_agent.unwrap_or(
+        "Mozilla/5.0 (X11; \
+            Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) \
+            Chrome/51.0.2704.103 Safari/537.36"
+            .to_string(),
+    );
     let latest_tag = reqwest::Client::new()
         .get("https://api.github.com/repos/ArkForgeLabs/Astra/tags")
-        .header(
-            reqwest::header::USER_AGENT,
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36"
-        )
+        .header(reqwest::header::USER_AGENT, user_agent)
         .send()
         .await?
         .json::<serde_json::Value>()
@@ -160,12 +196,13 @@ pub async fn upgrade_command() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Registers Lua components.
-async fn registration(lua: &mlua::Lua) -> String {
-    let (lib, cleaned_lib) = prepare_prelude();
+async fn registration(lua: &mlua::Lua) {
+    let mut lua_lib = prepare_prelude();
 
-    if let Err(e) = crate::components::register_components(lua).await {
-        eprintln!("Error setting up the components:\n{e}");
-    }
+    #[allow(clippy::expect_used)]
+    let std_lib = crate::components::register_components(lua)
+        .await
+        .expect("Error setting up the standard library");
 
     // Set Astra version in Lua globals.
     if let Err(e) = lua
@@ -175,51 +212,35 @@ async fn registration(lua: &mlua::Lua) -> String {
         eprintln!("Error adding version to Astra: {e:#?}");
     }
 
-    if let Err(e) = lua
-        .load(cleaned_lib.as_str())
-        .set_name("astra_bundle.lua")
-        .exec_async()
-        .await
-    {
-        eprintln!("Couldn't add prelude:\n{e}");
-    }
+    lua_lib.extend(std_lib);
 
-    lib
+    for (file_name, content) in lua_lib {
+        if let Err(e) = lua
+            .load(content.as_str())
+            .set_name(file_name)
+            .exec_async()
+            .await
+        {
+            eprintln!("Couldn't add prelude:\n{e}");
+        }
+    }
 }
 
-fn prepare_prelude() -> (String, String) {
-    //! Make a global hashmap for each Rust native lib to add type definition
-    //! And here add the libs through crabtime comptime lib
-    //! And connect everything to astra.lua so that it can be ran on runtime with customization
-
-    /// Filters lines between start and end markers.
-    fn filter(input: String, start: &str, end: &str) -> String {
-        let mut new_lines = Vec::new();
-        let mut removing = false;
-        for line in input.lines() {
-            if line.contains(start) {
-                removing = true;
-                continue;
-            } else if line.contains(end) {
-                removing = false;
-                continue;
+fn prepare_prelude() -> Vec<(String, String)> {
+    let mut lua_lib = include_dir::include_dir!("./src/lua_libs")
+        .files()
+        .filter_map(|file| {
+            if let Some(name) = file.path().file_name()
+                && let Some(name) = name.to_str().map(|name| name.to_string())
+                && let Some(content) = file.contents_utf8()
+            {
+                Some((name, content.replace("@ASTRA_VERSION", crate_version!())))
+            } else {
+                None
             }
+        })
+        .collect::<Vec<_>>();
+    lua_lib.sort_by(|itema, itemb| itema.0.cmp(&itemb.0));
 
-            if !removing {
-                new_lines.push(line);
-            }
-        }
-        new_lines.join("\n")
-    }
-
-    let lib = include_str!("./lua/astra_bundle.lua").to_string();
-
-    let lib = filter(lib, "--- @START_REMOVING_PACK", "--- @END_REMOVING_PACK");
-    let cleaned_lib = filter(
-        lib.clone(),
-        "--- @START_REMOVING_RUNTIME",
-        "--- @END_REMOVING_RUNTIME",
-    );
-
-    (lib, cleaned_lib)
+    lua_lib
 }
