@@ -40,5 +40,5 @@ pub fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<&'static str> {
         })?,
     )?;
 
-    Ok(include_str!("http.lua"))
+    Ok(include_str!("../http.lua"))
 }
