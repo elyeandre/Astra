@@ -11,7 +11,7 @@ mod templates;
 
 pub async fn register_components(lua: &mlua::Lua) -> mlua::Result<Vec<(String, String)>> {
     let global = global::register_to_lua(lua);
-    let http_server = http::server::register_to_lua(lua)?;
+    http::server::register_to_lua(lua)?;
     http::client::HTTPClientRequest::register_to_lua(lua)?;
     let database = database::Database::register_to_lua(lua)?;
     let datetime = datetime::LuaDateTime::register_to_lua(lua)?;
@@ -22,7 +22,7 @@ pub async fn register_components(lua: &mlua::Lua) -> mlua::Result<Vec<(String, S
 
     Ok(vec![
         ("global.lua".to_string(), global.to_string()),
-        ("http.lua".to_string(), http_server.to_string()),
+        ("http.lua".to_string(), http::type_definitions()),
         ("database.lua".to_string(), database.to_string()),
         ("crypto.lua".to_string(), crypto.to_string()),
         ("io.lua".to_string(), fileio.to_string()),
