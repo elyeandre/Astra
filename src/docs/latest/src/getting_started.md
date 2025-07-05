@@ -30,7 +30,7 @@ Each release likely contains updates to the packaged bundle lua code that contai
 ./astra-luajit-linux-amd64 export-bundle
 ```
 
-which will create a new file called `astra_bundle.lua`. You can include it in your code to get intellisense and references for the available functions. The import will be ignored during runtime as Astra will use it's own packaged bundle internally instead. There are some pure lua utilities for example table validation, ... which are also included in the bundle by default, but you can ignore them if you wish.
+which will create a new folder called `.astra` along with a new file `.luarc.json`. They are used for intellisense and references for the available functions. There are some pure lua utilities for example table validation, ... which are also included in the bundle by default.
 
 ## Interal dev environment
 

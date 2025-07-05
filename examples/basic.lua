@@ -1,4 +1,4 @@
-local server = Astra.http.server:new()
+local server = Astra.http.server.new()
 
 -- A simple GET index route with text return
 server:get("/", function()
