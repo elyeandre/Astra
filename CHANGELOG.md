@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.24.0](https://github.com/ArkForgeLabs/Astra/compare/v0.23.1..0.24.0) - 2025-07-05
+
+### Bug Fixes
+
+- import using path as key instead of UUID - ([d7c099a](https://github.com/ArkForgeLabs/Astra/commit/d7c099a55448cf6255753deb441a557890c34691))
+- imports fixed and update command now can take custom user_agent - ([ebdf3f6](https://github.com/ArkForgeLabs/Astra/commit/ebdf3f6de4187608f87b35b5c673dde2f59f6365))
+
+### Documentation
+
+- directory with Astra API definitions for Lua autocompletion - ([9956504](https://github.com/ArkForgeLabs/Astra/commit/9956504543468460695f3c036a05bd9350434b3d))
+- Add .luarc.json to enable autocompletion - ([9d3511a](https://github.com/ArkForgeLabs/Astra/commit/9d3511a93452340d7256bd93849f2d42f1bad7d6))
+- little clarification - ([d9cea09](https://github.com/ArkForgeLabs/Astra/commit/d9cea09c506afa26ca0226cedd55466cd73a90e1))
+- definitions refactoring for better go-to experience - ([0a35c64](https://github.com/ArkForgeLabs/Astra/commit/0a35c6435ab207a821439748419d691a6fd99b8f))
+- updated docs to reflect the new changes - ([419b0d3](https://github.com/ArkForgeLabs/Astra/commit/419b0d31740963af94200300719a653011a6d87a))
+
+### Features
+
+- astra now exports successfully - ([c9b8d36](https://github.com/ArkForgeLabs/Astra/commit/c9b8d3623ad13dd19d7124c98a5775bcef7d2544))
+- server type definitions are correct now - ([e533936](https://github.com/ArkForgeLabs/Astra/commit/e5339363be567d3ebf4bdfca038de82786e113fe))
+- completed type definition for the rest of the types - ([27db132](https://github.com/ArkForgeLabs/Astra/commit/27db13265d436871cf81ce98c67067601eb0c777))
+
+### Refactoring
+
+- cleaned up getters and setters - ([26e2569](https://github.com/ArkForgeLabs/Astra/commit/26e2569ea6864a20fdb15f4b0fc905ee600aed00))
+- fused the normal and utc datetime constructors - ([4b7bba2](https://github.com/ArkForgeLabs/Astra/commit/4b7bba2b5f45c444a546f3e84e73ed83e81bec1f))
+- the lua's type definitions for datetime - ([7001d9e](https://github.com/ArkForgeLabs/Astra/commit/7001d9e5df805069df0b5d4f3b3a2b0e8f143f05))
+- moved the lib files back to the top level folder - ([f312335](https://github.com/ArkForgeLabs/Astra/commit/f312335edb41d501fe609000f197e8116e95a2aa))
+- moved the type definitions on side of Rust code - ([1c3204c](https://github.com/ArkForgeLabs/Astra/commit/1c3204c70fdfbcf7772f2f38ae67699a95f22fb1))
+- divided the http server into components - ([d5f1749](https://github.com/ArkForgeLabs/Astra/commit/d5f1749ce3eb4fa5a2e8bb23b846b4367219b540))
+
 ## [0.23.1](https://github.com/ArkForgeLabs/Astra/compare/v0.23.0..0.23.1) - 2025-06-25
 
 ### Bug Fixes
