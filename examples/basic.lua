@@ -1,7 +1,3 @@
--- import for intellisense. This line is replaced
--- by the bundle code during runtime
-import("../src/lua/astra_bundle")
-
 local server = Astra.http.server:new()
 
 -- A simple GET index route with text return

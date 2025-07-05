@@ -1,9 +1,9 @@
 ---@meta
 
-local import = require
+_G.import = require
 
 ---@param modName string
-function import(modName)
+function _G.import(modName)
 	---@diagnostic disable-next-line: param-type-mismatch, undefined-global
 	local ok, result = pcall(astra_internal__import, modName)
 	if not ok then

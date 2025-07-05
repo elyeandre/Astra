@@ -227,7 +227,7 @@ async fn registration(lua: &mlua::Lua) {
 }
 
 fn prepare_prelude() -> Vec<(String, String)> {
-    let mut lua_lib = include_dir::include_dir!("./src/lua/libs")
+    let mut lua_lib = include_dir::include_dir!("./src/lua_libs")
         .files()
         .filter_map(|file| {
             if let Some(name) = file.path().file_name()
