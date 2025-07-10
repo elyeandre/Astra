@@ -93,7 +93,7 @@ pub async fn export_bundle_command(folder_path: Option<String>) {
         .replace("LuaJIT", runtime);
     if let Ok(does_luarc_exist) = std::fs::exists(".luarc.json") {
         if !does_luarc_exist {
-            std::fs::write(".luarsc.json", luarc_file)
+            std::fs::write(".luarc.json", luarc_file)
                 .unwrap_or_else(|e| panic!("Could not export the .luarc.json: {e}"));
         }
     }
