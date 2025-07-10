@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.24.1](https://github.com/ArkForgeLabs/Astra/compare/v0.24.0..0.24.1) - 2025-07-10
+
+### Bug Fixes
+
+- .luarc.json file incorrectly named - ([ca2b338](https://github.com/ArkForgeLabs/Astra/commit/ca2b338d1a99cdf54fa18c3e22a52f0a18ba031d))
+
 ## [0.24.0](https://github.com/ArkForgeLabs/Astra/compare/v0.23.1..0.24.0) - 2025-07-05
 
 ### Bug Fixes

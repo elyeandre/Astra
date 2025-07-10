@@ -67,17 +67,12 @@ local function print_usage()
     io.write("\nCommands:\n")
     io.write("  help            Display this help message.\n")
     io.write("  version         Show the version information.\n")
-    io.write("  pack            Bundle the lua libraries.\n")
     io.write("  changelog <TAG> Update CHANGELOG.md.\n")
     io.write("  docs            Generate documentation.\n")
 end
 
 local function show_version()
     io.write("Astra Build CLI Version 1.0\n")
-end
-
-local function execute_pack()
-    os.execute("cd src/lua && " .. runtime .. " pack.lua astra.lua")
 end
 
 local function execute_update_changelog(tag)
@@ -109,8 +104,6 @@ local function main(args)
         print_usage()
     elseif command == "version" then
         show_version()
-    elseif command == "pack" then
-        execute_pack()
     elseif command == "changelog" then
         execute_update_changelog(args[2])
     elseif command == "docs" then
