@@ -16,8 +16,8 @@ local html = middleware.html
 --- `Depends on:`
 --- `context`
 local function insert_datetime(next_handler)
-    ---@param request Request
-    ---@param response Response
+    ---@param request HTTPServerRequest
+    ---@param response HTTPServerResponse
     return function(request, response, ctx)
         ctx.datetime = Astra.datetime.new_utc_now()
         local result = next_handler(request, response, ctx)
@@ -31,8 +31,8 @@ local function favourite_day(_, _, ctx)
     return "My favourite day is " .. today
 end
 
----@param req Request
----@param res Response
+---@param req HTTPServerRequest
+---@param res HTTPServerResponse
 local function homepage(req, res)
     return "Hi there!"
 end

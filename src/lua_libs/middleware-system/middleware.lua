@@ -16,8 +16,8 @@ local function middleware_template(next_handler)
     
     each middleware must accept 3 arguments and pass those to the next_handler
     ]]
-    ---@param request Request
-    ---@param response Response
+    ---@param request HTTPServerRequest
+    ---@param response HTTPServerResponse
     ---@param ctx { key_inserted_by_middleware_I_depend_on: string }
     return function(request, response, ctx)
         -- Pre-handler logic
@@ -39,8 +39,8 @@ end
 --- 
 --- `on Leave:`
 function m.context(next_handler)
-    ---@param request Request
-    ---@param response Response
+    ---@param request HTTPServerRequest
+    ---@param response HTTPServerResponse
     return function(request, response)
         local ctx = {}
         return next_handler(request, response, ctx)
@@ -52,8 +52,8 @@ end
 --- 
 --- `on Leave:`
 function m.logger(next_handler)
-    ---@param request Request
-    ---@param response Response
+    ---@param request HTTPServerRequest
+    ---@param response HTTPServerResponse
     ---@param ctx table
     return function(request, response, ctx)
         print("Request:", request:method(), request:uri())
@@ -67,8 +67,8 @@ end
 --- `on Leave:`
 --- sets `"Content-Type": "text/html"` response header
 function m.html(next_handler)
-    ---@param request Request
-    ---@param response Response
+    ---@param request HTTPServerRequest
+    ---@param response HTTPServerResponse
     return function(request, response, ctx)
         response:set_header("Content-Type", "text/html")
         return next_handler(request, response, ctx)
