@@ -1,7 +1,9 @@
+---@meta
+
 ---
 ---@param val any
 ---@return table
-Observable = function(val)
+Astra.observable = function(val)
 	local new_observable = {
 		value = val,
 		observers = {},
