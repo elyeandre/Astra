@@ -3,7 +3,11 @@ use clap::crate_version;
 use std::str::FromStr;
 
 /// Runs a Lua script.
-pub async fn run_command(file_path: String, extra_args: Option<Vec<String>>) {
+pub async fn run_command(
+    file_path: String,
+    stdlib_path: Option<String>,
+    extra_args: Option<Vec<String>>,
+) {
     let lua = &LUA;
 
     // ! Move VM preparation into a separate function
@@ -19,7 +23,7 @@ pub async fn run_command(file_path: String, extra_args: Option<Vec<String>>) {
         .expect("Could not set the script path to OnceCell");
 
     // Register Lua components.
-    registration(lua).await;
+    registration(lua, stdlib_path).await;
 
     // Handle extra arguments.
     if let Some(extra_args) = extra_args {
@@ -196,22 +200,48 @@ pub async fn upgrade_command(user_agent: Option<String>) -> Result<(), Box<dyn s
 }
 
 /// Registers Lua components.
-async fn registration(lua: &mlua::Lua) {
+async fn registration(lua: &mlua::Lua, stdlib_path: Option<String>) {
     let mut lua_lib: Vec<(String, String)> = Vec::new();
 
-    let folder_path = if let Ok(file) = tokio::fs::read_to_string(".luarc.json").await
-        && let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&file)
-        && let Some(parsed) = parsed.as_object()
-        && let Some(parsed) = parsed.get("workspace.library")
-        && let Some(parsed) = parsed.as_array()
-        && let Some(folder_path) = parsed.first()
-        && let Some(folder_path) = folder_path.as_str()
-    {
-        folder_path.to_string()
+    let folder_path = stdlib_path.unwrap_or(
+        // get the folder path from .luarc.json
+        // { "workspace.library": ["./folder_path"] }
+        if let Ok(file) = tokio::fs::read_to_string(".luarc.json").await
+            && let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&file)
+            && let Some(parsed) = parsed.as_object()
+            && let Some(parsed) = parsed.get("workspace.library")
+            && let Some(parsed) = parsed.as_array()
+            && let Some(folder_path) = parsed.first()
+            && let Some(folder_path) = folder_path.as_str()
+        {
+            folder_path.to_string()
+        } else {
+            ".astra".to_string()
+        },
+    );
+    if let Ok(mut files) = tokio::fs::read_dir(folder_path).await {
+        // add them to the lua_lib for being sent to interpretation
+        #[allow(for_loops_over_fallibles)]
+        for file in files.next_entry().await {
+            if let Some(file) = file
+                && let Ok(content) = tokio::fs::read_to_string(file.path()).await
+            {
+                lua_lib.push((file.path().to_string_lossy().to_string(), content));
+            }
+        }
     } else {
-        ".astra".to_string()
-    };
-    if let Ok(files) = tokio::fs::read_dir(folder_path).await {}
+        // if the folder couldn't be opened or issues existed
+        lua_lib = prepare_prelude()
+    }
+
+    // Try to make astra.lua the first to get interpreted
+    if let Some(index) = lua_lib.iter().position(|entry| {
+        let name = entry.0.to_ascii_lowercase();
+        name == "astra.lua"
+    }) {
+        let value = lua_lib.remove(index);
+        lua_lib.insert(0, value);
+    }
 
     for (file_name, content) in lua_lib {
         if let Err(e) = lua

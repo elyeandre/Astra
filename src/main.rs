@@ -35,6 +35,9 @@ enum AstraCLI {
     Run {
         /// Path to the Lua script file.
         file_path: String,
+        /// Path to the standard library folder
+        #[arg(short, long)]
+        stdlib_path: Option<String>,
         /// Extra arguments to pass to the script.
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         extra_args: Option<Vec<String>>,
@@ -69,8 +72,9 @@ pub async fn main() {
     match AstraCLI::parse() {
         AstraCLI::Run {
             file_path,
+            stdlib_path,
             extra_args,
-        } => commands::run_command(file_path, extra_args).await,
+        } => commands::run_command(file_path, stdlib_path, extra_args).await,
         AstraCLI::ExportBundle { path } => commands::export_bundle_command(path).await,
         AstraCLI::Upgrade { user_agent } => {
             if let Err(e) = commands::upgrade_command(user_agent).await {
