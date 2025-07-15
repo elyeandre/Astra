@@ -17,6 +17,11 @@
 - [DateTime](./std/datetime.md)
 - [Utilities](./std/utilities.md)
 
+# Data Stores
+
+- [Observer Pattern](./std/observer_pattern.md)
+- [Pub/Sub Pattern](./std/pubsub_pattern.md)
+
 # Internals
 
 - [Structure](./internals/structure.md)
