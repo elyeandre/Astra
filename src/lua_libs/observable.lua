@@ -25,7 +25,7 @@ Astra.observable = function(val)
 	end
 
 	---Publish the provided data to all subcribers
-	---@param data any
+	---@param data function | any
 	function new_observable:publish(data)
 		for k, _ in pairs(self.observers) do
 			k(data)
