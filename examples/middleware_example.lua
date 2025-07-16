@@ -1,17 +1,19 @@
 local server = Astra.http.server:new()
-
-require("middleware")
 local middleware = Astra.http.middleware
 
 local context = middleware.context
-local logger = middleware.logger
+local console_logger = middleware.console_logger
+local file_logger = middleware.file_logger
 local chain = middleware.chain
 local html = middleware.html
 
+
+local function homepage()
+    return "Hi there!"
+end
+
 --- `on Entry:`
 --- Inserts `Astra.datetime.new_utc_now()` into `ctx.datetime`
----
---- `on Leave:`
 ---
 --- `Depends on:`
 --- `context`
@@ -31,13 +33,14 @@ local function favourite_day(_, _, ctx)
     return "My favourite day is " .. today
 end
 
----@param req HTTPServerRequest
----@param res HTTPServerResponse
-local function homepage(req, res)
-    return "Hi there!"
+local file_handler, err = io.open("logs.txt", "a")
+if not file_handler then
+    error(err)
 end
 
-server:get("/", logger(html((homepage))))
-server:get("/fn", chain { context, logger, insert_datetime, html } (favourite_day))
+local long_chain = chain { context, file_logger(file_handler), insert_datetime, html }
+
+server:get("/", chain { console_logger, html } (homepage))
+server:get("/fn", long_chain(favourite_day))
 
 server:run()
