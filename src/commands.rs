@@ -211,7 +211,11 @@ async fn registration(lua: &mlua::Lua, stdlib_path: Option<String>) {
     let folder_path = stdlib_path.unwrap_or(
         // get the folder path from .luarc.json
         // { "workspace.library": ["./folder_path"] }
-        if let Ok(file) = tokio::fs::read_to_string(".luarc.json").await
+        if let Ok(exists) = tokio::fs::try_exists(".astra").await
+            && exists
+        {
+            ".astra".to_string()
+        } else if let Ok(file) = tokio::fs::read_to_string(".luarc.json").await
             && let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&file)
             && let Some(parsed) = parsed.as_object()
             && let Some(parsed) = parsed.get("workspace.library")
@@ -221,7 +225,7 @@ async fn registration(lua: &mlua::Lua, stdlib_path: Option<String>) {
         {
             folder_path.to_string()
         } else {
-            ".astra".to_string()
+            "".to_string()
         },
     );
     if let Ok(mut files) = tokio::fs::read_dir(folder_path).await {
