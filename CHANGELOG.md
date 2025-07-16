@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.25.1](https://github.com/ArkForgeLabs/Astra/compare/v0.25.0..v0.25.1) - 2025-07-16
+
+### Bug Fixes
+
+- exported modules aren't interpreted - ([4c052d8](https://github.com/ArkForgeLabs/Astra/commit/4c052d8a8e56f2f4f8777688a68fe67c874d4aa1))
+
+### Refactoring
+
+- always checks for .astra folder first - ([756d768](https://github.com/ArkForgeLabs/Astra/commit/756d7681abcbe457476567b8ca67dd2b4a1a5a7f))
+
 ## [0.25.0](https://github.com/ArkForgeLabs/Astra/compare/v0.24.1..v0.24.2) - 2025-07-16
 
 ### Features
