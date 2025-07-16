@@ -21,7 +21,7 @@ counter:subscribe(simply_notify)
 counter:subscribe(detailed_notify)
 ```
 
-When a function that can modify the underlying data of the observable object subscribes to it and is ran with the default (luajit) backend, the execution order of the subscribers can't be predicted, which is fine for most functions, but dangerous/undesirable when you want to change the underlying data. We want to avoid this unpredictability **always**. We can mutate our observable object safely by passing a function which wraps around our observable object that'll execute any logic we program as an argument to the publish function.
+When a function that can modify the underlying data of the observable object subscribes to it and is ran with the default (luajit) backend, the execution order of the subscribers can't be predicted, which is fine for most functions, but dangerous/undesirable when you want to change the underlying data. We want to avoid this unpredictability **always**. We can mutate our observable object safely by passing a function which wraps around our observable object that'll execute any logic we program as an argument to the publish function, or we can mutate it in the preceding line, then pass any data we need to the `publish()` method.
 
 ```lua
 local function add_to_counter(data)
@@ -108,10 +108,6 @@ The count was increased by 4
 In total, our example script should look like this:
 
 ```lua
-
----@meta
-
-local Astra = {}
 -- You can can construct an observable object as shown below:
 -- Replace `0` with whatever data you'd like
 local counter = Astra.observable(0)

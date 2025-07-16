@@ -695,7 +695,7 @@ end
 counter:subscribe(simply_notify)
 counter:subscribe(detailed_notify)
 </code></pre>
-<p>When a function that can modify the underlying data of the observable object subscribes to it and is ran with the default (luajit) backend, the execution order of the subscribers can't be predicted, which is fine for most functions, but dangerous/undesirable when you want to change the underlying data. We want to avoid this unpredictability <strong>always</strong>. We can mutate our observable object safely by passing a function which wraps around our observable object that'll execute any logic we program as an argument to the publish function.</p>
+<p>When a function that can modify the underlying data of the observable object subscribes to it and is ran with the default (luajit) backend, the execution order of the subscribers can't be predicted, which is fine for most functions, but dangerous/undesirable when you want to change the underlying data. We want to avoid this unpredictability <strong>always</strong>. We can mutate our observable object safely by passing a function which wraps around our observable object that'll execute any logic we program as an argument to the publish function, or we can mutate it in the preceding line, then pass any data we need to the <code>publish()</code> method.</p>
 <pre><code class="language-lua">local function add_to_counter(data)
 	counter.value = counter.value + data
 end
@@ -760,11 +760,7 @@ The count now is 9
 The count was increased by 4
 </code></pre>
 <p>In total, our example script should look like this:</p>
-<pre><code class="language-lua">
----@meta
-
-local Astra = {}
--- You can can construct an observable object as shown below:
+<pre><code class="language-lua">-- You can can construct an observable object as shown below:
 -- Replace `0` with whatever data you'd like
 local counter = Astra.observable(0)
 
@@ -799,6 +795,50 @@ counter:unsubscribe(simply_notify)
 counter:publish(add_to_counter(4))
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="publishersubscriber-pattern"><a class="header" href="#publishersubscriber-pattern">Publisher/Subscriber Pattern</a></h1>
+<p>The Pub/Sub pattern in Astra is similar to the <a href="std/./observer_pattern.html">observer pattern</a> in terms of core functionality, but it differs in terms of publisher &amp; subscriber management. A pubsub store is a global store. It can have multiple functions subcribed to an observable object, and multiple of these observable objects organized into topics, which are simply string keywords.</p>
+<p>You must remember that the rules of operating on pubsub stores is the same as that for the observer pattern, but pubsub stores are much more powerful and flexible.</p>
+<pre><code class="language-lua">-- Let's create a few tables as examples for observable objects
+local user1 = {
+	name = "John Doe",
+	email = "johndoe@example.com",
+}
+
+local user2 = {
+	name = "Jane Doe",
+	email = "janedoe@example.com",
+}
+
+-- We're going to subscribe functions to both user objects
+-- The first parameter is the topic, for which we will use "user:update"
+-- Then we pass in the observable object we want to subscribe to
+-- Finally we pass in the function that'll subscribe to the aforementioned observable
+Astra.pubsub.subscribe("user:update", user1, function(user)
+	print("User1 updated:", user.name, user.email)
+end)
+
+Astra.pubsub.subscribe("user:update", user2, function(user)
+	print("User2 updated:", user.name, user.email)
+end)
+
+-- Publish updates to the "user_update" topic
+user1.name = "John Doe Jr."
+Astra.pubsub.publish("user:update", user1)
+
+-- While unsubscribing a function, if the function isn't stored as a variable, you must match it exactly
+-- The parameters required while unsubscribing are exactly the same as while subscribing.
+Astra.pubsub.unsubscribe("user:update", user1, function(user)
+	print("User1 updated:", user.name, user.email)
+end)
+
+user2.email = "jane.doe@company.com"
+Astra.pubsub.publish("user:update", user2)
+</code></pre>
+<p>You should get an output like this:</p>
+<pre><code>User1 updated:  John Doe Jr.    johndoe@example.com
+User2 updated:  Jane Doe        janedoe@example.com
+User2 updated:  Jane Doe        jane.doe@company.com
+</code></pre>
+<p>Now that you're familiar with how the pubsub system works, keep in mind that if you wish to add other observables under different topics, it's all going to work exactly the same, but with an added sense of dimension.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="structure"><a class="header" href="#structure">Structure</a></h1>
 <p>Astra is written in Rust and is built on top of <a href="https://docs.rs/axum">Axum</a>. Axum internally uses <a href="https://docs.rs/tokio">Tokio</a> for its async runtime and <a href="https://docs.rs/tower">Tower</a>. Astra also have other dependencies to assist with utilities and functionality of the runtime itself. One of them is <a href="https://github.com/mlua-rs/mlua">mlua</a> which is the library used for the Lua runtime.</p>
 <p>Astra's internal philosophy is to contain all routes in a single table array and use mlua <code>UserData</code> as much as possible for every other functionality. Since routes and server itself is the main point, utilities and functionality should be optional. Hence <code>main.rs</code>, <code>routes.rs</code> and <code>common.rs</code> are the main files that contain the essential details of the framework, while everything else is optional and extra. The utilities that require native system interopability must also be written in Rust. For example, the database drivers and the HTTP client.</p>

@@ -178,7 +178,7 @@ end
 counter:subscribe(simply_notify)
 counter:subscribe(detailed_notify)
 </code></pre>
-<p>When a function that can modify the underlying data of the observable object subscribes to it and is ran with the default (luajit) backend, the execution order of the subscribers can't be predicted, which is fine for most functions, but dangerous/undesirable when you want to change the underlying data. We want to avoid this unpredictability <strong>always</strong>. We can mutate our observable object safely by passing a function which wraps around our observable object that'll execute any logic we program as an argument to the publish function.</p>
+<p>When a function that can modify the underlying data of the observable object subscribes to it and is ran with the default (luajit) backend, the execution order of the subscribers can't be predicted, which is fine for most functions, but dangerous/undesirable when you want to change the underlying data. We want to avoid this unpredictability <strong>always</strong>. We can mutate our observable object safely by passing a function which wraps around our observable object that'll execute any logic we program as an argument to the publish function, or we can mutate it in the preceding line, then pass any data we need to the <code>publish()</code> method.</p>
 <pre><code class="language-lua">local function add_to_counter(data)
 	counter.value = counter.value + data
 end
@@ -243,11 +243,7 @@ The count now is 9
 The count was increased by 4
 </code></pre>
 <p>In total, our example script should look like this:</p>
-<pre><code class="language-lua">
----@meta
-
-local Astra = {}
--- You can can construct an observable object as shown below:
+<pre><code class="language-lua">-- You can can construct an observable object as shown below:
 -- Replace `0` with whatever data you'd like
 local counter = Astra.observable(0)
 
