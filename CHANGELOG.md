@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.25.1](https://github.com/ArkForgeLabs/Astra/compare/v0.25.0..v0.25.1) - 2025-07-16
+
+### Bug Fixes
+
+- exported modules aren't interpreted - ([4c052d8](https://github.com/ArkForgeLabs/Astra/commit/4c052d8a8e56f2f4f8777688a68fe67c874d4aa1))
+
+### Refactoring
+
+- always checks for .astra folder first - ([756d768](https://github.com/ArkForgeLabs/Astra/commit/756d7681abcbe457476567b8ca67dd2b4a1a5a7f))
+
+## [0.25.0](https://github.com/ArkForgeLabs/Astra/compare/v0.24.1..v0.24.2) - 2025-07-16
+
+### Features
+
+- implement pubsub stores #26 - ([ec958c9](https://github.com/ArkForgeLabs/Astra/commit/ec958c9fce8514e60b4c6fcb3f0980b1f7d78b0a))
+- implement pubsub stores (#75) - ([cf1089b](https://github.com/ArkForgeLabs/Astra/commit/cf1089b827bad1c9f7a6bca5073ec5ffa8af1ba5))
+- the runtime now prioritizes loading the locally exported modules instead of bundled modules - ([64b0869](https://github.com/ArkForgeLabs/Astra/commit/64b0869258933d95c1bca3d8f579dde09c6cda58))
+
+### Miscellaneous Chores
+
+- read the default folder or loaded folder from .luarc.json - ([6761d5b](https://github.com/ArkForgeLabs/Astra/commit/6761d5b26d9aa80b04b14b31c55ee414742ffe5a))
+
+### Refactoring
+
+- move pubsub under `Astra` - ([7901c39](https://github.com/ArkForgeLabs/Astra/commit/7901c39c120d647f52f3b9d739f164e8f79e38da))
+- #26 - ([7901c39](https://github.com/ArkForgeLabs/Astra/commit/7901c39c120d647f52f3b9d739f164e8f79e38da))
+
+## [0.24.1](https://github.com/ArkForgeLabs/Astra/compare/v0.24.0..0.24.1) - 2025-07-10
+
+### Bug Fixes
+
+- .luarc.json file incorrectly named - ([ca2b338](https://github.com/ArkForgeLabs/Astra/commit/ca2b338d1a99cdf54fa18c3e22a52f0a18ba031d))
+
 ## [0.24.0](https://github.com/ArkForgeLabs/Astra/compare/v0.23.1..0.24.0) - 2025-07-05
 
 ### Bug Fixes
