@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.26.0](https://github.com/ArkForgeLabs/Astra/compare/v0.25.1..v0.26.0) - 2025-07-17
+
+### Bug Fixes
+
+- delegate subcounter and enforce type preference - ([6b98b67](https://github.com/ArkForgeLabs/Astra/commit/6b98b678d4752378603ae309626102cfe39f2e82))
+
+### Documentation
+
+- data stores - ([a9f36c7](https://github.com/ArkForgeLabs/Astra/commit/a9f36c7286c9654aff1fcadbea1269bf0aa2b7c4))
+- finished `data-stores` docs - ([d9c57a2](https://github.com/ArkForgeLabs/Astra/commit/d9c57a24906ce5a4e0f7246b7b81fc6017bb2a34))
+
+### Features
+
+- implement observer pattern - ([14141a4](https://github.com/ArkForgeLabs/Astra/commit/14141a485910c72f89682ba13f2cd63d45d5566e))
+
+### Miscellaneous Chores
+
+- prefer function type for publish - ([ad6e812](https://github.com/ArkForgeLabs/Astra/commit/ad6e8124076c62babbeffb4a7f74b4c9d89a75a2))
+
+### Performance
+
+- hashed tables for observee-subscriber sets #26 - ([3a7ae14](https://github.com/ArkForgeLabs/Astra/commit/3a7ae14fbfdbd80bd3edd86527fe80ddc50c06df))
+- use a hash table to store subscribers - ([75f10be](https://github.com/ArkForgeLabs/Astra/commit/75f10be1db022c8df8db60ce07b4f30fae3d4a11))
+
+### Refactoring
+
+- add type hints - ([d165b53](https://github.com/ArkForgeLabs/Astra/commit/d165b53c0435b04a4ff223d0b5f01afc6b2b6657))
+- moved observable under `Astra` - ([e7c86ff](https://github.com/ArkForgeLabs/Astra/commit/e7c86ff1063d3eb1ba808a211707df34a16b8220))
+
 ## [0.25.1](https://github.com/ArkForgeLabs/Astra/compare/v0.25.0..v0.25.1) - 2025-07-16
 
 ### Bug Fixes
