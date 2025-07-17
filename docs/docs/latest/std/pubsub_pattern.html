@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>HTTP Client - ArkForge Astra</title>
+        <title>Pub/Sub Pattern - ArkForge Astra</title>
 
 
         <!-- Custom HTML head -->
@@ -12,32 +12,32 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="../../favicon.svg">
-        <link rel="shortcut icon" href="../../favicon.png">
-        <link rel="stylesheet" href="../../css/variables.css">
-        <link rel="stylesheet" href="../../css/general.css">
-        <link rel="stylesheet" href="../../css/chrome.css">
-        <link rel="stylesheet" href="../../css/print.css" media="print">
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="../../FontAwesome/css/font-awesome.css">
-        <link rel="stylesheet" href="../../fonts/fonts.css">
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="../../highlight.css">
-        <link rel="stylesheet" href="../../tomorrow-night.css">
-        <link rel="stylesheet" href="../../ayu-highlight.css">
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
 
 
         <!-- Provide site root to javascript -->
         <script>
-            var path_to_root = "../../";
+            var path_to_root = "../";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "arkforge" : "dark";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc.js"></script>
+        <script src="../toc.js"></script>
     </head>
     <body>
     <div id="body-container">
@@ -89,7 +89,7 @@
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
-                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
             </noscript>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -124,13 +124,13 @@
                     <h1 class="menu-title">ArkForge Astra</h1>
 
                     <div class="right-buttons">
-                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
                         <a href="https://github.com/ArkForgeLabs/Astra" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/std/http/http_client.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/std/pubsub_pattern.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -159,45 +159,61 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="http-client"><a class="header" href="#http-client">HTTP Client</a></h1>
-<p>Sometimes your server needs to access other servers and make an HTTP Request, for these cases Astra provides a HTTP Client function:</p>
-<pre><code class="language-lua">-- By default its always a GET request
-local response = Astra.http.request("https://example.com/"):execute()
-pprint(response:status_code())
-pprint(response:headers())
-pprint(response:remote_address())
-pprint(response:body():text())
+                        <h1 id="publishersubscriber-pattern"><a class="header" href="#publishersubscriber-pattern">Publisher/Subscriber Pattern</a></h1>
+<p>The Pub/Sub pattern in Astra is similar to the <a href="./observer_pattern.html">observer pattern</a> in terms of core functionality, but it differs in terms of publisher &amp; subscriber management. A pubsub store is a global store. It can have multiple functions subcribed to an observable object, and multiple of these observable objects organized into topics, which are simply string keywords.</p>
+<p>You must remember that the rules of operating on pubsub stores is the same as that for the observer pattern, but pubsub stores are much more powerful and flexible.</p>
+<pre><code class="language-lua">-- Let's create a few tables as examples for observable objects
+local user1 = {
+	name = "John Doe",
+	email = "johndoe@example.com",
+}
+
+local user2 = {
+	name = "Jane Doe",
+	email = "janedoe@example.com",
+}
+
+-- We're going to subscribe functions to both user objects
+-- The first parameter is the topic, for which we will use "user:update"
+-- Then we pass in the observable object we want to subscribe to
+-- Finally we pass in the function that'll subscribe to the aforementioned observable
+Astra.pubsub.subscribe("user:update", user1, function(user)
+	print("User1 updated:", user.name, user.email)
+end)
+
+Astra.pubsub.subscribe("user:update", user2, function(user)
+	print("User2 updated:", user.name, user.email)
+end)
+
+-- Publish updates to the "user_update" topic
+user1.name = "John Doe Jr."
+Astra.pubsub.publish("user:update", user1)
+
+-- While unsubscribing a function, if the function isn't stored as a variable, you must match it exactly
+-- The parameters required while unsubscribing are exactly the same as while subscribing.
+Astra.pubsub.unsubscribe("user:update", user1, function(user)
+	print("User1 updated:", user.name, user.email)
+end)
+
+user2.email = "jane.doe@company.com"
+Astra.pubsub.publish("user:update", user2)
 </code></pre>
-<p>The <code>Astra.http.request</code> function returns a <code>HTTPClientRequest</code> object which can be further modified to the needs before execution. The way to do these modification is through chained setters.</p>
-<pre><code class="language-lua">local request_client = Astra.http.request("https://example.com")
--- - Method. You can pick between one of these:
---   - GET,
---   - POST,
---   - PUT,
---   - PATCH,
---   - DELETE,
---   - HEAD,
-  :set_method("POST")
-  :set_header("key", "value")
-  :set_headers({ key = "value" })
-  :set_form("key", "value")
-  :set_forms({ key = "value" })
-  :set_body("THE CONTENT OF THE BODY")
-  :set_json({ key = "value" })
-  :set_file("/path/to/file")
-  -- You can also execute as an async task
-  :execute_task(function (result) end)
+<p>You should get an output like this:</p>
+<pre><code>User1 updated:  John Doe Jr.    johndoe@example.com
+User2 updated:  Jane Doe        janedoe@example.com
+User2 updated:  Jane Doe        jane.doe@company.com
 </code></pre>
+<p>Now that you're familiar with how the pubsub system works, keep in mind that if you wish to add other observables under different topics, it's all going to work exactly the same, but with an added sense of dimension.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../../std/http/http_server.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../std/observer_pattern.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../../std/templating.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../internals/structure.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -207,11 +223,11 @@ pprint(response:body():text())
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../../std/http/http_server.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../std/observer_pattern.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../../std/templating.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../internals/structure.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
@@ -242,13 +258,13 @@ pprint(response:body():text())
         </script>
 
 
-        <script src="../../elasticlunr.min.js"></script>
-        <script src="../../mark.min.js"></script>
-        <script src="../../searcher.js"></script>
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
 
-        <script src="../../clipboard.min.js"></script>
-        <script src="../../highlight.js"></script>
-        <script src="../../book.js"></script>
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
 
         <!-- Custom JS scripts -->
 

@@ -1,44 +1,55 @@
 ---@meta
 
 local subscriptions = {}
+local subcounter = {}
 
 Astra.pubsub = {}
 
 ---
 ---@param topic string
----@param observer any
+---@param observable any
 ---@param callback function
-Astra.pubsub.subscribe = function(topic, observer, callback)
+Astra.pubsub.subscribe = function(topic, observable, callback)
 	if not subscriptions[topic] then
 		subscriptions[topic] = {}
+		subcounter[topic] = {}
 	end
 
-	-- Subscriber table
-	table.insert(subscriptions[topic], {
-		obs = observer,
-		cbk = callback,
-	})
+	if not subscriptions[topic][observable] then
+		subscriptions[topic][observable] = {}
+
+		subcounter[topic][observable] = {
+			num_subs = 0,
+		}
+	end
+
+	if not subscriptions[topic][observable][callback] then
+		subscriptions[topic][observable][callback] = true
+		subcounter[topic][observable].num_subs = subcounter[topic][observable].num_subs + 1
+	end
 end
 
 ---
 ---@param topic string
----@param observer any
+---@param observable any
 ---@param callback function
-Astra.pubsub.unsubscribe = function(topic, observer, callback)
-	for i = #subscriptions[topic], 1, -1 do
-		local sub = subscriptions[topic][i]
+Astra.pubsub.unsubscribe = function(topic, observable, callback)
+	subscriptions[topic][observable][callback] = nil
+	subcounter[topic][observable].num_subs = subcounter[topic][observable].num_subs - 1
 
-		if sub.obs == observer and sub.cbk == callback then
-			table.remove(subscriptions[topic], i)
-		end
+	if subcounter[topic][observable].num_subs < 1 then
+		subscriptions[topic][observable] = nil
+		subcounter[topic][observable] = nil
 	end
 end
 
 ---
 ---@param topic string
----@param data any
+---@param data function | any
 Astra.pubsub.publish = function(topic, data)
-	for i = 1, #subscriptions[topic] do
-		subscriptions[topic][i].cbk(subscriptions[topic][i].obs, data)
+	for observable, kv in pairs(subscriptions[topic]) do
+		for k, _ in pairs(kv) do
+			k(observable, data)
+		end
 	end
 end
