@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
+## [0.27.0](https://github.com/ArkForgeLabs/Astra/compare/v0.26.0..v0.27.0) - 2025-07-18
+
+### Features
+
+- [**breaking**] multiple of datetime creation methods was replaced by `Astra.datetime.new` - ([25e9c21](https://github.com/ArkForgeLabs/Astra/commit/25e9c21e86d5cdc8aa2bdfaa4e86aa7485b32a15))
+
 ## [0.26.0](https://github.com/ArkForgeLabs/Astra/compare/v0.25.1..v0.26.0) - 2025-07-17
 
 ### Bug Fixes
