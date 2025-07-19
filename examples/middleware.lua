@@ -13,7 +13,7 @@ local function homepage()
 end
 
 --- `on Entry:`
---- Inserts `Astra.datetime.new_utc_now()` into `ctx.datetime`
+--- Inserts `Astra.datetime.new()` into `ctx.datetime`
 ---
 --- `Depends on:`
 --- `context`
@@ -21,7 +21,7 @@ local function insert_datetime(next_handler)
     ---@param request HTTPServerRequest
     ---@param response HTTPServerResponse
     return function(request, response, ctx)
-        ctx.datetime = Astra.datetime.new_utc_now()
+        ctx.datetime = Astra.datetime.new()
         local result = next_handler(request, response, ctx)
         return result
     end
@@ -29,8 +29,7 @@ end
 
 ---@param ctx { datetime: DateTime }
 local function favourite_day(_, _, ctx)
-    local today = string.format("%d/%d/%d", ctx.datetime:get_day(), ctx.datetime:get_month(), ctx.datetime:get_year())
-    return "My favourite day is " .. today
+    return "My favourite day is " .. ctx.datetime:to_date_string()
 end
 
 local file_handler, err = io.open("logs.txt", "a")
