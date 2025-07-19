@@ -15,6 +15,7 @@
 - [SQL Driver](./std/sql_driver.md)
 - [Async Tasks](./std/async_tasks.md)
 - [DateTime](./std/datetime.md)
+- [Middleware](./std/middleware.md)
 - [Utilities](./std/utilities.md)
 
 # Data Stores

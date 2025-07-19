@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Utilities - ArkForge Astra</title>
+        <title>Middleware - ArkForge Astra</title>
 
 
         <!-- Custom HTML head -->
@@ -130,7 +130,7 @@
                         <a href="https://github.com/ArkForgeLabs/Astra" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
-                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/std/utilities.md" title="Suggest an edit" aria-label="Suggest an edit">
+                        <a href="https://github.com/ArkForgeLabs/Astra/edit/main/src/docs/latest/./src/std/middleware.md" title="Suggest an edit" aria-label="Suggest an edit">
                             <i id="git-edit-button" class="fa fa-edit"></i>
                         </a>
 
@@ -226,56 +226,111 @@
 }
 
 </style>
-<h1 id="utilities"><a class="header" href="#utilities">Utilities</a></h1>
-<p>These are some of the smaller utilities and functionality that are usually globally available regardless of the <code>Astra</code> namespace:</p>
-<h2 id="pretty-print"><a class="header" href="#pretty-print">Pretty Print</a></h2>
-<p><code>pprint</code> function is a wrapper over <code>print</code> function that also lets you print tables as well as other values.</p>
-<h2 id="string-split"><a class="header" href="#string-split">String Split</a></h2>
-<p><code>string.split</code> splits a string according to the seperator provided and result into an array of chunks.</p>
-<h2 id="dotenv"><a class="header" href="#dotenv">Dotenv</a></h2>
-<p>It is always a good idea to never include sensitive API keys within your server code. For these reasons we usually recommend using a <code>.env</code> file. Astra automatically loads them if they are present in the same folder into the environment, accessible through the <code>os.getenv</code>. You can also load your own file using the global <code>Astra.dotenv_load</code> function.</p>
-<p>This is the load order of these files (They can overwrite the ones loaded previously):</p>
-<ul>
-<li><code>.env</code></li>
-<li><code>.env.production</code></li>
-<li><code>.env.prod</code></li>
-<li><code>.env.development</code></li>
-<li><code>.env.dev</code></li>
-<li><code>.env.test</code></li>
-<li><code>.env.local</code></li>
-</ul>
-<h2 id="regex"><a class="header" href="#regex">Regex</a></h2>
-<p>Astra has support for a very performant regex engine. The regex code is advised to be compiled once and reused multiple times to save up even more on performence. Example:</p>
-<pre><code class="language-lua">-- Create a new regex
-local my_re = Astra.regex([[(?:index)?\.(html|lua|tera)$]])
+<h1 id="middleware"><a class="header" href="#middleware">Middleware</a></h1>
+<p><em>TL;DR</em></p>
+<p>The the middleware pattern was inspired by Clojure community.</p>
+<pre><code class="language-lua">local server = Astra.http.server:new()
+local middleware = Astra.http.middleware
+local chain = middleware.chain
 
--- Capture all of the hits as list of string lists (string[][])
-pprint(my_re:captures([[
-path/to/file.html
-examples/templates/index.html
-src/components/base.tera
-]]))
+local function sunny_day(_request, _response)
+    return "What a great sunny day!"
+end
 
--- Check for matches available
-pprint(my_re:is_match("static/index.lua"))
+local function normal_day(_request, _response)
+    return "It's a normal day... I guess..."
+end
 
--- Or replace matches
-local content = "examples/templates/index.html"
-local to_replace_with = ""
-local number_of_replaces = 1 -- can omit it and not add it at all as argument
-local new_string = my_re:replace(content, to_replace_with, number_of_replaces)
-pprint(new_string)
+---@param ctx { datetime: DateTime }
+local function favourite_day(_request, _response, ctx)
+    local today = string.format(
+        "%d/%d/%d",
+        ctx.datetime:get_day(),
+        ctx.datetime:get_month(),
+        ctx.datetime:get_year()
+    )
+    return "My favourite day is " .. today
+end
+
+--- `on Entry:`
+--- Creates a new `ctx` table and passes it as a third argument into the `next_handler`
+local function ctx(next_handler)
+    return function(request, response)
+        local ctx = {}
+        return next_handler(request, response, ctx)
+    end
+end
+
+--- `on Entry:`
+--- Inserts `Astra.datetime.new()` into `ctx.datetime`
+---
+--- `Depends on:`
+--- `ctx`
+local function insert_datetime(next_handler)
+    return function(request, response, ctx)
+        ctx.datetime = Astra.datetime.new()
+        return next_handler(request, response, ctx)
+    end
+end
+
+--- `on Leave:`
+--- sets `"Content-Type": "text/html"` response header
+local function html(next_handler)
+    return function(request, response, ctx)
+        result = next_handler(request, response, ctx)
+        response:set_header("Content-Type", "text/html")
+        return result
+    end
+end
+
+--- `on Entry:`
+--- Logs request method and uri into the file
+---@param file_handler file* A file handler opened with an append mode `io.open("filepath", "a")`
+---@param flush_interval number? The number of log entries after which the file handler will be flushed
+local function file_logger(file_handler, flush_interval)
+    local flush_interval = flush_interval or 1
+    local flush_countdown = flush_interval
+    return function(next_handler)
+        return function(request, response, ctx)
+            local str = string.format("[New Request %s] %s %s\n", os.date(), request:method(), request:uri())
+            file_handler:write(str)
+
+            flush_countdown = flush_countdown - 1
+            if flush_countdown == 0 then
+                file_handler:flush()
+                flush_countdown = flush_interval
+            end
+            return next_handler(request, response, ctx)
+        end
+    end
+end
+local file_handler, err = io.open("logs.txt", "a")
+if not file_handler then error(err) end
+local logger = file_logger(file_handler)
+
+server:get("/sunny-day", logger(html(sunny_day)))
+server:get("/normal-day", chain { logger, html } (normal_day))
+server:get("/favourite-day", chain { ctx, logger, insert_datetime, html } (favourite_day))
+
+server:run()
+
 </code></pre>
+<h2 id="handler-wrappers"><a class="header" href="#handler-wrappers">Handler wrappers</a></h2>
+<p>Middleware in Astra is usually built using functions. Middleware wraps the handler in a function that can modify the way a request is processed.</p>
+<p>To make composing middlewares less tedious, we introduce a <code>chain</code> function that combines all provided handlers into a single handler.</p>
+<p>We use a context table to pass data through the handlers.</p>
+<p>Astra has several built-in middlewares. You can modify or extend middlewares directly in <code>.astra/middleware.lua</code> (after running <code>astra export</code>) or in your own files. We are opened to PRs.</p>
+<p>For more details, see the <a href="https://github.com/ArkForgeLabs/Astra/tree/main/src/lua_libs/middleware.lua">middleware.lua</a> and the <a href="https://github.com/ArkForgeLabs/Astra/tree/main/examples/middleware_example.lua">middleware_example.lua</a>.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../std/middleware.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../std/datetime.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../std/observer_pattern.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../std/utilities.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -285,11 +340,11 @@ pprint(new_string)
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../std/middleware.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../std/datetime.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../std/observer_pattern.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../std/utilities.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
