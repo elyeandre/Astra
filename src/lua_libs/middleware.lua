@@ -114,7 +114,7 @@ end
 ---@param file_handler file* A file handler opened with an append mode `io.open("filepath", "a")`
 ---@param flush_interval number? The number of log entries after which the file handler will be flushed
 function Astra.http.middleware.file_logger(file_handler, flush_interval)
-    local flush_interval = flush_interval or 15
+    local flush_interval = flush_interval or 1
     local flush_countdown = flush_interval
     return function(next_handler)
         ---@param request HTTPServerRequest
@@ -144,7 +144,8 @@ function Astra.http.middleware.html(next_handler)
     ---@param request HTTPServerRequest
     ---@param response HTTPServerResponse
     return function(request, response, ctx)
+        result = next_handler(request, response, ctx)
         response:set_header("Content-Type", "text/html")
-        return next_handler(request, response, ctx)
+        return result
     end
 end
