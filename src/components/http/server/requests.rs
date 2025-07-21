@@ -62,14 +62,18 @@ impl UserData for RequestLua {
         methods.add_async_method("params", |lua, this, ()| async move {
             let raw_path_params = RawPathParams::from_request_parts(&mut this.parts.clone(), &())
                 .await
-                .map_err(|e| {
-                    mlua::Error::runtime(format!("Failed to extract path params: {}", e))
-                })?;
+                .map_err(|e| mlua::Error::runtime(format!("Failed to extract path params: {e}")))?;
 
             let params_table = lua.create_table()?;
 
-            for (key, value) in raw_path_params.iter() {
-                params_table.set(key, value)?;
+            for (key, value) in &raw_path_params {
+                if let Ok(value) = value.parse::<i32>() {
+                    params_table.set(key, value)?;
+                } else if let Ok(value) = value.parse::<f32>() {
+                    params_table.set(key, value)?;
+                } else {
+                    params_table.set(key, value)?;
+                }
             }
 
             Ok(params_table)
