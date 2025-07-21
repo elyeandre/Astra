@@ -72,6 +72,7 @@ pub async fn export_bundle_command(folder_path: Option<String>) {
 
     let folder_path = std::path::Path::new(&folder_path.unwrap_or(".".to_string())).join(".astra");
 
+    let _ = std::fs::remove_dir_all(&folder_path);
     let _ = std::fs::create_dir_all(&folder_path);
     for (file_path, content) in lua_lib {
         // Write the bundled library to the file.
@@ -191,7 +192,13 @@ pub async fn upgrade_command(user_agent: Option<String>) -> Result<(), Box<dyn s
                 .spawn();
         }
 
-        println!("Done! Enjoy!");
+        println!(
+            r#"🚀 Update complete!
+
+Some of the next steps could be updating the exported type definitions:
+
+astra export"#
+        );
     } else {
         println!("Already up to date!");
     }
