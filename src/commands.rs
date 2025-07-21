@@ -192,7 +192,13 @@ pub async fn upgrade_command(user_agent: Option<String>) -> Result<(), Box<dyn s
                 .spawn();
         }
 
-        println!("Done! Enjoy!");
+        println!(
+            r#"🚀 Update complete!
+
+Some of the next steps could be updating the exported type definitions:
+
+astra export"#
+        );
     } else {
         println!("Already up to date!");
     }
