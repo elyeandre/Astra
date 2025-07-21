@@ -2,8 +2,8 @@ use super::cookie::LuaCookie;
 use crate::components::BodyLua;
 use axum::{
     body::Body,
-    extract::{FromRequest, FromRequestParts, Multipart, State},
-    http::{Request, request::Parts},
+    extract::{FromRequest, FromRequestParts, Multipart, RawPathParams, State},
+    http::{request::Parts, Request},
 };
 use axum_extra::extract::{CookieJar, cookie::Cookie};
 use mlua::{LuaSerdeExt, UserData};
@@ -43,6 +43,19 @@ impl RequestLua {
             cookie_jar,
         }
     }
+
+    pub async fn path_params(&self) -> Result<HashMap<String, String>, mlua::Error> {
+        let mut params = HashMap::new();
+        let raw_path_params = RawPathParams::from_request_parts(&mut self.parts.clone(), &())
+            .await
+            .map_err(|e| mlua::Error::runtime(format!("Failed to extract path params: {}", e)))?;
+
+        for (key, value) in raw_path_params.iter() {
+            params.insert(key.to_string(), value.to_string());
+        }
+
+        Ok(params)
+    }
 }
 unsafe impl Send for RequestLua {}
 unsafe impl Sync for RequestLua {}
@@ -57,6 +70,12 @@ impl UserData for RequestLua {
                 Err(e) => Err(mlua::Error::runtime(format!(
                     "Could not parse queries: {e:?}"
                 ))),
+            }
+        });
+        methods.add_async_method("params", |lua, this, ()| async move {
+            match this.path_params().await {
+                Ok(params) => lua.to_value(&params),
+                Err(e) => Err(e),
             }
         });
         methods.add_async_method("multipart", |_, this, ()| async move {
