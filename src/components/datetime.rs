@@ -138,8 +138,6 @@ impl UserData for LuaDateTime {
         add_getter_method!("get_timezone_offset", offset, |offset: &FixedOffset| offset
             .local_minus_utc()
             / 60);
-        add_getter_method!("to_rfc2822", to_rfc2822);
-        add_getter_method!("to_rfc3339", to_rfc3339);
 
         add_setter_method!("set_year", with_year, i32, "Invalid year!");
         add_setter_method!("set_month", with_month, u32, "Invalid month!");
@@ -178,14 +176,19 @@ impl UserData for LuaDateTime {
                 dt: dt.fixed_offset(),
             })
         });
+        add_getter_method!("to_rfc2822", to_rfc2822);
+        add_getter_method!("to_rfc3339", to_rfc3339);
         add_formatted_method!("to_date_string", "%a %b %d %Y");
         add_formatted_method!("to_time_string", "%T %Z%z");
         add_formatted_method!("to_datetime_string", "%a %b %d %Y %T %Z%z");
-        methods.add_method("to_iso_string", |_, this, ()| {
-            Ok(this.dt.to_rfc3339_opts(SecondsFormat::Millis, false))
-        });
         add_formatted_method!("to_locale_date_string", "%x");
         add_formatted_method!("to_locale_time_string", "%X");
         add_formatted_method!("to_locale_datetime_string", "%c");
+        methods.add_method("to_iso_string", |_, this, ()| {
+            Ok(this.dt.to_rfc3339_opts(SecondsFormat::Millis, false))
+        });
+        methods.add_method("to_format", |_, this, format: String| {
+            Ok(this.dt.format(&format).to_string())
+        });
     }
 }

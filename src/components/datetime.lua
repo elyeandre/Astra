@@ -11,8 +11,6 @@
 ---@field get_millisecond fun(datetime: DateTime): number
 ---@field get_epoch_milliseconds fun(datetime: DateTime): number
 ---@field get_timezone_offset fun(datetime: DateTime): number
----@field to_rfc2822 fun(datetime: DateTime): string
----@field to_rfc3339 fun(datetime: DateTime): string
 ---@field set_year fun(datetime:DateTime, year: number)
 ---@field set_month fun(datetime:DateTime, month: number)
 ---@field set_day fun(datetime:DateTime, day: number)
@@ -23,6 +21,9 @@
 ---@field set_epoch_milliseconds fun(datetime: DateTime, milli: number)
 ---@field to_utc fun(datetime: DateTime): DateTime
 ---@field to_local fun(datetime: DateTime): DateTime
+---@field to_rfc2822 fun(datetime: DateTime): string
+---@field to_rfc3339 fun(datetime: DateTime): string
+---@field to_format fun(datetime: DateTime, format: string): string
 ---@field to_date_string fun(datetime: DateTime): string
 ---@field to_time_string fun(datetime: DateTime): string
 ---@field to_datetime_string fun(datetime: DateTime): string
