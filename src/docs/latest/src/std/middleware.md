@@ -102,5 +102,5 @@ We use a context table to pass data through the handlers.
 
 Astra has several built-in middlewares. You can modify or extend middlewares directly in `.astra/middleware.lua` (after running `astra export`) or in your own files. We are opened to PRs.
 
-For more details, see the [middleware.lua](https://github.com/ArkForgeLabs/Astra/tree/main/src/lua_libs/middleware.lua) and the [middleware_example.lua](https://github.com/ArkForgeLabs/Astra/tree/main/examples/middleware.lua).
+For more details, see the [middleware.lua](https://github.com/ArkForgeLabs/Astra/blob/main/src/components/http/middleware.lua) and the [middleware_example.lua](https://github.com/ArkForgeLabs/Astra/tree/main/examples/middleware.lua).
 
