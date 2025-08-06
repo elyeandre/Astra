@@ -268,6 +268,14 @@ async fn registration(lua: &mlua::Lua, stdlib_path: Option<String>) {
             tracing::error!("Couldn't add prelude:\n{e}");
         }
     }
+     // Register unix socket AFTER Lua scripts
+    #[cfg(unix)]
+    {
+        use crate::components::unix_socket::UnixSocketComponent;
+        if let Err(e) = UnixSocketComponent::register_to_lua(lua).await {
+            tracing::error!("Failed to register unix socket: {:?}", e);
+        }
+    }
 }
 
 fn pure_lua_libs() -> Vec<(String, String)> {

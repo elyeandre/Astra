@@ -1,5 +1,4 @@
 use mlua::LuaSerdeExt;
-
 mod crypto;
 mod database;
 mod datetime;
@@ -8,6 +7,8 @@ pub mod http;
 mod io;
 mod regex;
 mod templates;
+#[cfg(unix)]
+pub mod unix_socket;
 
 pub async fn register_components(lua: &mlua::Lua) -> mlua::Result<Vec<(String, String)>> {
     let global = global::register_to_lua(lua);
@@ -20,7 +21,7 @@ pub async fn register_components(lua: &mlua::Lua) -> mlua::Result<Vec<(String, S
     let templates = templates::TemplatingEngine::register_to_lua(lua)?;
     let regex = regex::LuaRegex::register_to_lua(lua)?;
 
-    Ok(vec![
+    let mut components: Vec<(String, String)> = vec![
         ("global.lua".to_string(), global.to_string()),
         ("http.lua".to_string(), http::type_definitions()),
         ("database.lua".to_string(), database.to_string()),
@@ -29,7 +30,18 @@ pub async fn register_components(lua: &mlua::Lua) -> mlua::Result<Vec<(String, S
         ("templates.lua".to_string(), templates.to_string()),
         ("regex.lua".to_string(), regex.to_string()),
         ("datetime.lua".to_string(), datetime.to_string()),
-    ])
+
+    ];
+
+    #[cfg(unix)]
+    {
+        components.push((
+            "unix_socket.lua".to_string(),
+            unix_socket::UnixSocketComponent::lua_code().to_string()
+        ));
+    }
+
+    Ok(components)
 }
 
 #[derive(Debug, Clone)]
