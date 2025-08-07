@@ -3,6 +3,9 @@
 ---@class NetworkManager
 ---@field set_link_up fun(self: NetworkManager, interface_name: string): nil
 ---@field set_link_down fun(self: NetworkManager, interface_name: string): nil
+---@field set_link_mtu fun(self: NetworkManager, interface_name: string, mtu: number): nil
+---@field add_route fun(self: NetworkManager, route_spec: string): nil
+---@field delete_route fun(self: NetworkManager, route_spec: string): nil
 ---@field get_link_status fun(self: NetworkManager, interface_name: string): NetworkInterfaceStatus
 ---@field list_interfaces fun(self: NetworkManager): NetworkInterfaceStatus[]
 
@@ -11,6 +14,7 @@
 ---@field index number Interface index
 ---@field is_up boolean Whether the interface is administratively up
 ---@field is_running boolean Whether the interface is operationally running
+---@field mtu number|nil Maximum Transmission Unit (if available)
 
 ---@class _AstraNetwork
 ---@field new fun(): NetworkManager Create a new NetworkManager instance
