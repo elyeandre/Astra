@@ -1,0 +1,13 @@
+[target.armv7-unknown-linux-musleabihf]
+linker = "/home/ely/armv7l-linux-musleabihf-cross/bin/armv7l-linux-musleabihf-gcc"
+rustflags = [
+    "-C", "target-cpu=cortex-a9",
+    "-C", "link-arg=-lgcc",
+    "-C", "link-arg=-Wl,--strip-all",
+    "-C", "link-arg=-L/home/ely/armv7l-linux-musleabihf-cross/armv7l-linux-musleabihf/lib",
+    "-C", "opt-level=z",
+    "-C", "panic=abort"
+]
+
+[env]
+HOST_CC = "gcc -m32"
