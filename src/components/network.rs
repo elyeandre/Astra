@@ -1,11 +1,10 @@
 use neli::{
-    consts::{nl::Nlmsg, rtnl::{Arphrd, Ifla, IflaInfo, IflaInfoData, Iff, RtAddrFamily, Rtm}, socket::NlFamily, NlmF},
+    consts::{nl::NlmF, rtnl::{Arphrd, Ifla, Iff, RtAddrFamily, Rtm}, socket::NlFamily},
     err::NlError,
-    nl::{NlPayload, Nlmsghdr},
-    rtnl::{Ifinfomsg, Rtattr},
-    socket::NlSocketHandle,
+    nl::Nlmsghdr,
+    rtnl::Ifinfomsg,
+    socket::NlSocket,
     types::RtBuffer,
-    utils::U32Bitmask,
 };
 use tokio::task;
 
@@ -55,70 +54,76 @@ async fn set_link_state(iface: &str, up: bool) -> mlua::Result<()> {
 }
 
 fn blocking_set_link_state(iface: &str, up: bool) -> Result<(), NlError> {
-    let mut socket = NlSocketHandle::connect(NlFamily::Route, None, &[])?;
+    let mut socket = NlSocket::connect(NlFamily::Route, None, &[])?;
 
     let index = get_interface_index(iface)?
         .ok_or_else(|| NlError::Msg("Interface not found".into()))?;
 
-    let flags = if up {
-        Iff::Up
-    } else {
-        Iff::empty()
-    };
+    let mut attrs = RtBuffer::new();
 
-    let ifi_flags = U32Bitmask::from(flags);
-    let change_mask = U32Bitmask::from(Iff::Up);
-
-    let ifmsg = Ifinfomsg {
-        ifi_family: RtAddrFamily::Unspecified,
-        ifi_type: Arphrd::Ether,
-        ifi_index: index as i32,
-        ifi_flags,
-        ifi_change: change_mask,
-    };
+    let ifmsg = Ifinfomsg::new(
+        RtAddrFamily::Unspecified,
+        Arphrd::Ether,
+        index as i32,
+        if up { Iff::Up.bits() } else { 0 },
+        Iff::Up.bits(),
+        attrs,
+    );
 
     let nlhdr = Nlmsghdr::new(
         None,
         Rtm::Newlink,
-        NlmF::Request | NlmF::Ack,
+        NlmF::REQUEST | NlmF::ACK,
         None,
         None,
-        NlPayload::Payload(ifmsg),
+        ifmsg,
     );
 
-    socket.send(nlhdr)?;
-    socket.recv()?; // Wait for ACK
+    socket.send(&nlhdr)?;
+    let mut buf = Vec::new();
+    socket.recv(&mut buf)?;
 
     Ok(())
 }
 
 fn get_interface_index(name: &str) -> Result<Option<u32>, NlError> {
-    let mut socket = NlSocketHandle::connect(NlFamily::Route, None, &[])?;
+    let mut socket = NlSocket::connect(NlFamily::Route, None, &[])?;
 
-    let ifmsg = Ifinfomsg::default();
+    let ifmsg = Ifinfomsg::new(
+        RtAddrFamily::Unspecified,
+        Arphrd::Ether,
+        0,
+        0,
+        0,
+        RtBuffer::new(),
+    );
 
     let nlhdr = Nlmsghdr::new(
         None,
         Rtm::Getlink,
-        NlmF::Request | NlmF::Dump,
+        NlmF::REQUEST | NlmF::DUMP,
         None,
         None,
-        NlPayload::Payload(ifmsg),
+        ifmsg,
     );
 
-    socket.send(nlhdr)?;
+    socket.send(&nlhdr)?;
+    let mut buf = Vec::new();
 
-    while let Some(response) = socket.recv()? {
-        if let NlPayload::Payload(msg) = response.nl_payload {
-            for attr in msg.rtattrs.iter() {
+    loop {
+        if let Some(response) = socket.recv::<Ifinfomsg>(&mut buf)? {
+            let attrs = response.nl_payload.rtattrs();
+            for attr in attrs.iter() {
                 if attr.rta_type == Ifla::Ifname {
                     if let Ok(n) = String::from_utf8(attr.rta_payload.clone()) {
                         if n == name {
-                            return Ok(Some(msg.ifi_index as u32));
+                            return Ok(Some(response.nl_payload.ifi_index as u32));
                         }
                     }
                 }
             }
+        } else {
+            break;
         }
     }
 
