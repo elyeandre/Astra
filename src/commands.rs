@@ -276,6 +276,13 @@ async fn registration(lua: &mlua::Lua, stdlib_path: Option<String>) {
             tracing::error!("Failed to register unix socket: {:?}", e);
         }
     }
+     #[cfg(unix)]
+    {
+        use crate::components::network::NetworkComponent;
+        if let Err(e) = NetworkComponent::register_to_lua(lua).await {
+            tracing::error!("Failed to register network component: {:?}", e);
+        }
+    }
 }
 
 fn pure_lua_libs() -> Vec<(String, String)> {
