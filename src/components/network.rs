@@ -2,8 +2,8 @@ use mlua::{Lua, Result, UserData, UserDataMethods, Value, Integer};
 use rtnetlink::{Handle, new_connection};
 use netlink_packet_route::{
     link::{LinkMessage, LinkFlags, LinkAttribute},
-    route::{RouteMessage, RouteHeader, RouteAttribute},
-    AddressFamily, RouteType, RouteScope, RouteProtocol,
+    route::{RouteMessage, RouteAttribute, RouteType, RouteScope, RouteProtocol, RouteAddress},
+    AddressFamily,
 };
 use std::collections::HashMap;
 use std::net::IpAddr;
@@ -255,10 +255,10 @@ impl NetworkManager {
         if let Some(dest) = destination {
             match dest {
                 IpAddr::V4(addr) => {
-                    route_msg.attributes.push(RouteAttribute::Destination(addr.octets().to_vec()));
+                    route_msg.attributes.push(RouteAttribute::Destination(RouteAddress::Inet(addr)));
                 },
                 IpAddr::V6(addr) => {
-                    route_msg.attributes.push(RouteAttribute::Destination(addr.octets().to_vec()));
+                    route_msg.attributes.push(RouteAttribute::Destination(RouteAddress::Inet6(addr)));
                 }
             }
         }
@@ -284,10 +284,10 @@ impl NetworkManager {
 
                     match gateway {
                         IpAddr::V4(addr) => {
-                            route_msg.attributes.push(RouteAttribute::Gateway(addr.octets().to_vec()));
+                            route_msg.attributes.push(RouteAttribute::Gateway(RouteAddress::Inet(addr)));
                         },
                         IpAddr::V6(addr) => {
-                            route_msg.attributes.push(RouteAttribute::Gateway(addr.octets().to_vec()));
+                            route_msg.attributes.push(RouteAttribute::Gateway(RouteAddress::Inet6(addr)));
                         }
                     }
                 },
