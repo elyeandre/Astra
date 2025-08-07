@@ -1,9 +1,12 @@
-use mlua::{Lua, Result, UserData, UserDataMethods, Value, Integer};
+use mlua::{Lua, Result, UserData, UserDataMethods, Value, Integer, Table};
 use rtnetlink::{Handle, new_connection};
 use netlink_packet_route::{
     link::{LinkMessage, LinkFlags, LinkAttribute},
+    route::RouteScope,
+    AddressFamily,
 };
 use std::collections::HashMap;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use tokio::time::{timeout, Duration};
 use futures::stream::TryStreamExt;
 
@@ -166,6 +169,324 @@ impl NetworkManager {
 
         Ok(interfaces)
     }
+
+    /// Add an IP address to an interface
+    pub async fn add_address(&self, interface_name: String, address_cidr: String) -> Result<()> {
+        tracing::debug!("Adding address '{}' to interface '{}'", address_cidr, interface_name);
+
+        // Parse the CIDR notation (e.g., "10.8.0.1/24")
+        let (ip_str, prefix_len_str) = address_cidr.split_once('/').ok_or_else(|| {
+            mlua::Error::runtime("Address must be in CIDR format (e.g., '10.8.0.1/24')")
+        })?;
+
+        let ip: IpAddr = ip_str.parse().map_err(|e| {
+            mlua::Error::runtime(format!("Invalid IP address '{}': {}", ip_str, e))
+        })?;
+
+        let prefix_len: u8 = prefix_len_str.parse().map_err(|e| {
+            mlua::Error::runtime(format!("Invalid prefix length '{}': {}", prefix_len_str, e))
+        })?;
+
+        // Get the interface index
+        let mut links = self.handle.link().get().match_name(interface_name.clone()).execute();
+        let link = timeout(Duration::from_secs(5), links.try_next())
+            .await
+            .map_err(|_| mlua::Error::runtime("Timeout getting interface information"))?
+            .map_err(|e| mlua::Error::runtime(format!("Failed to get interface: {}", e)))?
+            .ok_or_else(|| mlua::Error::runtime(format!("Interface '{}' not found", interface_name)))?;
+
+        // Add the address
+        let result = match ip {
+            IpAddr::V4(ipv4) => {
+                timeout(
+                    Duration::from_secs(10),
+                    self.handle
+                        .address()
+                        .add(link.header.index, ipv4, prefix_len)
+                        .execute()
+                ).await
+            },
+            IpAddr::V6(ipv6) => {
+                timeout(
+                    Duration::from_secs(10),
+                    self.handle
+                        .address()
+                        .add(link.header.index, ipv6, prefix_len)
+                        .execute()
+                ).await
+            }
+        };
+
+        match result {
+            Ok(Ok(_)) => {
+                tracing::info!("Successfully added address '{}' to interface '{}'", address_cidr, interface_name);
+                Ok(())
+            },
+            Ok(Err(e)) => {
+                tracing::error!("Failed to add address '{}' to interface '{}': {}", address_cidr, interface_name, e);
+                Err(mlua::Error::runtime(format!("Failed to add address: {}", e)))
+            },
+            Err(_) => {
+                tracing::error!("Timeout adding address '{}' to interface '{}'", address_cidr, interface_name);
+                Err(mlua::Error::runtime("Timeout adding address"))
+            }
+        }
+    }
+
+    /// Delete an IP address from an interface
+    pub async fn delete_address(&self, interface_name: String, address_cidr: String) -> Result<()> {
+        tracing::debug!("Deleting address '{}' from interface '{}'", address_cidr, interface_name);
+
+        // Parse the CIDR notation
+        let (ip_str, prefix_len_str) = address_cidr.split_once('/').ok_or_else(|| {
+            mlua::Error::runtime("Address must be in CIDR format (e.g., '10.8.0.1/24')")
+        })?;
+
+        let ip: IpAddr = ip_str.parse().map_err(|e| {
+            mlua::Error::runtime(format!("Invalid IP address '{}': {}", ip_str, e))
+        })?;
+
+        let prefix_len: u8 = prefix_len_str.parse().map_err(|e| {
+            mlua::Error::runtime(format!("Invalid prefix length '{}': {}", prefix_len_str, e))
+        })?;
+
+        // Get the interface index
+        let mut links = self.handle.link().get().match_name(interface_name.clone()).execute();
+        let link = timeout(Duration::from_secs(5), links.try_next())
+            .await
+            .map_err(|_| mlua::Error::runtime("Timeout getting interface information"))?
+            .map_err(|e| mlua::Error::runtime(format!("Failed to get interface: {}", e)))?
+            .ok_or_else(|| mlua::Error::runtime(format!("Interface '{}' not found", interface_name)))?;
+
+        // Delete the address
+        let result = match ip {
+            IpAddr::V4(ipv4) => {
+                timeout(
+                    Duration::from_secs(10),
+                    self.handle
+                        .address()
+                        .del(link.header.index, ipv4, prefix_len)
+                        .execute()
+                ).await
+            },
+            IpAddr::V6(ipv6) => {
+                timeout(
+                    Duration::from_secs(10),
+                    self.handle
+                        .address()
+                        .del(link.header.index, ipv6, prefix_len)
+                        .execute()
+                ).await
+            }
+        };
+
+        match result {
+            Ok(Ok(_)) => {
+                tracing::info!("Successfully deleted address '{}' from interface '{}'", address_cidr, interface_name);
+                Ok(())
+            },
+            Ok(Err(e)) => {
+                tracing::error!("Failed to delete address '{}' from interface '{}': {}", address_cidr, interface_name, e);
+                Err(mlua::Error::runtime(format!("Failed to delete address: {}", e)))
+            },
+            Err(_) => {
+                tracing::error!("Timeout deleting address '{}' from interface '{}'", address_cidr, interface_name);
+                Err(mlua::Error::runtime("Timeout deleting address"))
+            }
+        }
+    }
+
+    /// Add a route
+    pub async fn add_route(&self, route_config: Table) -> Result<()> {
+        tracing::debug!("Adding route with config: {:?}", route_config);
+
+        // Parse route configuration from Lua table
+        let destination: String = route_config.get("destination")
+            .map_err(|_| mlua::Error::runtime("Route must have 'destination' field"))?;
+        
+        let device: Option<String> = route_config.get("device").ok();
+        let gateway: Option<String> = route_config.get("gateway").ok();
+
+        // Parse destination CIDR
+        let (dest_ip_str, prefix_len_str) = if destination == "default" || destination == "0.0.0.0/0" {
+            ("0.0.0.0", "0")
+        } else {
+            destination.split_once('/').ok_or_else(|| {
+                mlua::Error::runtime("Destination must be in CIDR format (e.g., '192.168.1.0/24') or 'default'")
+            })?
+        };
+
+        let dest_ip: IpAddr = dest_ip_str.parse().map_err(|e| {
+            mlua::Error::runtime(format!("Invalid destination IP '{}': {}", dest_ip_str, e))
+        })?;
+
+        let prefix_len: u8 = prefix_len_str.parse().map_err(|e| {
+            mlua::Error::runtime(format!("Invalid prefix length '{}': {}", prefix_len_str, e))
+        })?;
+
+        // Get interface index if device is specified
+        let interface_index = if let Some(device_name) = device {
+            let mut links = self.handle.link().get().match_name(device_name.clone()).execute();
+            let link = timeout(Duration::from_secs(5), links.try_next())
+                .await
+                .map_err(|_| mlua::Error::runtime("Timeout getting interface information"))?
+                .map_err(|e| mlua::Error::runtime(format!("Failed to get interface: {}", e)))?
+                .ok_or_else(|| mlua::Error::runtime(format!("Interface '{}' not found", device_name)))?;
+            Some(link.header.index)
+        } else {
+            None
+        };
+
+        // Parse gateway if specified
+        let gateway_ip = if let Some(gw_str) = gateway {
+            Some(gw_str.parse::<IpAddr>().map_err(|e| {
+                mlua::Error::runtime(format!("Invalid gateway IP '{}': {}", gw_str, e))
+            })?)
+        } else {
+            None
+        };
+
+        // Add the route
+        let result = match dest_ip {
+            IpAddr::V4(dest_ipv4) => {
+                let mut route_req = self.handle.route().add().v4().destination_prefix(dest_ipv4, prefix_len);
+                
+                if let Some(index) = interface_index {
+                    route_req = route_req.output_interface(index);
+                }
+                
+                if let Some(IpAddr::V4(gw_ipv4)) = gateway_ip {
+                    route_req = route_req.gateway(gw_ipv4);
+                }
+
+                timeout(Duration::from_secs(10), route_req.execute()).await
+            },
+            IpAddr::V6(dest_ipv6) => {
+                let mut route_req = self.handle.route().add().v6().destination_prefix(dest_ipv6, prefix_len);
+                
+                if let Some(index) = interface_index {
+                    route_req = route_req.output_interface(index);
+                }
+                
+                if let Some(IpAddr::V6(gw_ipv6)) = gateway_ip {
+                    route_req = route_req.gateway(gw_ipv6);
+                }
+
+                timeout(Duration::from_secs(10), route_req.execute()).await
+            }
+        };
+
+        match result {
+            Ok(Ok(_)) => {
+                tracing::info!("Successfully added route to '{}'", destination);
+                Ok(())
+            },
+            Ok(Err(e)) => {
+                tracing::error!("Failed to add route to '{}': {}", destination, e);
+                Err(mlua::Error::runtime(format!("Failed to add route: {}", e)))
+            },
+            Err(_) => {
+                tracing::error!("Timeout adding route to '{}'", destination);
+                Err(mlua::Error::runtime("Timeout adding route"))
+            }
+        }
+    }
+
+    /// Delete a route
+    pub async fn delete_route(&self, route_config: Table) -> Result<()> {
+        tracing::debug!("Deleting route with config: {:?}", route_config);
+
+        // Parse route configuration from Lua table
+        let destination: String = route_config.get("destination")
+            .map_err(|_| mlua::Error::runtime("Route must have 'destination' field"))?;
+        
+        let device: Option<String> = route_config.get("device").ok();
+        let gateway: Option<String> = route_config.get("gateway").ok();
+
+        // Parse destination CIDR
+        let (dest_ip_str, prefix_len_str) = if destination == "default" || destination == "0.0.0.0/0" {
+            ("0.0.0.0", "0")
+        } else {
+            destination.split_once('/').ok_or_else(|| {
+                mlua::Error::runtime("Destination must be in CIDR format (e.g., '192.168.1.0/24') or 'default'")
+            })?
+        };
+
+        let dest_ip: IpAddr = dest_ip_str.parse().map_err(|e| {
+            mlua::Error::runtime(format!("Invalid destination IP '{}': {}", dest_ip_str, e))
+        })?;
+
+        let prefix_len: u8 = prefix_len_str.parse().map_err(|e| {
+            mlua::Error::runtime(format!("Invalid prefix length '{}': {}", prefix_len_str, e))
+        })?;
+
+        // Get interface index if device is specified
+        let interface_index = if let Some(device_name) = device {
+            let mut links = self.handle.link().get().match_name(device_name.clone()).execute();
+            let link = timeout(Duration::from_secs(5), links.try_next())
+                .await
+                .map_err(|_| mlua::Error::runtime("Timeout getting interface information"))?
+                .map_err(|e| mlua::Error::runtime(format!("Failed to get interface: {}", e)))?
+                .ok_or_else(|| mlua::Error::runtime(format!("Interface '{}' not found", device_name)))?;
+            Some(link.header.index)
+        } else {
+            None
+        };
+
+        // Parse gateway if specified
+        let gateway_ip = if let Some(gw_str) = gateway {
+            Some(gw_str.parse::<IpAddr>().map_err(|e| {
+                mlua::Error::runtime(format!("Invalid gateway IP '{}': {}", gw_str, e))
+            })?)
+        } else {
+            None
+        };
+
+        // Delete the route
+        let result = match dest_ip {
+            IpAddr::V4(dest_ipv4) => {
+                let mut route_req = self.handle.route().del().v4().destination_prefix(dest_ipv4, prefix_len);
+                
+                if let Some(index) = interface_index {
+                    route_req = route_req.output_interface(index);
+                }
+                
+                if let Some(IpAddr::V4(gw_ipv4)) = gateway_ip {
+                    route_req = route_req.gateway(gw_ipv4);
+                }
+
+                timeout(Duration::from_secs(10), route_req.execute()).await
+            },
+            IpAddr::V6(dest_ipv6) => {
+                let mut route_req = self.handle.route().del().v6().destination_prefix(dest_ipv6, prefix_len);
+                
+                if let Some(index) = interface_index {
+                    route_req = route_req.output_interface(index);
+                }
+                
+                if let Some(IpAddr::V6(gw_ipv6)) = gateway_ip {
+                    route_req = route_req.gateway(gw_ipv6);
+                }
+
+                timeout(Duration::from_secs(10), route_req.execute()).await
+            }
+        };
+
+        match result {
+            Ok(Ok(_)) => {
+                tracing::info!("Successfully deleted route to '{}'", destination);
+                Ok(())
+            },
+            Ok(Err(e)) => {
+                tracing::error!("Failed to delete route to '{}': {}", destination, e);
+                Err(mlua::Error::runtime(format!("Failed to delete route: {}", e)))
+            },
+            Err(_) => {
+                tracing::error!("Timeout deleting route to '{}'", destination);
+                Err(mlua::Error::runtime("Timeout deleting route"))
+            }
+        }
+    }
 }
 
 impl UserData for NetworkManager {
@@ -200,6 +521,22 @@ impl UserData for NetworkManager {
             }
             
             Ok(result)
+        });
+
+        methods.add_async_method("add_address", |_lua, this, (interface_name, address_cidr): (String, String)| async move {
+            this.add_address(interface_name, address_cidr).await
+        });
+
+        methods.add_async_method("delete_address", |_lua, this, (interface_name, address_cidr): (String, String)| async move {
+            this.delete_address(interface_name, address_cidr).await
+        });
+
+        methods.add_async_method("add_route", |_lua, this, route_config: Table| async move {
+            this.add_route(route_config).await
+        });
+
+        methods.add_async_method("delete_route", |_lua, this, route_config: Table| async move {
+            this.delete_route(route_config).await
         });
     }
 }
