@@ -1,6 +1,9 @@
-use mlua::{Lua, Result, UserData, UserDataMethods, Value};
+use mlua::{Lua, Result, UserData, UserDataMethods, Value, Integer};
 use rtnetlink::{Handle, new_connection};
-use netlink_packet_route::link::LinkFlags;
+use netlink_packet_route::{
+    LinkMessage,
+    link::{LinkFlags, LinkAttribute},
+};
 use std::collections::HashMap;
 use tokio::time::{timeout, Duration};
 use futures::stream::TryStreamExt;
@@ -34,14 +37,15 @@ impl NetworkManager {
             .map_err(|e| mlua::Error::runtime(format!("Failed to get interface: {}", e)))?
             .ok_or_else(|| mlua::Error::runtime(format!("Interface '{}' not found", interface_name)))?;
 
-        // Set the interface up by adding the UP flag
+        // Create a modified link message with UP flag set
+        let mut new_link = LinkMessage::default();
+        new_link.header.index = link.header.index;
+        new_link.header.flags = link.header.flags | LinkFlags::Up;
+        
+        // Set the interface up
         let result = timeout(
             Duration::from_secs(10),
-            self.handle
-                .link()
-                .set(link.header.index)
-                .setattr_flags(LinkFlags::Up, LinkFlags::Up)
-                .execute()
+            self.handle.link().set(new_link).execute()
         ).await;
 
         match result {
@@ -72,14 +76,15 @@ impl NetworkManager {
             .map_err(|e| mlua::Error::runtime(format!("Failed to get interface: {}", e)))?
             .ok_or_else(|| mlua::Error::runtime(format!("Interface '{}' not found", interface_name)))?;
 
-        // Set the interface down by removing the UP flag
+        // Create a modified link message with UP flag cleared
+        let mut new_link = LinkMessage::default();
+        new_link.header.index = link.header.index;
+        new_link.header.flags = link.header.flags & !LinkFlags::Up;
+        
+        // Set the interface down
         let result = timeout(
             Duration::from_secs(10),
-            self.handle
-                .link()
-                .set(link.header.index)
-                .unsetattr_flags(LinkFlags::Up)
-                .execute()
+            self.handle.link().set(new_link).execute()
         ).await;
 
         match result {
@@ -99,7 +104,7 @@ impl NetworkManager {
     }
 
     /// Get interface status
-    pub async fn get_link_status(&self, interface_name: String) -> Result<HashMap<String, Value>> {
+    pub async fn get_link_status(&self, lua: &Lua, interface_name: String) -> Result<HashMap<String, Value>> {
         tracing::debug!("Getting status for interface '{}'", interface_name);
 
         let mut links = self.handle.link().get().match_name(interface_name.clone()).execute();
@@ -110,8 +115,8 @@ impl NetworkManager {
             .ok_or_else(|| mlua::Error::runtime(format!("Interface '{}' not found", interface_name)))?;
 
         let mut status = HashMap::new();
-        status.insert("name".to_string(), Value::String(mlua::String::from(interface_name)));
-        status.insert("index".to_string(), Value::Integer(link.header.index as i64));
+        status.insert("name".to_string(), Value::String(lua.create_string(interface_name)?));
+        status.insert("index".to_string(), Value::Integer(link.header.index as Integer));
         
         // Check if interface is up
         let is_up = link.header.flags & LinkFlags::Up == LinkFlags::Up;
@@ -125,7 +130,7 @@ impl NetworkManager {
     }
 
     /// List all network interfaces
-    pub async fn list_interfaces(&self) -> Result<Vec<HashMap<String, Value>>> {
+    pub async fn list_interfaces(&self, lua: &Lua) -> Result<Vec<HashMap<String, Value>>> {
         tracing::debug!("Listing all network interfaces");
 
         let mut links = self.handle.link().get().execute();
@@ -140,16 +145,16 @@ impl NetworkManager {
             
             // Get interface name
             if let Some(name_attr) = link.attributes.iter().find_map(|attr| {
-                if let netlink_packet_route::link::LinkAttribute::IfName(name) = attr {
+                if let LinkAttribute::IfName(name) = attr {
                     Some(name.clone())
                 } else {
                     None
                 }
             }) {
-                interface_info.insert("name".to_string(), Value::String(mlua::String::from(name_attr)));
+                interface_info.insert("name".to_string(), Value::String(lua.create_string(name_attr)?));
             }
 
-            interface_info.insert("index".to_string(), Value::Integer(link.header.index as i64));
+            interface_info.insert("index".to_string(), Value::Integer(link.header.index as Integer));
             
             let is_up = link.header.flags & LinkFlags::Up == LinkFlags::Up;
             interface_info.insert("is_up".to_string(), Value::Boolean(is_up));
@@ -175,7 +180,7 @@ impl UserData for NetworkManager {
         });
 
         methods.add_async_method("get_link_status", |lua, this, interface_name: String| async move {
-            let status = this.get_link_status(interface_name).await?;
+            let status = this.get_link_status(lua, interface_name).await?;
             let table = lua.create_table()?;
             for (key, value) in status {
                 table.set(key, value)?;
@@ -184,7 +189,7 @@ impl UserData for NetworkManager {
         });
 
         methods.add_async_method("list_interfaces", |lua, this, _: ()| async move {
-            let interfaces = this.list_interfaces().await?;
+            let interfaces = this.list_interfaces(lua).await?;
             let result = lua.create_table()?;
             
             for (i, interface) in interfaces.iter().enumerate() {
