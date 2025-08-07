@@ -2,7 +2,7 @@ use mlua::{Lua, Result, UserData, UserDataMethods, Value, Integer, Table};
 use rtnetlink::{Handle, new_connection};
 use netlink_packet_route::{
     link::{LinkMessage, LinkFlags, LinkAttribute},
-    route::RouteScope,
+    route::{RouteMessage, RouteHeader, RouteAttribute, RouteScope, RouteType, RouteProtocol},
     AddressFamily,
 };
 use std::collections::HashMap;
@@ -170,322 +170,282 @@ impl NetworkManager {
         Ok(interfaces)
     }
 
-    /// Add an IP address to an interface
-    pub async fn add_address(&self, interface_name: String, address_cidr: String) -> Result<()> {
-        tracing::debug!("Adding address '{}' to interface '{}'", address_cidr, interface_name);
-
-        // Parse the CIDR notation (e.g., "10.8.0.1/24")
-        let (ip_str, prefix_len_str) = address_cidr.split_once('/').ok_or_else(|| {
-            mlua::Error::runtime("Address must be in CIDR format (e.g., '10.8.0.1/24')")
-        })?;
-
-        let ip: IpAddr = ip_str.parse().map_err(|e| {
-            mlua::Error::runtime(format!("Invalid IP address '{}': {}", ip_str, e))
-        })?;
-
-        let prefix_len: u8 = prefix_len_str.parse().map_err(|e| {
-            mlua::Error::runtime(format!("Invalid prefix length '{}': {}", prefix_len_str, e))
-        })?;
-
-        // Get the interface index
-        let mut links = self.handle.link().get().match_name(interface_name.clone()).execute();
+    /// Helper function to get interface index by name
+    async fn get_interface_index(&self, interface_name: &str) -> Result<u32> {
+        let mut links = self.handle.link().get().match_name(interface_name.to_string()).execute();
         let link = timeout(Duration::from_secs(5), links.try_next())
             .await
             .map_err(|_| mlua::Error::runtime("Timeout getting interface information"))?
             .map_err(|e| mlua::Error::runtime(format!("Failed to get interface: {}", e)))?
             .ok_or_else(|| mlua::Error::runtime(format!("Interface '{}' not found", interface_name)))?;
-
-        // Add the address
-        let result = match ip {
-            IpAddr::V4(ipv4) => {
-                timeout(
-                    Duration::from_secs(10),
-                    self.handle
-                        .address()
-                        .add(link.header.index, ipv4, prefix_len)
-                        .execute()
-                ).await
-            },
-            IpAddr::V6(ipv6) => {
-                timeout(
-                    Duration::from_secs(10),
-                    self.handle
-                        .address()
-                        .add(link.header.index, ipv6, prefix_len)
-                        .execute()
-                ).await
-            }
-        };
-
-        match result {
-            Ok(Ok(_)) => {
-                tracing::info!("Successfully added address '{}' to interface '{}'", address_cidr, interface_name);
-                Ok(())
-            },
-            Ok(Err(e)) => {
-                tracing::error!("Failed to add address '{}' to interface '{}': {}", address_cidr, interface_name, e);
-                Err(mlua::Error::runtime(format!("Failed to add address: {}", e)))
-            },
-            Err(_) => {
-                tracing::error!("Timeout adding address '{}' to interface '{}'", address_cidr, interface_name);
-                Err(mlua::Error::runtime("Timeout adding address"))
-            }
-        }
-    }
-
-    /// Delete an IP address from an interface
-    pub async fn delete_address(&self, interface_name: String, address_cidr: String) -> Result<()> {
-        tracing::debug!("Deleting address '{}' from interface '{}'", address_cidr, interface_name);
-
-        // Parse the CIDR notation
-        let (ip_str, prefix_len_str) = address_cidr.split_once('/').ok_or_else(|| {
-            mlua::Error::runtime("Address must be in CIDR format (e.g., '10.8.0.1/24')")
-        })?;
-
-        let ip: IpAddr = ip_str.parse().map_err(|e| {
-            mlua::Error::runtime(format!("Invalid IP address '{}': {}", ip_str, e))
-        })?;
-
-        let prefix_len: u8 = prefix_len_str.parse().map_err(|e| {
-            mlua::Error::runtime(format!("Invalid prefix length '{}': {}", prefix_len_str, e))
-        })?;
-
-        // Get the interface index
-        let mut links = self.handle.link().get().match_name(interface_name.clone()).execute();
-        let link = timeout(Duration::from_secs(5), links.try_next())
-            .await
-            .map_err(|_| mlua::Error::runtime("Timeout getting interface information"))?
-            .map_err(|e| mlua::Error::runtime(format!("Failed to get interface: {}", e)))?
-            .ok_or_else(|| mlua::Error::runtime(format!("Interface '{}' not found", interface_name)))?;
-
-        // Delete the address
-        let result = match ip {
-            IpAddr::V4(ipv4) => {
-                timeout(
-                    Duration::from_secs(10),
-                    self.handle
-                        .address()
-                        .del(link.header.index, ipv4, prefix_len)
-                        .execute()
-                ).await
-            },
-            IpAddr::V6(ipv6) => {
-                timeout(
-                    Duration::from_secs(10),
-                    self.handle
-                        .address()
-                        .del(link.header.index, ipv6, prefix_len)
-                        .execute()
-                ).await
-            }
-        };
-
-        match result {
-            Ok(Ok(_)) => {
-                tracing::info!("Successfully deleted address '{}' from interface '{}'", address_cidr, interface_name);
-                Ok(())
-            },
-            Ok(Err(e)) => {
-                tracing::error!("Failed to delete address '{}' from interface '{}': {}", address_cidr, interface_name, e);
-                Err(mlua::Error::runtime(format!("Failed to delete address: {}", e)))
-            },
-            Err(_) => {
-                tracing::error!("Timeout deleting address '{}' from interface '{}'", address_cidr, interface_name);
-                Err(mlua::Error::runtime("Timeout deleting address"))
-            }
-        }
-    }
-
-    /// Add a route
-    pub async fn add_route(&self, route_config: Table) -> Result<()> {
-        tracing::debug!("Adding route with config: {:?}", route_config);
-
-        // Parse route configuration from Lua table
-        let destination: String = route_config.get("destination")
-            .map_err(|_| mlua::Error::runtime("Route must have 'destination' field"))?;
         
-        let device: Option<String> = route_config.get("device").ok();
-        let gateway: Option<String> = route_config.get("gateway").ok();
+        Ok(link.header.index)
+    }
+
+    /// Parse IP address and prefix length from CIDR notation
+    fn parse_cidr(destination: &str) -> Result<(IpAddr, u8)> {
+        if let Some((ip_str, prefix_str)) = destination.split_once('/') {
+            let ip: IpAddr = ip_str.parse()
+                .map_err(|_| mlua::Error::runtime(format!("Invalid IP address: {}", ip_str)))?;
+            let prefix: u8 = prefix_str.parse()
+                .map_err(|_| mlua::Error::runtime(format!("Invalid prefix length: {}", prefix_str)))?;
+            Ok((ip, prefix))
+        } else {
+            // If no prefix is provided, assume /32 for IPv4 or /128 for IPv6
+            let ip: IpAddr = destination.parse()
+                .map_err(|_| mlua::Error::runtime(format!("Invalid IP address: {}", destination)))?;
+            let prefix = match ip {
+                IpAddr::V4(_) => 32,
+                IpAddr::V6(_) => 128,
+            };
+            Ok((ip, prefix))
+        }
+    }
+
+    /// Add a route to the routing table
+    pub async fn add_route(&self, route_table: Table) -> Result<()> {
+        let destination: String = route_table.get("destination")?;
+        let device: Option<String> = route_table.get("device").ok();
+        let gateway: Option<String> = route_table.get("gateway").ok();
+
+        tracing::debug!("Adding route: dest={}, device={:?}, gateway={:?}", 
+                       destination, device, gateway);
 
         // Parse destination CIDR
-        let (dest_ip_str, prefix_len_str) = if destination == "default" || destination == "0.0.0.0/0" {
-            ("0.0.0.0", "0")
-        } else {
-            destination.split_once('/').ok_or_else(|| {
-                mlua::Error::runtime("Destination must be in CIDR format (e.g., '192.168.1.0/24') or 'default'")
-            })?
+        let (dest_ip, prefix_len) = Self::parse_cidr(&destination)?;
+
+        // Create route message
+        let mut route = RouteMessage::default();
+        
+        // Set address family
+        route.header.address_family = match dest_ip {
+            IpAddr::V4(_) => AddressFamily::Inet,
+            IpAddr::V6(_) => AddressFamily::Inet6,
         };
+        
+        route.header.destination_prefix_length = prefix_len;
+        route.header.scope = RouteScope::Universe;
+        route.header.kind = RouteType::Unicast;
+        route.header.protocol = RouteProtocol::Static;
+        route.header.table = netlink_packet_route::RT_TABLE_MAIN;
 
-        let dest_ip: IpAddr = dest_ip_str.parse().map_err(|e| {
-            mlua::Error::runtime(format!("Invalid destination IP '{}': {}", dest_ip_str, e))
-        })?;
-
-        let prefix_len: u8 = prefix_len_str.parse().map_err(|e| {
-            mlua::Error::runtime(format!("Invalid prefix length '{}': {}", prefix_len_str, e))
-        })?;
-
-        // Get interface index if device is specified
-        let interface_index = if let Some(device_name) = device {
-            let mut links = self.handle.link().get().match_name(device_name.clone()).execute();
-            let link = timeout(Duration::from_secs(5), links.try_next())
-                .await
-                .map_err(|_| mlua::Error::runtime("Timeout getting interface information"))?
-                .map_err(|e| mlua::Error::runtime(format!("Failed to get interface: {}", e)))?
-                .ok_or_else(|| mlua::Error::runtime(format!("Interface '{}' not found", device_name)))?;
-            Some(link.header.index)
-        } else {
-            None
-        };
-
-        // Parse gateway if specified
-        let gateway_ip = if let Some(gw_str) = gateway {
-            Some(gw_str.parse::<IpAddr>().map_err(|e| {
-                mlua::Error::runtime(format!("Invalid gateway IP '{}': {}", gw_str, e))
-            })?)
-        } else {
-            None
-        };
-
-        // Add the route
-        let result = match dest_ip {
-            IpAddr::V4(dest_ipv4) => {
-                let mut route_req = self.handle.route().add().v4().destination_prefix(dest_ipv4, prefix_len);
-                
-                if let Some(index) = interface_index {
-                    route_req = route_req.output_interface(index);
+        // Add destination attribute
+        match dest_ip {
+            IpAddr::V4(ipv4) => {
+                if prefix_len > 0 {
+                    route.attributes.push(RouteAttribute::Destination(ipv4.octets().to_vec()));
                 }
-                
-                if let Some(IpAddr::V4(gw_ipv4)) = gateway_ip {
-                    route_req = route_req.gateway(gw_ipv4);
-                }
-
-                timeout(Duration::from_secs(10), route_req.execute()).await
-            },
-            IpAddr::V6(dest_ipv6) => {
-                let mut route_req = self.handle.route().add().v6().destination_prefix(dest_ipv6, prefix_len);
-                
-                if let Some(index) = interface_index {
-                    route_req = route_req.output_interface(index);
-                }
-                
-                if let Some(IpAddr::V6(gw_ipv6)) = gateway_ip {
-                    route_req = route_req.gateway(gw_ipv6);
-                }
-
-                timeout(Duration::from_secs(10), route_req.execute()).await
             }
-        };
+            IpAddr::V6(ipv6) => {
+                if prefix_len > 0 {
+                    route.attributes.push(RouteAttribute::Destination(ipv6.octets().to_vec()));
+                }
+            }
+        }
+
+        // Add gateway if provided
+        if let Some(gw_str) = gateway {
+            let gw_ip: IpAddr = gw_str.parse()
+                .map_err(|_| mlua::Error::runtime(format!("Invalid gateway IP: {}", gw_str)))?;
+            
+            match gw_ip {
+                IpAddr::V4(ipv4) => {
+                    route.attributes.push(RouteAttribute::Gateway(ipv4.octets().to_vec()));
+                }
+                IpAddr::V6(ipv6) => {
+                    route.attributes.push(RouteAttribute::Gateway(ipv6.octets().to_vec()));
+                }
+            }
+        }
+
+        // Add output interface if provided
+        if let Some(dev_name) = device {
+            let if_index = self.get_interface_index(&dev_name).await?;
+            route.attributes.push(RouteAttribute::Oif(if_index));
+        }
+
+        // Execute the route addition
+        let result = timeout(
+            Duration::from_secs(10),
+            self.handle.route().add(route).execute()
+        ).await;
 
         match result {
             Ok(Ok(_)) => {
-                tracing::info!("Successfully added route to '{}'", destination);
+                tracing::info!("Successfully added route: {}", destination);
                 Ok(())
             },
             Ok(Err(e)) => {
-                tracing::error!("Failed to add route to '{}': {}", destination, e);
+                tracing::error!("Failed to add route {}: {}", destination, e);
                 Err(mlua::Error::runtime(format!("Failed to add route: {}", e)))
             },
             Err(_) => {
-                tracing::error!("Timeout adding route to '{}'", destination);
+                tracing::error!("Timeout adding route: {}", destination);
                 Err(mlua::Error::runtime("Timeout adding route"))
             }
         }
     }
 
-    /// Delete a route
-    pub async fn delete_route(&self, route_config: Table) -> Result<()> {
-        tracing::debug!("Deleting route with config: {:?}", route_config);
+    /// Delete a route from the routing table
+    pub async fn delete_route(&self, route_table: Table) -> Result<()> {
+        let destination: String = route_table.get("destination")?;
+        let device: Option<String> = route_table.get("device").ok();
+        let gateway: Option<String> = route_table.get("gateway").ok();
 
-        // Parse route configuration from Lua table
-        let destination: String = route_config.get("destination")
-            .map_err(|_| mlua::Error::runtime("Route must have 'destination' field"))?;
-        
-        let device: Option<String> = route_config.get("device").ok();
-        let gateway: Option<String> = route_config.get("gateway").ok();
+        tracing::debug!("Deleting route: dest={}, device={:?}, gateway={:?}", 
+                       destination, device, gateway);
 
         // Parse destination CIDR
-        let (dest_ip_str, prefix_len_str) = if destination == "default" || destination == "0.0.0.0/0" {
-            ("0.0.0.0", "0")
-        } else {
-            destination.split_once('/').ok_or_else(|| {
-                mlua::Error::runtime("Destination must be in CIDR format (e.g., '192.168.1.0/24') or 'default'")
-            })?
+        let (dest_ip, prefix_len) = Self::parse_cidr(&destination)?;
+
+        // Create route message for deletion
+        let mut route = RouteMessage::default();
+        
+        // Set address family
+        route.header.address_family = match dest_ip {
+            IpAddr::V4(_) => AddressFamily::Inet,
+            IpAddr::V6(_) => AddressFamily::Inet6,
         };
+        
+        route.header.destination_prefix_length = prefix_len;
+        route.header.scope = RouteScope::Universe;
+        route.header.kind = RouteType::Unicast;
+        route.header.protocol = RouteProtocol::Static;
+        route.header.table = netlink_packet_route::RT_TABLE_MAIN;
 
-        let dest_ip: IpAddr = dest_ip_str.parse().map_err(|e| {
-            mlua::Error::runtime(format!("Invalid destination IP '{}': {}", dest_ip_str, e))
-        })?;
-
-        let prefix_len: u8 = prefix_len_str.parse().map_err(|e| {
-            mlua::Error::runtime(format!("Invalid prefix length '{}': {}", prefix_len_str, e))
-        })?;
-
-        // Get interface index if device is specified
-        let interface_index = if let Some(device_name) = device {
-            let mut links = self.handle.link().get().match_name(device_name.clone()).execute();
-            let link = timeout(Duration::from_secs(5), links.try_next())
-                .await
-                .map_err(|_| mlua::Error::runtime("Timeout getting interface information"))?
-                .map_err(|e| mlua::Error::runtime(format!("Failed to get interface: {}", e)))?
-                .ok_or_else(|| mlua::Error::runtime(format!("Interface '{}' not found", device_name)))?;
-            Some(link.header.index)
-        } else {
-            None
-        };
-
-        // Parse gateway if specified
-        let gateway_ip = if let Some(gw_str) = gateway {
-            Some(gw_str.parse::<IpAddr>().map_err(|e| {
-                mlua::Error::runtime(format!("Invalid gateway IP '{}': {}", gw_str, e))
-            })?)
-        } else {
-            None
-        };
-
-        // Delete the route
-        let result = match dest_ip {
-            IpAddr::V4(dest_ipv4) => {
-                let mut route_req = self.handle.route().del().v4().destination_prefix(dest_ipv4, prefix_len);
-                
-                if let Some(index) = interface_index {
-                    route_req = route_req.output_interface(index);
+        // Add destination attribute
+        match dest_ip {
+            IpAddr::V4(ipv4) => {
+                if prefix_len > 0 {
+                    route.attributes.push(RouteAttribute::Destination(ipv4.octets().to_vec()));
                 }
-                
-                if let Some(IpAddr::V4(gw_ipv4)) = gateway_ip {
-                    route_req = route_req.gateway(gw_ipv4);
-                }
-
-                timeout(Duration::from_secs(10), route_req.execute()).await
-            },
-            IpAddr::V6(dest_ipv6) => {
-                let mut route_req = self.handle.route().del().v6().destination_prefix(dest_ipv6, prefix_len);
-                
-                if let Some(index) = interface_index {
-                    route_req = route_req.output_interface(index);
-                }
-                
-                if let Some(IpAddr::V6(gw_ipv6)) = gateway_ip {
-                    route_req = route_req.gateway(gw_ipv6);
-                }
-
-                timeout(Duration::from_secs(10), route_req.execute()).await
             }
-        };
+            IpAddr::V6(ipv6) => {
+                if prefix_len > 0 {
+                    route.attributes.push(RouteAttribute::Destination(ipv6.octets().to_vec()));
+                }
+            }
+        }
+
+        // Add gateway if provided
+        if let Some(gw_str) = gateway {
+            let gw_ip: IpAddr = gw_str.parse()
+                .map_err(|_| mlua::Error::runtime(format!("Invalid gateway IP: {}", gw_str)))?;
+            
+            match gw_ip {
+                IpAddr::V4(ipv4) => {
+                    route.attributes.push(RouteAttribute::Gateway(ipv4.octets().to_vec()));
+                }
+                IpAddr::V6(ipv6) => {
+                    route.attributes.push(RouteAttribute::Gateway(ipv6.octets().to_vec()));
+                }
+            }
+        }
+
+        // Add output interface if provided
+        if let Some(dev_name) = device {
+            let if_index = self.get_interface_index(&dev_name).await?;
+            route.attributes.push(RouteAttribute::Oif(if_index));
+        }
+
+        // Execute the route deletion
+        let result = timeout(
+            Duration::from_secs(10),
+            self.handle.route().del(route).execute()
+        ).await;
 
         match result {
             Ok(Ok(_)) => {
-                tracing::info!("Successfully deleted route to '{}'", destination);
+                tracing::info!("Successfully deleted route: {}", destination);
                 Ok(())
             },
             Ok(Err(e)) => {
-                tracing::error!("Failed to delete route to '{}': {}", destination, e);
+                tracing::error!("Failed to delete route {}: {}", destination, e);
                 Err(mlua::Error::runtime(format!("Failed to delete route: {}", e)))
             },
             Err(_) => {
-                tracing::error!("Timeout deleting route to '{}'", destination);
+                tracing::error!("Timeout deleting route: {}", destination);
                 Err(mlua::Error::runtime("Timeout deleting route"))
             }
         }
+    }
+
+    /// List routes in the routing table
+    pub async fn list_routes(&self, lua: &Lua) -> Result<Vec<HashMap<String, Value>>> {
+        tracing::debug!("Listing routing table");
+
+        let mut routes = self.handle.route().get(AddressFamily::Unspec).execute();
+        let mut route_list = Vec::new();
+
+        while let Some(route_msg) = timeout(Duration::from_secs(10), routes.try_next())
+            .await
+            .map_err(|_| mlua::Error::runtime("Timeout listing routes"))?
+            .map_err(|e| mlua::Error::runtime(format!("Failed to list routes: {}", e)))?
+        {
+            let mut route_info = HashMap::new();
+
+            // Get destination
+            let mut destination = "default".to_string();
+            if let Some(RouteAttribute::Destination(dest_bytes)) = route_msg.attributes.iter()
+                .find(|attr| matches!(attr, RouteAttribute::Destination(_)))
+            {
+                match route_msg.header.address_family {
+                    AddressFamily::Inet if dest_bytes.len() == 4 => {
+                        let ip = Ipv4Addr::new(dest_bytes[0], dest_bytes[1], dest_bytes[2], dest_bytes[3]);
+                        destination = format!("{}/{}", ip, route_msg.header.destination_prefix_length);
+                    }
+                    AddressFamily::Inet6 if dest_bytes.len() == 16 => {
+                        let mut octets = [0u8; 16];
+                        octets.copy_from_slice(dest_bytes);
+                        let ip = Ipv6Addr::from(octets);
+                        destination = format!("{}/{}", ip, route_msg.header.destination_prefix_length);
+                    }
+                    _ => {}
+                }
+            } else if route_msg.header.destination_prefix_length == 0 {
+                match route_msg.header.address_family {
+                    AddressFamily::Inet => destination = "0.0.0.0/0".to_string(),
+                    AddressFamily::Inet6 => destination = "::/0".to_string(),
+                    _ => {}
+                }
+            }
+
+            route_info.insert("destination".to_string(), Value::String(lua.create_string(destination)?));
+
+            // Get gateway
+            if let Some(RouteAttribute::Gateway(gw_bytes)) = route_msg.attributes.iter()
+                .find(|attr| matches!(attr, RouteAttribute::Gateway(_)))
+            {
+                let gateway = match route_msg.header.address_family {
+                    AddressFamily::Inet if gw_bytes.len() == 4 => {
+                        let ip = Ipv4Addr::new(gw_bytes[0], gw_bytes[1], gw_bytes[2], gw_bytes[3]);
+                        ip.to_string()
+                    }
+                    AddressFamily::Inet6 if gw_bytes.len() == 16 => {
+                        let mut octets = [0u8; 16];
+                        octets.copy_from_slice(gw_bytes);
+                        let ip = Ipv6Addr::from(octets);
+                        ip.to_string()
+                    }
+                    _ => "unknown".to_string(),
+                };
+                route_info.insert("gateway".to_string(), Value::String(lua.create_string(gateway)?));
+            }
+
+            // Get output interface
+            if let Some(RouteAttribute::Oif(if_index)) = route_msg.attributes.iter()
+                .find(|attr| matches!(attr, RouteAttribute::Oif(_)))
+            {
+                route_info.insert("if_index".to_string(), Value::Integer(*if_index as Integer));
+            }
+
+            route_info.insert("table".to_string(), Value::Integer(route_msg.header.table as Integer));
+            route_info.insert("protocol".to_string(), Value::Integer(route_msg.header.protocol as u8 as Integer));
+
+            route_list.push(route_info);
+        }
+
+        Ok(route_list)
     }
 }
 
@@ -523,20 +483,27 @@ impl UserData for NetworkManager {
             Ok(result)
         });
 
-        methods.add_async_method("add_address", |_lua, this, (interface_name, address_cidr): (String, String)| async move {
-            this.add_address(interface_name, address_cidr).await
+        methods.add_async_method("add_route", |_lua, this, route_table: Table| async move {
+            this.add_route(route_table).await
         });
 
-        methods.add_async_method("delete_address", |_lua, this, (interface_name, address_cidr): (String, String)| async move {
-            this.delete_address(interface_name, address_cidr).await
+        methods.add_async_method("delete_route", |_lua, this, route_table: Table| async move {
+            this.delete_route(route_table).await
         });
 
-        methods.add_async_method("add_route", |_lua, this, route_config: Table| async move {
-            this.add_route(route_config).await
-        });
-
-        methods.add_async_method("delete_route", |_lua, this, route_config: Table| async move {
-            this.delete_route(route_config).await
+        methods.add_async_method("list_routes", |lua, this, _: ()| async move {
+            let routes = this.list_routes(&lua).await?;
+            let result = lua.create_table()?;
+            
+            for (i, route) in routes.iter().enumerate() {
+                let route_table = lua.create_table()?;
+                for (key, value) in route {
+                    route_table.set(key.clone(), value.clone())?;
+                }
+                result.set(i + 1, route_table)?;
+            }
+            
+            Ok(result)
         });
     }
 }
