@@ -10,7 +10,7 @@ mod templates;
 #[cfg(unix)]
 pub mod unix_socket;
 #[cfg(unix)]
-pub mod network; 
+pub mod network;  
 
 pub async fn register_components(lua: &mlua::Lua) -> mlua::Result<Vec<(String, String)>> {
     let global = global::register_to_lua(lua);
@@ -32,7 +32,6 @@ pub async fn register_components(lua: &mlua::Lua) -> mlua::Result<Vec<(String, S
         ("templates.lua".to_string(), templates.to_string()),
         ("regex.lua".to_string(), regex.to_string()),
         ("datetime.lua".to_string(), datetime.to_string()),
-
     ];
 
     #[cfg(unix)]
@@ -41,9 +40,8 @@ pub async fn register_components(lua: &mlua::Lua) -> mlua::Result<Vec<(String, S
             "unix_socket.lua".to_string(),
             unix_socket::UnixSocketComponent::lua_code().to_string()
         ));
-    }
-    #[cfg(unix)]
-    {
+        
+        // Add network component
         components.push((
             "network.lua".to_string(),
             network::NetworkComponent::lua_code().to_string()
