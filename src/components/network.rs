@@ -1,17 +1,23 @@
 use neli::{
-    consts::{nl::NlmF, rtnl::{Arphrd, Ifla, Iff, RtAddrFamily, Rtm}, socket::NlFamily},
+    consts::{
+        nl::NlmF,
+        rtnl::{Arphrd, IffFlags, Ifla, RtAddrFamily, Rtm},
+        socket::NlFamily,
+    },
     err::NlError,
-    nl::Nlmsghdr,
+    nl::{NlPayload, Nlmsghdr},
     rtnl::Ifinfomsg,
     socket::NlSocket,
     types::RtBuffer,
 };
 use tokio::task;
 
+/// Network component for interface control
 pub struct NetworkComponent;
 
 impl NetworkComponent {
     pub async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
+        // Get or create Astra table
         let astra_table: mlua::Table = if let Ok(table) = lua.globals().get("Astra") {
             table
         } else {
@@ -20,6 +26,7 @@ impl NetworkComponent {
             table
         };
 
+        // Create net subtable
         let net_table = lua.create_table()?;
 
         net_table.set(
@@ -56,33 +63,39 @@ async fn set_link_state(iface: &str, up: bool) -> mlua::Result<()> {
 fn blocking_set_link_state(iface: &str, up: bool) -> Result<(), NlError> {
     let mut socket = NlSocket::connect(NlFamily::Route, None, &[])?;
 
-    let index = get_interface_index(iface)?
-        .ok_or_else(|| NlError::Msg("Interface not found".into()))?;
-
     let mut attrs = RtBuffer::new();
-
     let ifmsg = Ifinfomsg::new(
         RtAddrFamily::Unspecified,
-        Arphrd::Ether,
-        index as i32,
-        if up { Iff::Up.bits() } else { 0 },
-        Iff::Up.bits(),
+        Arphrd::UnrecognizedConst(0),
+        0,
+        IffFlags::empty(),
+        IffFlags::empty(),
         attrs,
     );
 
-    let nlhdr = Nlmsghdr::new(
+    let mut nlhdr = Nlmsghdr::new(
         None,
-        Rtm::Newlink,
-        NlmF::REQUEST | NlmF::ACK,
+        if up { Rtm::Setlink } else { Rtm::Dellink },
+        NlmF::Request | NlmF::Ack,
         None,
         None,
-        ifmsg,
+        NlPayload::Payload(ifmsg),
     );
 
-    socket.send(&nlhdr)?;
-    let mut buf = Vec::new();
-    socket.recv(&mut buf)?;
+    if let Some(idx) = get_interface_index(iface)? {
+        if let NlPayload::Payload(ref mut msg) = nlhdr.nl_payload {
+            msg.ifi_index = idx as i32;
+        } else {
+            return Err(NlError::Msg("Unexpected payload type".into()));
+        }
+    } else {
+        return Err(NlError::Msg("Interface not found".into()));
+    }
 
+    socket.send(&nlhdr, 0)?;
+
+    let mut buf = vec![0; 4096];
+    let _ = socket.recv(&mut buf, 0)?;
     Ok(())
 }
 
@@ -91,39 +104,37 @@ fn get_interface_index(name: &str) -> Result<Option<u32>, NlError> {
 
     let ifmsg = Ifinfomsg::new(
         RtAddrFamily::Unspecified,
-        Arphrd::Ether,
+        Arphrd::UnrecognizedConst(0),
         0,
-        0,
-        0,
+        IffFlags::empty(),
+        IffFlags::empty(),
         RtBuffer::new(),
     );
 
     let nlhdr = Nlmsghdr::new(
         None,
         Rtm::Getlink,
-        NlmF::REQUEST | NlmF::DUMP,
+        NlmF::Request | NlmF::Dump,
         None,
         None,
-        ifmsg,
+        NlPayload::Payload(ifmsg),
     );
 
-    socket.send(&nlhdr)?;
-    let mut buf = Vec::new();
+    socket.send(&nlhdr, 0)?;
 
-    loop {
-        if let Some(response) = socket.recv::<Ifinfomsg>(&mut buf)? {
-            let attrs = response.nl_payload.rtattrs();
-            for attr in attrs.iter() {
-                if attr.rta_type == Ifla::Ifname {
-                    if let Ok(n) = String::from_utf8(attr.rta_payload.clone()) {
-                        if n == name {
-                            return Ok(Some(response.nl_payload.ifi_index as u32));
-                        }
+    let mut buf = vec![0; 8192];
+    let size = socket.recv(&mut buf, 0)?;
+    let msgs = Nlmsghdr::<Rtm, Ifinfomsg>::from_bytes(&buf[..size])?;
+
+    for msg in msgs {
+        if let NlPayload::Payload(payload) = msg.nl_payload {
+            if let Some(attrs) = payload.rtattrs.get_attr_handle().get_attr_payload_as::<Vec<u8>>(&Ifla::Ifname).ok() {
+                if let Ok(ifname) = String::from_utf8(attrs) {
+                    if ifname == name {
+                        return Ok(Some(payload.ifi_index as u32));
                     }
                 }
             }
-        } else {
-            break;
         }
     }
 
