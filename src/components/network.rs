@@ -2,11 +2,11 @@ use neli::{
     consts::{nl::NlmF, rtnl::RtAddr, socket::NlFamily},
     err::NlError,
     nl::Nlmsghdr,
-    rtnl::{Ifinfomsg, Rtmsg},
-    socket::tokio::NlSocket,
-    utils::Groups,
+    rtnl::Ifinfomsg,
+    socket::NlSocket,
+    types::RtBuffer,
 };
-use tokio::runtime::Handle;
+use tokio::task;
 
 /// Network component for interface control
 pub struct NetworkComponent;
@@ -14,7 +14,7 @@ pub struct NetworkComponent;
 impl NetworkComponent {
     pub async fn register_to_lua(lua: &mlua::Lua) -> mlua::Result<()> {
         // Get or create Astra table
-        let astra_table: mlua::Table = if let Ok(table) = lua.globals().get::<_, mlua::Table>("Astra") {
+        let astra_table: mlua::Table = if let Ok(table) = lua.globals().get("Astra") {
             table
         } else {
             let table = lua.create_table()?;
@@ -49,9 +49,8 @@ impl NetworkComponent {
 }
 
 async fn set_link_state(iface: &str, up: bool) -> mlua::Result<()> {
-    let handle = Handle::current();
-    handle
-        .spawn_blocking(move || blocking_set_link_state(iface, up))
+    let iface = iface.to_string();
+    task::spawn_blocking(move || blocking_set_link_state(&iface, up))
         .await
         .map_err(|e| mlua::Error::runtime(e.to_string()))?
         .map_err(|e| mlua::Error::runtime(e.to_string()))
@@ -59,15 +58,17 @@ async fn set_link_state(iface: &str, up: bool) -> mlua::Result<()> {
 
 fn blocking_set_link_state(iface: &str, up: bool) -> Result<(), NlError> {
     // Create netlink socket
-    let mut socket = NlSocket::new(NlFamily::Route)?;
+    let mut socket = NlSocket::connect(NlFamily::Route, None, &[])?;
 
     // Build interface message
+    let mut attrs = RtBuffer::new();
     let ifmsg = Ifinfomsg::new(
         RtAddr::Unspecified,   // family
         0,                     // link layer type
         0,                     // interface index (will be set later)
         0,                     // flags
-        Groups::empty(),       // change mask
+        0,                     // change mask
+        attrs,                 // attributes
     );
 
     // Create netlink header
@@ -92,24 +93,24 @@ fn blocking_set_link_state(iface: &str, up: bool) -> Result<(), NlError> {
     }
 
     // Send request
-    socket.send(nlhdr)?;
+    socket.send(&nlhdr)?;
 
     // Wait for ACK
-    match socket.recv::<_, Rtmsg>() {
-        Ok(_) => Ok(()),
-        Err(e) => Err(e),
-    }
+    let mut buf = Vec::new();
+    let _ = socket.recv(&mut buf)?;
+    Ok(())
 }
 
 fn get_interface_index(name: &str) -> Result<Option<u32>, NlError> {
-    let mut socket = NlSocket::new(NlFamily::Route)?;
+    let mut socket = NlSocket::connect(NlFamily::Route, None, &[])?;
     
     let ifmsg = Ifinfomsg::new(
         RtAddr::Unspecified,
         0,
         0,
         0,
-        Groups::empty(),
+        0,
+        RtBuffer::new(),
     );
     
     let nlhdr = Nlmsghdr::new(
@@ -121,13 +122,13 @@ fn get_interface_index(name: &str) -> Result<Option<u32>, NlError> {
         ifmsg,
     );
     
-    socket.send(nlhdr)?;
+    socket.send(&nlhdr)?;
     
-    for msg in socket.iter::<Ifinfomsg>() {
-        let msg = msg?;
-        if let Some(ifname) = msg.ifa_label {
+    let mut buf = Vec::new();
+    while let Some(msg) = socket.recv::<Ifinfomsg>(&mut buf)? {
+        if let Some(ifname) = msg.nl_payload.ifa_label {
             if ifname == name {
-                return Ok(Some(msg.ifi_index as u32));
+                return Ok(Some(msg.nl_payload.ifi_index as u32));
             }
         }
     }
