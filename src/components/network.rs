@@ -205,7 +205,7 @@ impl NetworkManager {
     }
 
     /// Parse route specification string into RouteMessage
-    async fn parse_route_spec(&self, route_spec: &str, is_add: bool) -> Result<RouteMessage> {
+    async fn parse_route_spec(&self, route_spec: &str, _is_add: bool) -> Result<RouteMessage> {
         let parts: Vec<&str> = route_spec.split_whitespace().collect();
         if parts.is_empty() {
             return Err(mlua::Error::runtime("Empty route specification"));
