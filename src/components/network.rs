@@ -1,8 +1,7 @@
 use mlua::{Lua, Result, UserData, UserDataMethods, Value, Integer};
 use rtnetlink::{Handle, new_connection};
 use netlink_packet_route::{
-    LinkMessage,
-    link::{LinkFlags, LinkAttribute},
+    link::{LinkMessage, LinkFlags, LinkAttribute},
 };
 use std::collections::HashMap;
 use tokio::time::{timeout, Duration};
@@ -180,7 +179,7 @@ impl UserData for NetworkManager {
         });
 
         methods.add_async_method("get_link_status", |lua, this, interface_name: String| async move {
-            let status = this.get_link_status(lua, interface_name).await?;
+            let status = this.get_link_status(&lua, interface_name).await?;
             let table = lua.create_table()?;
             for (key, value) in status {
                 table.set(key, value)?;
@@ -189,7 +188,7 @@ impl UserData for NetworkManager {
         });
 
         methods.add_async_method("list_interfaces", |lua, this, _: ()| async move {
-            let interfaces = this.list_interfaces(lua).await?;
+            let interfaces = this.list_interfaces(&lua).await?;
             let result = lua.create_table()?;
             
             for (i, interface) in interfaces.iter().enumerate() {
