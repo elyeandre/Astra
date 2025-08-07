@@ -1,9 +1,13 @@
 use neli::{
-    consts::{nl::NlmF, rtnl::RtAddr, socket::NlFamily},
+    consts::{
+        nl::NlmF,
+        rtnl::{Arphrd, IffFlags, Ifla, RtAddr, Rtm},
+        socket::NlFamily,
+    },
     err::NlError,
-    nl::Nlmsghdr,
-    rtnl::Ifinfomsg,
-    socket::NlSocket,
+    nl::{Nlmsghdr, NlPayload},
+    rtnl::{Ifinfomsg, Rtattr},
+    socket::NlSocketHandle,
     types::RtBuffer,
 };
 use tokio::task;
@@ -24,14 +28,14 @@ impl NetworkComponent {
 
         // Create net subtable
         let net_table = lua.create_table()?;
-        
+
         net_table.set(
             "set_link_up",
             lua.create_async_function(|_, iface: String| async move {
                 set_link_state(&iface, true).await
             })?,
         )?;
-        
+
         net_table.set(
             "set_link_down",
             lua.create_async_function(|_, iface: String| async move {
@@ -57,81 +61,89 @@ async fn set_link_state(iface: &str, up: bool) -> mlua::Result<()> {
 }
 
 fn blocking_set_link_state(iface: &str, up: bool) -> Result<(), NlError> {
-    // Create netlink socket
-    let mut socket = NlSocket::connect(NlFamily::Route, None, &[])?;
+    let mut socket = NlSocketHandle::connect(NlFamily::Route, None, &[])?;
 
-    // Build interface message
     let mut attrs = RtBuffer::new();
-    let ifmsg = Ifinfomsg::new(
-        RtAddr::Unspecified,   // family
-        0,                     // link layer type
-        0,                     // interface index (will be set later)
-        0,                     // flags
-        0,                     // change mask
-        attrs,                 // attributes
+
+    // Set interface flags (IFF_UP) for link up/down
+    let flags = if up {
+        IffFlags::IFF_UP
+    } else {
+        IffFlags::empty()
+    };
+
+    let mut ifmsg = Ifinfomsg::new(
+        RtAddr::Unspecified,
+        Arphrd::UnrecognizedConst(0),
+        0, // Will set index later
+        flags,
+        IffFlags::IFF_UP, // Change mask
+        attrs,
     );
 
-    // Create netlink header
-    let mut nlhdr = Nlmsghdr::new(
-        None,
-        if up {
-            neli::consts::rtnl::Rtm::Setlink
-        } else {
-            neli::consts::rtnl::Rtm::Dellink
-        },
-        NlmF::REQUEST | NlmF::ACK,
-        None,
-        None,
-        ifmsg,
-    );
-
-    // Set interface index
+    // Get index
     if let Some(idx) = get_interface_index(iface)? {
-        nlhdr.nl_payload.ifi_index = idx as i32;
+        ifmsg.ifi_index = idx as i32;
     } else {
         return Err(NlError::Msg("Interface not found".into()));
     }
 
-    // Send request
-    socket.send(&nlhdr)?;
+    let nlhdr = Nlmsghdr::new(
+        None,
+        if up { Rtm::Setlink } else { Rtm::Dellink },
+        NlmF::Request | NlmF::Ack,
+        None,
+        None,
+        NlPayload::Payload(ifmsg),
+    );
 
-    // Wait for ACK
-    let mut buf = Vec::new();
-    let _ = socket.recv(&mut buf)?;
+    socket.send(nlhdr, 0)?;
+
+    let mut buf = vec![0; 4096];
+    let _ = socket.recv(&mut buf, 0)?;
     Ok(())
 }
 
 fn get_interface_index(name: &str) -> Result<Option<u32>, NlError> {
-    let mut socket = NlSocket::connect(NlFamily::Route, None, &[])?;
-    
+    let mut socket = NlSocketHandle::connect(NlFamily::Route, None, &[])?;
+
     let ifmsg = Ifinfomsg::new(
         RtAddr::Unspecified,
+        Arphrd::UnrecognizedConst(0),
         0,
-        0,
-        0,
-        0,
+        IffFlags::empty(),
+        IffFlags::empty(),
         RtBuffer::new(),
     );
-    
+
     let nlhdr = Nlmsghdr::new(
         None,
-        neli::consts::rtnl::Rtm::Getlink,
-        NlmF::REQUEST | NlmF::DUMP,
+        Rtm::Getlink,
+        NlmF::Request | NlmF::Dump,
         None,
         None,
-        ifmsg,
+        NlPayload::Payload(ifmsg),
     );
-    
-    socket.send(&nlhdr)?;
-    
-    let mut buf = Vec::new();
-    while let Some(msg) = socket.recv::<Ifinfomsg>(&mut buf)? {
-        if let Some(ifname) = msg.nl_payload.ifa_label {
-            if ifname == name {
-                return Ok(Some(msg.nl_payload.ifi_index as u32));
+
+    socket.send(nlhdr, 0)?;
+
+    let mut buf = vec![0; 4096];
+    let size = socket.recv(&mut buf, 0)?;
+
+    let messages = Nlmsghdr::<Rtm, Ifinfomsg>::from_bytes(&buf[..size])?;
+
+    for msg in messages {
+        if let NlPayload::Payload(ifinfo) = msg.nl_payload {
+            for attr in ifinfo.rtattrs.iter() {
+                if attr.rta_type == Ifla::Ifname {
+                    let ifname = std::str::from_utf8(attr.rta_payload.as_ref()).unwrap_or("");
+                    if ifname == name {
+                        return Ok(Some(ifinfo.ifi_index as u32));
+                    }
+                }
             }
         }
     }
-    
+
     Ok(None)
 }
