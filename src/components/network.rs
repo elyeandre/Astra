@@ -1,6 +1,7 @@
 use mlua::{Lua, Result, UserData, UserDataMethods, Value, Integer};
 use rtnetlink::{Handle, new_connection};
 use netlink_packet_route::{
+    address::{AddressAttribute, AddressScope, AddressMessage},
     link::{LinkMessage, LinkFlags, LinkAttribute},
     route::{RouteMessage, RouteAttribute, RouteType, RouteScope, RouteProtocol, RouteAddress},
     AddressFamily,
@@ -407,10 +408,197 @@ impl NetworkManager {
 
         Ok(interfaces)
     }
+    
+    /// Add an IP address to a network interface
+    pub async fn add_address(&self, interface_name: String, address_spec: String) -> Result<()> {
+        tracing::debug!("Adding address '{}' to interface '{}'", address_spec, interface_name);
+
+        // Parse the address specification (e.g., "192.168.6.233/32")
+        let (addr, prefix_len) = self.parse_address_spec(&address_spec)?;
+
+        // Get the interface by name
+        let mut links = self.handle.link().get().match_name(interface_name.clone()).execute();
+        let link = timeout(Duration::from_secs(5), links.try_next())
+            .await
+            .map_err(|_| mlua::Error::runtime("Timeout getting interface information"))?
+            .map_err(|e| mlua::Error::runtime(format!("Failed to get interface: {}", e)))?
+            .ok_or_else(|| mlua::Error::runtime(format!("Interface '{}' not found", interface_name)))?;
+
+        // Use the correct API - add() expects (u32, IpAddr, u8)
+        let result = timeout(
+            Duration::from_secs(10),
+            self.handle.address().add(link.header.index, addr, prefix_len).execute()
+        ).await;
+
+        match result {
+            Ok(Ok(_)) => {
+                tracing::info!("Successfully added address '{}' to interface '{}'", address_spec, interface_name);
+                Ok(())
+            },
+            Ok(Err(e)) => {
+                tracing::error!("Failed to add address '{}' to interface '{}': {}", address_spec, interface_name, e);
+                Err(mlua::Error::runtime(format!("Failed to add address: {}", e)))
+            },
+            Err(_) => {
+                tracing::error!("Timeout adding address '{}' to interface '{}'", address_spec, interface_name);
+                Err(mlua::Error::runtime("Timeout adding address"))
+            }
+        }
+    }
+
+     /// Remove an IP address from a network interface
+     pub async fn remove_address(&self, interface_name: String, address_spec: String) -> Result<()> {
+        tracing::debug!("Removing address '{}' from interface '{}'", address_spec, interface_name);
+
+        // Parse the address specification
+        let (addr, prefix_len) = self.parse_address_spec(&address_spec)?;
+
+        // Get the interface by name
+        let mut links = self.handle.link().get().match_name(interface_name.clone()).execute();
+        let link = timeout(Duration::from_secs(5), links.try_next())
+            .await
+            .map_err(|_| mlua::Error::runtime("Timeout getting interface information"))?
+            .map_err(|e| mlua::Error::runtime(format!("Failed to get interface: {}", e)))?
+            .ok_or_else(|| mlua::Error::runtime(format!("Interface '{}' not found", interface_name)))?;
+
+        // Create address message for deletion - del() expects AddressMessage
+        let mut addr_msg = AddressMessage::default();
+        addr_msg.header.index = link.header.index;
+        addr_msg.header.family = match addr {
+            IpAddr::V4(_) => AddressFamily::Inet,
+            IpAddr::V6(_) => AddressFamily::Inet6,
+        };
+        addr_msg.header.prefix_len = prefix_len;
+
+        // Add address attributes
+        addr_msg.attributes.push(AddressAttribute::Address(addr));
+        addr_msg.attributes.push(AddressAttribute::Local(addr));
+
+        // Use the correct API - del() expects AddressMessage
+        let result = timeout(
+            Duration::from_secs(10),
+            self.handle.address().del(addr_msg).execute()
+        ).await;
+
+        match result {
+            Ok(Ok(_)) => {
+                tracing::info!("Successfully removed address '{}' from interface '{}'", address_spec, interface_name);
+                Ok(())
+            },
+            Ok(Err(e)) => {
+                tracing::error!("Failed to remove address '{}' from interface '{}': {}", address_spec, interface_name, e);
+                Err(mlua::Error::runtime(format!("Failed to remove address: {}", e)))
+            },
+            Err(_) => {
+                tracing::error!("Timeout removing address '{}' from interface '{}'", address_spec, interface_name);
+                Err(mlua::Error::runtime("Timeout removing address"))
+            }
+        }
+    }
+
+    /// List all IP addresses on a network interface
+    pub async fn list_addresses(&self, lua: &Lua, interface_name: String) -> Result<Vec<HashMap<String, Value>>> {
+        tracing::debug!("Listing addresses for interface '{}'", interface_name);
+
+        // Get the interface by name first to get its index
+        let mut links = self.handle.link().get().match_name(interface_name.clone()).execute();
+        let link = timeout(Duration::from_secs(5), links.try_next())
+            .await
+            .map_err(|_| mlua::Error::runtime("Timeout getting interface information"))?
+            .map_err(|e| mlua::Error::runtime(format!("Failed to get interface: {}", e)))?
+            .ok_or_else(|| mlua::Error::runtime(format!("Interface '{}' not found", interface_name)))?;
+
+        let interface_index = link.header.index;
+
+        // Get all addresses and filter by interface
+        let mut addresses = self.handle.address().get().execute();
+        let mut interface_addresses = Vec::new();
+
+        while let Some(addr_msg) = timeout(Duration::from_secs(5), addresses.try_next())
+            .await
+            .map_err(|_| mlua::Error::runtime("Timeout listing addresses"))?
+            .map_err(|e| mlua::Error::runtime(format!("Failed to list addresses: {}", e)))?
+        {
+            // Filter by interface index
+            if addr_msg.header.index == interface_index {
+                let mut addr_info = HashMap::new();
+                
+                // Extract address information
+                for attr in &addr_msg.attributes {
+                    match attr {
+                        AddressAttribute::Address(ip_addr) => {
+                            let addr_str = format!("{}/{}", ip_addr, addr_msg.header.prefix_len);
+                            addr_info.insert("address".to_string(), Value::String(lua.create_string(addr_str)?));
+                        },
+                        AddressAttribute::Label(label) => {
+                            addr_info.insert("label".to_string(), Value::String(lua.create_string(label.clone())?));
+                        },
+                        _ => {}
+                    }
+                }
+
+                // Add additional information
+                addr_info.insert("family".to_string(), Value::String(lua.create_string(
+                    match addr_msg.header.family {
+                        AddressFamily::Inet => "inet",
+                        AddressFamily::Inet6 => "inet6",
+                        _ => "unknown",
+                    }
+                )?));
+                
+                addr_info.insert("prefix_len".to_string(), Value::Integer(addr_msg.header.prefix_len as Integer));
+                addr_info.insert("scope".to_string(), Value::String(lua.create_string(
+                    match addr_msg.header.scope {
+                        AddressScope::Universe => "global",
+                        AddressScope::Site => "site",
+                        AddressScope::Link => "link",
+                        AddressScope::Host => "host",
+                        _ => "unknown",
+                    }
+                )?));
+
+                // Only add if we have an address
+                if addr_info.contains_key("address") {
+                    interface_addresses.push(addr_info);
+                }
+            }
+        }
+
+        Ok(interface_addresses)
+    }
+
+     /// Parse address specification like "192.168.6.233/32" or "2001:db8::1/64"
+     fn parse_address_spec(&self, address_spec: &str) -> Result<(IpAddr, u8)> {
+        let parts: Vec<&str> = address_spec.split('/').collect();
+        if parts.len() != 2 {
+            return Err(mlua::Error::runtime(format!("Invalid address specification: {}. Expected format: IP/PREFIX", address_spec)));
+        }
+
+        let addr = IpAddr::from_str(parts[0])
+            .map_err(|_| mlua::Error::runtime(format!("Invalid IP address: {}", parts[0])))?;
+
+        let prefix_len = parts[1].parse::<u8>()
+            .map_err(|_| mlua::Error::runtime(format!("Invalid prefix length: {}", parts[1])))?;
+
+        // Validate prefix length based on address type
+        match addr {
+            IpAddr::V4(_) if prefix_len > 32 => {
+                return Err(mlua::Error::runtime(format!("Invalid IPv4 prefix length: {}. Must be 0-32", prefix_len)));
+            },
+            IpAddr::V6(_) if prefix_len > 128 => {
+                return Err(mlua::Error::runtime(format!("Invalid IPv6 prefix length: {}. Must be 0-128", prefix_len)));
+            },
+            _ => {}
+        }
+
+        Ok((addr, prefix_len))
+    }
+
 }
 
 impl UserData for NetworkManager {
     fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
+        // Your existing methods...
         methods.add_async_method("set_link_up", |_lua, this, interface_name: String| async move {
             this.set_link_up(interface_name).await
         });
@@ -450,6 +638,29 @@ impl UserData for NetworkManager {
                     interface_table.set(key.clone(), value.clone())?;
                 }
                 result.set(i + 1, interface_table)?;
+            }
+            
+            Ok(result)
+        });
+
+        methods.add_async_method("add_address", |_lua, this, (interface_name, address_spec): (String, String)| async move {
+            this.add_address(interface_name, address_spec).await
+        });
+
+        methods.add_async_method("remove_address", |_lua, this, (interface_name, address_spec): (String, String)| async move {
+            this.remove_address(interface_name, address_spec).await
+        });
+
+        methods.add_async_method("list_addresses", |lua, this, interface_name: String| async move {
+            let addresses = this.list_addresses(&lua, interface_name).await?;
+            let result = lua.create_table()?;
+            
+            for (i, address) in addresses.iter().enumerate() {
+                let address_table = lua.create_table()?;
+                for (key, value) in address {
+                    address_table.set(key.clone(), value.clone())?;
+                }
+                result.set(i + 1, address_table)?;
             }
             
             Ok(result)
