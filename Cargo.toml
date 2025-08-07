@@ -85,6 +85,7 @@ chrono = { version = "0.4.41", features = ["serde"] }
 # Network management
 rtnetlink = "0.15"
 netlink-packet-route = "0.21"
+futures = "0.3"
 tokio = { version = "1.0", features = ["full"] }
 # For iptables support later
 iptables = "0.5"
