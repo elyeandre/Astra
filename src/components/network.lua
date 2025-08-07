@@ -1,17 +1,19 @@
 ---@meta
 
----@class _AstraNet
----@field set_link_up fun(interface: string): boolean, string|nil
----@field set_link_down fun(interface: string): boolean, string|nil
+---@class NetworkManager
+---@field set_link_up fun(self: NetworkManager, interface_name: string): nil
+---@field set_link_down fun(self: NetworkManager, interface_name: string): nil
+---@field get_link_status fun(self: NetworkManager, interface_name: string): NetworkInterfaceStatus
+---@field list_interfaces fun(self: NetworkManager): NetworkInterfaceStatus[]
 
----Sets a network interface up
----@param interface string Interface name (e.g., "wg0")
----@return boolean success
----@return string|nil error_message
-function Astra.net.set_link_up(interface) end
+---@class NetworkInterfaceStatus
+---@field name string Interface name (e.g., "wg0", "eth0")
+---@field index number Interface index
+---@field is_up boolean Whether the interface is administratively up
+---@field is_running boolean Whether the interface is operationally running
 
----Sets a network interface down
----@param interface string Interface name (e.g., "wg0")
----@return boolean success
----@return string|nil error_message
-function Astra.net.set_link_down(interface) end
+---@class _AstraNetwork
+---@field new fun(): NetworkManager Create a new NetworkManager instance
+
+---@class Astra
+---@field Network _AstraNetwork
