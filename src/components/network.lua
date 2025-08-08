@@ -11,6 +11,11 @@
 ---@field add_address fun(self: NetworkManager, interface_name: string, address_spec: string): nil
 ---@field remove_address fun(self: NetworkManager, interface_name: string, address_spec: string): nil
 ---@field list_addresses fun(self: NetworkManager, interface_name: string): NetworkAddress[]
+---@field add_nat_rule fun(self: NetworkManager, chain: string, rule_spec: string): nil
+---@field remove_nat_rule fun(self: NetworkManager, chain: string, rule_spec: string): nil
+---@field list_nat_rules fun(self: NetworkManager, chain: string): string[]
+---@field nat_rule_exists fun(self: NetworkManager, chain: string, rule_spec: string): boolean
+---@field flush_nat_chain fun(self: NetworkManager, chain: string): nil
 
 ---@class NetworkInterfaceStatus
 ---@field name string Interface name (e.g., "wg0", "eth0")

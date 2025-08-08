@@ -6,6 +6,7 @@ use netlink_packet_route::{
     route::{RouteMessage, RouteAttribute, RouteType, RouteScope, RouteProtocol, RouteAddress},
     AddressFamily,
 };
+use iptables;
 use std::collections::HashMap;
 use std::net::IpAddr;
 use std::str::FromStr;
@@ -594,11 +595,225 @@ impl NetworkManager {
         Ok((addr, prefix_len))
     }
 
+    /// Add a NAT rule using iptables
+    pub async fn add_nat_rule(&self, chain: String, rule_spec: String) -> Result<()> {
+        tracing::debug!("Adding NAT rule to chain '{}': {}", chain, rule_spec);
+
+        // Validate chain name
+        let valid_chains = ["PREROUTING", "INPUT", "OUTPUT", "POSTROUTING"];
+        if !valid_chains.contains(&chain.as_str()) {
+            return Err(mlua::Error::runtime(format!(
+                "Invalid NAT chain '{}'. Valid chains are: {}", 
+                chain, 
+                valid_chains.join(", ")
+            )));
+        }
+
+        // Create iptables instance
+        let ipt = iptables::new(false)
+            .map_err(|e| mlua::Error::runtime(format!("Failed to initialize iptables: {}", e)))?;
+
+        // Execute in a blocking task
+        let chain_clone = chain.clone();
+        let rule_spec_clone = rule_spec.clone();
+        
+        let result = tokio::task::spawn_blocking(move || -> std::result::Result<(), String> {
+            // Use the rule spec as a single string - iptables API expects &str
+            ipt.append("nat", &chain_clone, &rule_spec_clone)
+                .map_err(|e| e.to_string())
+        }).await;
+
+        match result {
+            Ok(Ok(_)) => {
+                tracing::info!("Successfully added NAT rule to chain '{}': {}", chain, rule_spec);
+                Ok(())
+            },
+            Ok(Err(e)) => {
+                tracing::error!("Failed to add NAT rule to chain '{}': {}", chain, e);
+                Err(mlua::Error::runtime(format!("Failed to add NAT rule: {}", e)))
+            },
+            Err(e) => {
+                tracing::error!("Task error when adding NAT rule: {}", e);
+                Err(mlua::Error::runtime(format!("Task execution error: {}", e)))
+            }
+        }
+    }
+
+    /// Remove a NAT rule using iptables
+    pub async fn remove_nat_rule(&self, chain: String, rule_spec: String) -> Result<()> {
+        tracing::debug!("Removing NAT rule from chain '{}': {}", chain, rule_spec);
+
+        // Validate chain name
+        let valid_chains = ["PREROUTING", "INPUT", "OUTPUT", "POSTROUTING"];
+        if !valid_chains.contains(&chain.as_str()) {
+            return Err(mlua::Error::runtime(format!(
+                "Invalid NAT chain '{}'. Valid chains are: {}", 
+                chain, 
+                valid_chains.join(", ")
+            )));
+        }
+
+        // Create iptables instance
+        let ipt = iptables::new(false)
+            .map_err(|e| mlua::Error::runtime(format!("Failed to initialize iptables: {}", e)))?;
+
+        // Execute in a blocking task
+        let chain_clone = chain.clone();
+        let rule_spec_clone = rule_spec.clone();
+        
+        let result = tokio::task::spawn_blocking(move || -> std::result::Result<(), String> {
+            // Use the rule spec as a single string - iptables API expects &str
+            ipt.delete("nat", &chain_clone, &rule_spec_clone)
+                .map_err(|e| e.to_string())
+        }).await;
+
+        match result {
+            Ok(Ok(_)) => {
+                tracing::info!("Successfully removed NAT rule from chain '{}': {}", chain, rule_spec);
+                Ok(())
+            },
+            Ok(Err(e)) => {
+                tracing::error!("Failed to remove NAT rule from chain '{}': {}", chain, e);
+                Err(mlua::Error::runtime(format!("Failed to remove NAT rule: {}", e)))
+            },
+            Err(e) => {
+                tracing::error!("Task error when removing NAT rule: {}", e);
+                Err(mlua::Error::runtime(format!("Task execution error: {}", e)))
+            }
+        }
+    }
+     /// List NAT rules in a specific chain
+     pub async fn list_nat_rules(&self, _lua: &Lua, chain: String) -> Result<Vec<String>> {
+        tracing::debug!("Listing NAT rules for chain '{}'", chain);
+
+        // Validate chain name
+        let valid_chains = ["PREROUTING", "INPUT", "OUTPUT", "POSTROUTING"];
+        if !valid_chains.contains(&chain.as_str()) {
+            return Err(mlua::Error::runtime(format!(
+                "Invalid NAT chain '{}'. Valid chains are: {}", 
+                chain, 
+                valid_chains.join(", ")
+            )));
+        }
+
+        // Create iptables instance
+        let ipt = iptables::new(false)
+            .map_err(|e| mlua::Error::runtime(format!("Failed to initialize iptables: {}", e)))?;
+
+        // Clone chain for logging after the closure
+        let chain_for_logging = chain.clone();
+        
+        // List rules in a blocking task
+        let result = tokio::task::spawn_blocking(move || -> std::result::Result<Vec<String>, String> {
+            ipt.list("nat", &chain)
+                .map_err(|e| e.to_string())
+        }).await;
+
+        match result {
+            Ok(Ok(rules)) => {
+                tracing::info!("Successfully listed {} NAT rules from chain '{}'", rules.len(), chain_for_logging);
+                Ok(rules)
+            },
+            Ok(Err(e)) => {
+                tracing::error!("Failed to list NAT rules from chain '{}': {}", chain_for_logging, e);
+                Err(mlua::Error::runtime(format!("Failed to list NAT rules: {}", e)))
+            },
+            Err(e) => {
+                tracing::error!("Task error when listing NAT rules: {}", e);
+                Err(mlua::Error::runtime(format!("Task execution error: {}", e)))
+            }
+        }
+    }
+
+    /// Check if a NAT rule exists
+    pub async fn nat_rule_exists(&self, chain: String, rule_spec: String) -> Result<bool> {
+        tracing::debug!("Checking if NAT rule exists in chain '{}': {}", chain, rule_spec);
+
+        // Validate chain name
+        let valid_chains = ["PREROUTING", "INPUT", "OUTPUT", "POSTROUTING"];
+        if !valid_chains.contains(&chain.as_str()) {
+            return Err(mlua::Error::runtime(format!(
+                "Invalid NAT chain '{}'. Valid chains are: {}", 
+                chain, 
+                valid_chains.join(", ")
+            )));
+        }
+
+        // Create iptables instance
+        let ipt = iptables::new(false)
+            .map_err(|e| mlua::Error::runtime(format!("Failed to initialize iptables: {}", e)))?;
+
+        // Clone for logging after the closure
+        let chain_for_logging = chain.clone();
+        
+        // Check rule existence in a blocking task
+        let result = tokio::task::spawn_blocking(move || -> std::result::Result<bool, String> {
+            ipt.exists("nat", &chain, &rule_spec)
+                .map_err(|e| e.to_string())
+        }).await;
+
+        match result {
+            Ok(Ok(exists)) => {
+                tracing::debug!("NAT rule exists check result for chain '{}': {}", chain_for_logging, exists);
+                Ok(exists)
+            },
+            Ok(Err(e)) => {
+                tracing::error!("Failed to check NAT rule existence in chain '{}': {}", chain_for_logging, e);
+                Err(mlua::Error::runtime(format!("Failed to check NAT rule existence: {}", e)))
+            },
+            Err(e) => {
+                tracing::error!("Task error when checking NAT rule existence: {}", e);
+                Err(mlua::Error::runtime(format!("Task execution error: {}", e)))
+            }
+        }
+    }
+
+    /// Flush all NAT rules from a specific chain
+    pub async fn flush_nat_chain(&self, chain: String) -> Result<()> {
+        tracing::debug!("Flushing NAT chain '{}'", chain);
+
+        // Validate chain name
+        let valid_chains = ["PREROUTING", "INPUT", "OUTPUT", "POSTROUTING"];
+        if !valid_chains.contains(&chain.as_str()) {
+            return Err(mlua::Error::runtime(format!(
+                "Invalid NAT chain '{}'. Valid chains are: {}", 
+                chain, 
+                valid_chains.join(", ")
+            )));
+        }
+
+        // Create iptables instance
+        let ipt = iptables::new(false)
+            .map_err(|e| mlua::Error::runtime(format!("Failed to initialize iptables: {}", e)))?;
+
+        // Clone chain for logging after the closure
+        let chain_for_logging = chain.clone();
+
+        // Flush chain in a blocking task
+        let result = tokio::task::spawn_blocking(move || -> std::result::Result<(), String> {
+            ipt.flush_chain("nat", &chain)
+                .map_err(|e| e.to_string())
+        }).await;
+
+        match result {
+            Ok(Ok(_)) => {
+                tracing::info!("Successfully flushed NAT chain '{}'", chain_for_logging);
+                Ok(())
+            },
+            Ok(Err(e)) => {
+                tracing::error!("Failed to flush NAT chain '{}': {}", chain_for_logging, e);
+                Err(mlua::Error::runtime(format!("Failed to flush NAT chain: {}", e)))
+            },
+            Err(e) => {
+                tracing::error!("Task error when flushing NAT chain: {}", e);
+                Err(mlua::Error::runtime(format!("Task execution error: {}", e)))
+            }
+        }
+    }
 }
 
 impl UserData for NetworkManager {
     fn add_methods<M: UserDataMethods<Self>>(methods: &mut M) {
-        // Your existing methods...
         methods.add_async_method("set_link_up", |_lua, this, interface_name: String| async move {
             this.set_link_up(interface_name).await
         });
@@ -664,6 +879,33 @@ impl UserData for NetworkManager {
             }
             
             Ok(result)
+        });
+
+        methods.add_async_method("add_nat_rule", |_lua, this, (chain, rule_spec): (String, String)| async move {
+            this.add_nat_rule(chain, rule_spec).await
+        });
+
+        methods.add_async_method("remove_nat_rule", |_lua, this, (chain, rule_spec): (String, String)| async move {
+            this.remove_nat_rule(chain, rule_spec).await
+        });
+
+        methods.add_async_method("list_nat_rules", |lua, this, chain: String| async move {
+            let rules = this.list_nat_rules(&lua, chain).await?;
+            let result = lua.create_table()?;
+            
+            for (i, rule) in rules.iter().enumerate() {
+                result.set(i + 1, lua.create_string(rule.clone())?)?;
+            }
+            
+            Ok(result)
+        });
+
+        methods.add_async_method("nat_rule_exists", |_lua, this, (chain, rule_spec): (String, String)| async move {
+            this.nat_rule_exists(chain, rule_spec).await
+        });
+
+        methods.add_async_method("flush_nat_chain", |_lua, this, chain: String| async move {
+            this.flush_nat_chain(chain).await
         });
     }
 }
