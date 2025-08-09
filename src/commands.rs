@@ -212,11 +212,6 @@ astra export"#
 async fn registration(lua: &mlua::Lua, stdlib_path: Option<String>) {
     let mut lua_lib: Vec<(String, String)> = Vec::new();
 
-    #[allow(clippy::expect_used)]
-    let registration = crate::components::register_components(lua)
-        .await
-        .expect("Error setting up the standard library");
-
     let folder_path = stdlib_path.unwrap_or(
         // get the folder path from .luarc.json
         // { "workspace.library": ["./folder_path"] }
@@ -240,13 +235,21 @@ async fn registration(lua: &mlua::Lua, stdlib_path: Option<String>) {
     if let Ok(mut files) = tokio::fs::read_dir(folder_path).await {
         // add them to the lua_lib for being sent to interpretation
         while let Ok(Some(file)) = files.next_entry().await {
-            if let Ok(content) = tokio::fs::read_to_string(file.path()).await {
+            if (file.path().ends_with("lua") || file.path().ends_with("luau")) // make sure only lua files are loaded
+                && let Ok(content) = tokio::fs::read_to_string(file.path()).await
+            {
                 lua_lib.push((file.path().to_string_lossy().to_string(), content));
             }
         }
-    } else {
+    }
+    if lua_lib.is_empty() {
         // if the folder couldn't be opened or issues existed
-        lua_lib = registration
+        #[allow(clippy::expect_used)]
+        let registration = crate::components::register_components(lua)
+            .await
+            .expect("Error setting up the standard library");
+
+        lua_lib = registration;
     }
     let mut final_lib = pure_lua_libs();
     final_lib.extend(lua_lib);
