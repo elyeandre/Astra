@@ -51,6 +51,8 @@ pub async fn run_command(
         tracing::error!("{e}");
     }
 
+    // TODO: JOIN ALL TASKS HERE, AND EXIT IN CASE OF ERROR
+
     // Wait for all Tokio tasks to finish.
     let metrics = tokio::runtime::Handle::current().metrics();
     loop {
